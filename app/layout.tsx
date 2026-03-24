@@ -15,9 +15,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Art 'n Me — Order Management",
+  title: "Art 'n Me — Digital Printing Services and Studios",
   description:
-    "Internal order management system for Art 'n Me digital printing",
+    "Silay City's premier destination for high-quality tarpaulins, custom apparel, and personalized souvenirs. Where Creativity Belongs.",
+  openGraph: {
+    title: "Art 'n Me — Digital Printing Services and Studios",
+    description: "Where Creativity Belongs 🎨 | High-quality tarpaulins, shirts, mugs, and more in Silay City.",
+    url: "https://artnme.vercel.app",
+    siteName: "Art 'n Me",
+    locale: "en_PH",
+    type: "website",
+  },
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
