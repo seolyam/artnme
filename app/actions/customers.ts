@@ -111,3 +111,25 @@ export async function deleteCustomer(customerId: string) {
   revalidatePath("/dashboard/customers");
   return { success: true };
 }
+
+export async function getCustomerById(id: string) {
+  await requireAuth();
+  const parsed = z.string().uuid().safeParse(id);
+  if (!parsed.success) {
+    return null;
+  }
+
+  const customer = await db.query.customers.findFirst({
+    where: eq(customers.id, parsed.data),
+    with: {
+      orders: {
+        with: {
+          items: true,
+        },
+        orderBy: (orders, { desc }) => [desc(orders.createdAt)],
+      },
+    },
+  });
+
+  return customer || null;
+}
