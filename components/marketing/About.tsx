@@ -27,10 +27,10 @@ export function About() {
       <div className="container mx-auto px-4 md:px-8">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <motion.div 
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6 }}
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.2 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
           >
             <h2 className="text-3xl font-bold sm:text-4xl mb-6">Why Choose Art &apos;n Me?</h2>
             <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
@@ -44,10 +44,10 @@ export function About() {
                   <motion.div 
                     key={index} 
                     className="flex items-start gap-4"
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 40 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.15, duration: 0.5 }}
+                    viewport={{ once: false, amount: 0.2 }}
+                    transition={{ duration: 0.6, ease: "easeOut", delay: index * 0.15 }}
                   >
                     <div className="mt-1 bg-red-100 dark:bg-red-900/30 p-3 rounded-xl">
                       <Icon className="w-6 h-6 text-red-600 dark:text-red-500" />
@@ -63,10 +63,10 @@ export function About() {
           </motion.div>
           
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.2 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
             className="relative"
           >
             <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl bg-muted/50 border border-border/50 flex flex-col items-center justify-center p-8 text-center bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/10">

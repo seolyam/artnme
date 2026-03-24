@@ -15,10 +15,10 @@ export function CTA() {
       <div className="container relative mx-auto px-4 md:px-8 z-10">
         <motion.div 
           className="max-w-3xl mx-auto text-center space-y-8"
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          viewport={{ once: false, amount: 0.2 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
         >
           <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight">
             Ready to bring your ideas to life?
