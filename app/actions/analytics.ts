@@ -18,7 +18,7 @@ export async function getRevenueOverTime() {
       revenue: sql<number>`sum(${orders.totalAmount}::numeric)`
     })
     .from(orders)
-    .where(sql`${orders.createdAt} >= ${thirtyDaysAgo}`)
+    .where(sql`${orders.createdAt} >= ${thirtyDaysAgo.toISOString()}`)
     .groupBy(sql`date_trunc('day', ${orders.createdAt} at time zone 'Asia/Manila')`)
     .orderBy(sql`date_trunc('day', ${orders.createdAt} at time zone 'Asia/Manila') ASC`);
 
