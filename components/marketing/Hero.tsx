@@ -8,8 +8,8 @@ import Image from "next/image";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-background pt-16 md:pt-24 pb-32">
-      <div className="container mx-auto px-4 md:px-8">
+    <section className="relative overflow-hidden bg-background pt-16 md:pt-24 pb-32 flex flex-col justify-center min-h-[100dvh]">
+      <div className="container mx-auto px-4 md:px-8 w-full">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-8 items-center">
           <motion.div 
             initial={{ opacity: 0, x: -50 }}
@@ -72,10 +72,10 @@ export function Hero() {
             <motion.div 
               animate={{ y: [-15, 15, -15], rotate: [-1, 1, -1] }}
               transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              className="aspect-video lg:aspect-square relative rounded-3xl overflow-hidden shadow-2xl bg-background border border-white/20 z-10"
+              className="w-full aspect-[2840/1248] relative rounded-3xl overflow-hidden shadow-2xl border border-border z-10"
             >
                <Image 
-                 src="/images/og-image.jpg" 
+                 src="/images/2840x1248-banner.png" 
                  alt="Art 'n Me Display" 
                  fill
                  className="object-cover"

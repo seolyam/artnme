@@ -2,7 +2,7 @@
 
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Printer, Shirt, Gift, MonitorPlay } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 
 const services = [
   {
@@ -27,19 +27,19 @@ const services = [
   },
 ];
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.15,
+      staggerChildren: 0.2,
     },
   },
 };
 
-const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: { y: 0, opacity: 1 },
+const itemVariants: Variants = {
+  hidden: { y: 40, opacity: 0 },
+  visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
 };
 
 export function Services() {
@@ -58,7 +58,7 @@ export function Services() {
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: false, amount: 0.2 }}
         >
           {services.map((service) => {
             const Icon = service.icon;
