@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Facebook, MapPin, Phone } from "lucide-react";
 
 export function Footer() {
@@ -10,7 +11,8 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 mb-12">
           
           <div className="space-y-4">
-            <Link href="/" className="inline-block">
+            <Link href="/" className="inline-flex items-center gap-2 transition-opacity hover:opacity-80">
+              <Image src="/images/art-n-me-logo.jpg" alt="Art 'n Me Logo" width={32} height={32} className="rounded-md object-cover overflow-hidden" />
               <span className="text-2xl font-black tracking-tighter text-red-600 dark:text-red-500">
                 Art &apos;n Me
               </span>
