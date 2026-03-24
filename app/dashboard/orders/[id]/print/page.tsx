@@ -26,7 +26,7 @@ export default async function PrintOrderPage({
 
       <div className="flex justify-between items-start border-b border-gray-200 pb-6 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Art 'n Me</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Art &apos;n Me</h1>
           <p className="text-sm text-gray-500">Digital Printing Services</p>
           <p className="text-sm text-gray-500">Receipt / Invoice</p>
         </div>
