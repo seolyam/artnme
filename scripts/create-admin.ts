@@ -72,8 +72,8 @@ async function main() {
         role: "admin",
       });
       console.log("Profile created in database.");
-    } catch (dbError: any) {
-      if (dbError.code === '23505') { 
+    } catch (dbError: unknown) {
+      if (dbError && typeof dbError === 'object' && 'code' in dbError && dbError.code === '23505') { 
           console.log("Profile already exists. Updating to admin...");
           await db.update(schema.profiles)
               .set({ role: "admin", fullName: "Admin User" })
