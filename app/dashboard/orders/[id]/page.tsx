@@ -16,6 +16,7 @@ import {
   User,
   Package,
   Banknote,
+  Printer,
 } from "lucide-react";
 import { OrderActions } from "@/components/dashboard/order-actions";
 
@@ -70,7 +71,15 @@ export default async function OrderDetailPage({
             </span>
           </div>
         </div>
-        <OrderActions orderId={order.id} currentStatus={order.status} />
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/dashboard/orders/${order.id}/invoice`}>
+              <Printer className="mr-2 h-4 w-4" />
+              Print Invoice
+            </Link>
+          </Button>
+          <OrderActions orderId={order.id} currentStatus={order.status} />
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
