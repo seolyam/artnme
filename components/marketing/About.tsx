@@ -72,22 +72,42 @@ export function About() {
             <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl bg-muted/50 border border-border/50 flex flex-col items-center justify-center p-8 text-center bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/10">
                {/* Decorative elements representing quality and speed */}
                <div className="grid grid-cols-2 gap-4 w-full h-full p-4">
-                 <div className="bg-white/60 dark:bg-background/40 rounded-2xl border border-white/20 shadow-sm flex items-center justify-center">
-                   <div className="w-16 h-16 rounded-full bg-red-100/80 dark:bg-red-900/40" />
-                 </div>
-                 <div className="bg-red-600/10 dark:bg-red-500/10 rounded-2xl border border-red-500/20 shadow-sm flex items-center justify-center translate-y-8">
+                 <motion.div 
+                   animate={{ y: [-5, 5, -5] }}
+                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                   className="bg-white/60 dark:bg-background/40 rounded-2xl border border-white/20 shadow-sm flex items-center justify-center"
+                 >
+                   <motion.div 
+                     animate={{ scale: [1, 1.1, 1] }} 
+                     transition={{ duration: 3, repeat: Infinity }}
+                     className="w-16 h-16 rounded-full bg-red-100/80 dark:bg-red-900/40" 
+                   />
+                 </motion.div>
+                 <motion.div 
+                   animate={{ y: [0, -10, 0] }}
+                   transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                   className="bg-red-600/10 dark:bg-red-500/10 rounded-2xl border border-red-500/20 shadow-sm flex items-center justify-center translate-y-8"
+                 >
                    <div className="w-20 h-4 rounded-full bg-red-600/30 dark:bg-red-500/30" />
-                 </div>
-                 <div className="bg-white/60 dark:bg-background/40 rounded-2xl border border-white/20 shadow-sm flex items-center justify-center -translate-y-8">
+                 </motion.div>
+                 <motion.div 
+                   animate={{ y: [0, 10, 0], rotate: [0, 5, 0] }}
+                   transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                   className="bg-white/60 dark:bg-background/40 rounded-2xl border border-white/20 shadow-sm flex items-center justify-center -translate-y-8"
+                 >
                    <div className="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900/40" />
-                 </div>
-                 <div className="bg-white/60 dark:bg-background/40 rounded-2xl border border-white/20 shadow-sm flex items-center justify-center">
+                 </motion.div>
+                 <motion.div 
+                   animate={{ y: [-8, 8, -8] }}
+                   transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
+                   className="bg-white/60 dark:bg-background/40 rounded-2xl border border-white/20 shadow-sm flex items-center justify-center"
+                 >
                    <div className="space-y-2 w-1/2">
                     <div className="w-full h-2 rounded-full bg-muted-foreground/30" />
                     <div className="w-4/5 h-2 rounded-full bg-muted-foreground/30" />
                     <div className="w-full h-2 rounded-full bg-muted-foreground/30" />
                    </div>
-                 </div>
+                 </motion.div>
                </div>
                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                  <div className="bg-background/80 backdrop-blur-sm px-6 py-3 rounded-full border border-border shadow-lg">
@@ -97,8 +117,22 @@ export function About() {
             </div>
             
             {/* Decorative background blur */}
-            <div className="absolute -z-10 -bottom-10 -right-10 w-64 h-64 bg-red-600/20 blur-3xl rounded-full" />
-            <div className="absolute -z-10 -top-10 -left-10 w-64 h-64 bg-orange-500/10 blur-3xl rounded-full" />
+            <motion.div 
+              animate={{ 
+                scale: [1, 1.2, 1],
+                opacity: [0.3, 0.6, 0.3],
+              }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute -z-10 -bottom-10 -right-10 w-64 h-64 bg-red-600/30 blur-[100px] rounded-full" 
+            />
+            <motion.div 
+              animate={{ 
+                scale: [1, 1.5, 1],
+                opacity: [0.2, 0.5, 0.2],
+              }}
+              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+              className="absolute -z-10 -top-10 -left-10 w-64 h-64 bg-orange-500/30 blur-[100px] rounded-full" 
+            />
           </motion.div>
         </div>
       </div>
