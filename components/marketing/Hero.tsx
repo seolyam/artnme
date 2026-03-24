@@ -3,7 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, ImageIcon } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import Image from "next/image";
 
 export function Hero() {
   return (
@@ -22,7 +23,22 @@ export function Hero() {
                 Where Creativity Belongs 🎨
               </div>
               <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl xl:text-6xl text-foreground">
-                Bring Your <span className="text-red-600">Ideas</span> to Life.
+                <motion.span 
+                  initial={{ opacity: 0, filter: "blur(10px)", y: 20 }}
+                  animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="block"
+                >
+                  Bring Your
+                </motion.span>
+                <motion.span 
+                  initial={{ opacity: 0, filter: "blur(10px)", y: 20 }}
+                  animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  className="bg-gradient-to-r from-red-600 to-orange-500 bg-clip-text text-transparent block"
+                >
+                  Ideas to Life.
+                </motion.span>
               </h1>
               <p className="max-w-[1.5xl] text-lg text-muted-foreground sm:text-xl leading-relaxed">
                 Silay City&apos;s premier destination for high-quality tarpaulins, custom apparel, and personalized corporate giveaways. Let us craft exactly what you need.
@@ -45,16 +61,28 @@ export function Hero() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="mx-auto w-full max-w-[500px] lg:max-w-none"
+            className="mx-auto w-full max-w-[500px] lg:max-w-none relative"
           >
-            <div className="aspect-square relative rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-tr from-rose-100 to-red-50 dark:from-rose-950/40 dark:to-red-900/20 flex items-center justify-center border border-border/50">
-               {/* Note: User requested placeholder for massive beautiful hero image */}
-               <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-               <div className="relative flex flex-col items-center text-red-600/40 dark:text-red-500/30">
-                 <ImageIcon className="w-32 h-32 mb-4" />
-                 <span className="font-semibold text-xl">Stunning Hero Image</span>
-               </div>
-            </div>
+            {/* Soft glowing backdrop */}
+            <motion.div 
+              animate={{ opacity: [0.5, 0.8, 0.5], scale: [0.95, 1.05, 0.95] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute -inset-2 bg-gradient-to-r from-red-500 to-orange-500 rounded-[2rem] blur-2xl opacity-60 dark:opacity-40"
+            />
+            <motion.div 
+              animate={{ y: [-15, 15, -15], rotate: [-1, 1, -1] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              className="aspect-video lg:aspect-square relative rounded-3xl overflow-hidden shadow-2xl bg-background border border-white/20 z-10"
+            >
+               <Image 
+                 src="/images/og-image.jpg" 
+                 alt="Art 'n Me Display" 
+                 fill
+                 className="object-cover"
+                 priority
+               />
+               <div className="absolute inset-0 bg-gradient-to-tr from-black/10 to-transparent mix-blend-overlay"></div>
+            </motion.div>
           </motion.div>
         </div>
       </div>

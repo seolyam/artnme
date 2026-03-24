@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://artnme.vercel.app"),
   title: "Art 'n Me — Digital Printing Services and Studios",
   description:
     "Silay City's premier destination for high-quality tarpaulins, custom apparel, and personalized souvenirs. Where Creativity Belongs.",
@@ -25,6 +26,17 @@ export const metadata: Metadata = {
     siteName: "Art 'n Me",
     locale: "en_PH",
     type: "website",
+    images: [
+      {
+        url: "/images/og-image.jpg",
+        width: 1200,
+        height: 630,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/og-image.jpg"],
   },
   icons: {
     icon: "/favicon.ico",

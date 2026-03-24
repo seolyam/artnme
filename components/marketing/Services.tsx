@@ -63,10 +63,16 @@ export function Services() {
           {services.map((service) => {
             const Icon = service.icon;
             return (
-              <motion.div key={service.title} variants={itemVariants}>
-                <Card className="h-full border-border/50 bg-background hover:shadow-lg transition-all hover:border-red-200 dark:hover:border-red-900 group">
-                  <CardHeader>
-                    <div className="h-12 w-12 rounded-xl bg-red-100 dark:bg-red-900/40 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <motion.div 
+                key={service.title} 
+                variants={itemVariants}
+                whileHover={{ y: -8, scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
+                <Card className="h-full border-border/50 bg-background hover:shadow-xl hover:shadow-red-500/10 transition-all hover:border-red-500/30 group relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                  <CardHeader className="relative">
+                    <div className="h-12 w-12 rounded-xl bg-red-100 dark:bg-red-900/40 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
                       <Icon className="h-6 w-6 text-red-600 dark:text-red-500" />
                     </div>
                     <CardTitle className="text-xl mb-2">{service.title}</CardTitle>
