@@ -1,4 +1,6 @@
 import { getOrderStats, getRecentOrders } from "@/app/actions/orders";
+import { getRevenueOverTime } from "@/app/actions/analytics";
+import { OverviewChart } from "@/components/dashboard/overview-chart";
 import Link from "next/link";
 import {
   Card,
@@ -26,9 +28,10 @@ const STATUS_BADGE_VARIANT: Record<string, "default" | "secondary" | "outline" |
 };
 
 export default async function DashboardPage() {
-  const [stats, recentOrders] = await Promise.all([
+  const [stats, recentOrders, revenueData] = await Promise.all([
     getOrderStats(),
     getRecentOrders(7),
+    getRevenueOverTime(),
   ]);
 
   return (
@@ -72,8 +75,18 @@ export default async function DashboardPage() {
         />
       </div>
 
-      {/* Recent Orders */}
-      <Card>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-4">
+          <CardHeader>
+            <CardTitle>Revenue Overview</CardTitle>
+          </CardHeader>
+          <CardContent className="pl-2">
+            <OverviewChart data={revenueData} />
+          </CardContent>
+        </Card>
+
+        {/* Recent Orders */}
+        <Card className="col-span-3">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg">Recent Orders</CardTitle>
           <Link
@@ -164,7 +177,8 @@ export default async function DashboardPage() {
             </div>
           )}
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }
