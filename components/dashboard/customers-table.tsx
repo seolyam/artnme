@@ -132,69 +132,63 @@ export function CustomersTable({
                 : "No customers yet. They will appear here when you create orders."}
             </p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Messenger</TableHead>
-                  <TableHead className="text-right">Orders</TableHead>
-                  <TableHead className="text-right">Revenue</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="font-medium">{c.name}</TableCell>
-                    <TableCell>{c.contactNumber || "\u2014"}</TableCell>
-                    <TableCell>
-                      {c.fbMessengerLink ? (
-                        <a
-                          href={c.fbMessengerLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary underline underline-offset-4"
-                        >
-                          Open
-                        </a>
-                      ) : (
-                        "\u2014"
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {c.orderCount}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {"\u20B1"}
-                      {c.totalRevenue.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      })}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0"
-                          onClick={() => openEdit(c)}
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0 text-destructive hover:text-destructive"
-                          onClick={() => setDeleteTarget(c)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="grid gap-2">
+              {filtered.map((c) => (
+                <div key={c.id} className="relative grid grid-cols-1 md:grid-cols-12 gap-4 p-5 items-start md:items-center bg-[color:var(--color-surface-container-low)] hover:bg-[color:var(--color-surface-container-highest)] transition-colors border-l-2 border-l-transparent hover:border-l-primary group">
+                  <div className="md:col-span-4">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Client Name</p>
+                    <p className="font-bold text-lg leading-none text-foreground">{c.name}</p>
+                  </div>
+                  <div className="md:col-span-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Contact</p>
+                    <p className="text-sm font-medium">{c.contactNumber || "\u2014"}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Network</p>
+                    {c.fbMessengerLink ? (
+                      <a
+                        href={c.fbMessengerLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary text-sm font-semibold hover:underline"
+                      >
+                        Messenger
+                      </a>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">\u2014</span>
+                    )}
+                  </div>
+                  <div className="md:col-span-1 text-right">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Orders</p>
+                    <p className="text-base font-bold text-foreground">{c.orderCount}</p>
+                  </div>
+                  <div className="md:col-span-2 text-right">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Lifetime Value</p>
+                    <p className="font-bold text-primary text-lg leading-none">
+                      {"\u20B1"}{c.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-end gap-1 bg-[color:var(--color-surface-container-highest)] pl-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => openEdit(c)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                      onClick={() => setDeleteTarget(c)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>

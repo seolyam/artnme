@@ -1,8 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, RotateCcw } from "lucide-react";
 
 export default function DashboardError({
   error,
@@ -13,20 +12,31 @@ export default function DashboardError({
 }) {
   return (
     <div className="flex items-center justify-center min-h-[50vh]">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-            <AlertTriangle className="h-6 w-6" />
-          </div>
-          <CardTitle>Something went wrong</CardTitle>
-        </CardHeader>
-        <CardContent className="text-center space-y-4">
-          <p className="text-sm text-muted-foreground">
-            {error.message || "An unexpected error occurred. Please try again."}
-          </p>
-          <Button onClick={reset}>Try Again</Button>
-        </CardContent>
-      </Card>
+      <div className="w-full max-w-md bg-surface-container-low p-8 text-center space-y-5">
+        {/* Icon with destructive accent */}
+        <div className="mx-auto flex h-14 w-14 items-center justify-center bg-destructive/10">
+          <AlertTriangle className="h-7 w-7 text-destructive" strokeWidth={2} />
+        </div>
+
+        {/* Title */}
+        <h2
+          className="text-xl font-bold uppercase tracking-tight"
+          style={{ fontFamily: "var(--font-headline)" }}
+        >
+          Something Went Wrong
+        </h2>
+
+        {/* Message */}
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          {error.message || "An unexpected error occurred. Please try again."}
+        </p>
+
+        {/* Action */}
+        <Button onClick={reset} className="gap-2">
+          <RotateCcw className="h-4 w-4" />
+          Try Again
+        </Button>
+      </div>
     </div>
   );
 }

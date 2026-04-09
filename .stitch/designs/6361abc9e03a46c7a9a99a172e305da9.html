@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ART 'N ME // SYSTEM_ORDERS_MGMT</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-dim": "#131313",
+                    "on-surface": "#e2e2e2",
+                    "primary": "#ffb4ab",
+                    "tertiary": "#8ecdff",
+                    "primary-fixed": "#ffdad6",
+                    "background": "#131313",
+                    "on-tertiary-fixed-variant": "#004b71",
+                    "secondary-fixed-dim": "#c8c6c5",
+                    "on-secondary-fixed": "#1b1c1c",
+                    "outline": "#ae8883",
+                    "inverse-on-surface": "#303030",
+                    "on-primary": "#690006",
+                    "primary-fixed-dim": "#ffb4ab",
+                    "error": "#ffb4ab",
+                    "secondary-container": "#474746",
+                    "inverse-primary": "#c00014",
+                    "surface-tint": "#ffb4ab",
+                    "on-error-container": "#ffdad6",
+                    "surface-container-lowest": "#0e0e0e",
+                    "primary-container": "#e31e24",
+                    "inverse-surface": "#e2e2e2",
+                    "tertiary-fixed-dim": "#8ecdff",
+                    "secondary-fixed": "#e5e2e1",
+                    "on-error": "#690005",
+                    "on-secondary-container": "#b7b5b4",
+                    "on-secondary-fixed-variant": "#474746",
+                    "surface-container-low": "#1b1b1b",
+                    "surface": "#131313",
+                    "on-primary-fixed-variant": "#93000d",
+                    "on-secondary": "#303030",
+                    "on-primary-container": "#fffafa",
+                    "on-background": "#e2e2e2",
+                    "error-container": "#93000a",
+                    "on-primary-fixed": "#410002",
+                    "on-tertiary-container": "#fbfcff",
+                    "tertiary-fixed": "#cbe6ff",
+                    "tertiary-container": "#007bb5",
+                    "surface-container-highest": "#353535",
+                    "surface-bright": "#393939",
+                    "on-tertiary-fixed": "#001e30",
+                    "on-tertiary": "#00344f",
+                    "on-surface-variant": "#e7bdb8",
+                    "surface-container": "#1f1f1f",
+                    "surface-container-high": "#2a2a2a",
+                    "secondary": "#c8c6c5",
+                    "outline-variant": "#5d3f3c",
+                    "surface-variant": "#353535"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0rem",
+                    "lg": "0rem",
+                    "xl": "0rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        .no-line { border: none !important; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body select-none">
+<!-- TopAppBar -->
+<header class="bg-[#131313] dark:bg-[#131313] flex justify-between items-center w-full px-6 h-16 sticky top-0 z-50">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#E31E24] dark:text-[#E31E24]" data-icon="terminal">terminal</span>
+<h1 class="font-['Space_Grotesk'] tracking-tighter uppercase font-bold text-[#E31E24] dark:text-[#E31E24] text-xl">SYSTEM_ORDERS_MGMT</h1>
+</div>
+<div class="w-8 h-8 bg-surface-container-highest overflow-hidden rounded-none">
+<img alt="Admin Avatar" class="w-full h-full object-cover" data-alt="high contrast black and white portrait of a tech professional in a dark studio setting with sharp lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlsDapU-2292m5XlgaA22C4gEjyfkExTrs1ZOdTEq3wSqTQ9if_wHETseGOCCxXKhIkhFXJTKLGCV_wV5858VjUWFVWp-Oxb9ykFZAYVAchYWSAgJg2W4EA3gHmMTDS9gfSlnm6cZvhYzudIq8_HzFthv8WddO1GtwklM80eoHB7Yy0sO2CHYIJFoG3wM82DDIwQ7YjMTchN_eB27MsQUgpZXCK_SB80KSW8M1HwLhl-yV4Hir2CsYTTN6GUZB6LLLYeO8B_ztG5Y"/>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex flex-col min-h-screen pb-20">
+<!-- Header Section -->
+<section class="px-6 pt-8 pb-4">
+<div class="flex items-baseline justify-between gap-4">
+<h2 class="font-headline font-black text-6xl tracking-tighter text-on-background leading-none">ORDERS</h2>
+<button class="bg-primary-container text-on-primary-container px-4 py-3 font-label font-bold uppercase tracking-widest text-xs active:bg-red-700 transition-colors">
+                    NEW ORDER
+                </button>
+</div>
+<p class="font-label text-[10px] tracking-[0.3em] text-zinc-500 mt-2 uppercase">LITHO_CORE_PRODUCTION_QUEUE_v4.2</p>
+</section>
+<!-- Pipeline View (Tabbed Switcher) -->
+<nav class="flex px-6 overflow-x-auto gap-2 py-4 scrollbar-hide">
+<button class="bg-primary-container text-on-primary-container px-6 py-2 font-headline font-bold text-sm uppercase whitespace-nowrap">
+                PENDING (12)
+            </button>
+<button class="bg-surface-container-low text-zinc-400 px-6 py-2 font-headline font-bold text-sm uppercase whitespace-nowrap hover:bg-surface-container-high transition-colors">
+                DESIGNING (08)
+            </button>
+<button class="bg-surface-container-low text-zinc-400 px-6 py-2 font-headline font-bold text-sm uppercase whitespace-nowrap hover:bg-surface-container-high transition-colors">
+                PRINTING (04)
+            </button>
+<button class="bg-surface-container-low text-zinc-400 px-6 py-2 font-headline font-bold text-sm uppercase whitespace-nowrap hover:bg-surface-container-high transition-colors">
+                READY (22)
+            </button>
+</nav>
+<!-- Active Pipeline Content -->
+<section class="flex-grow px-6 space-y-4 pt-2">
+<!-- Order Card: Printing State (Active) -->
+<div class="bg-surface-container-high p-5 relative overflow-hidden group">
+<div class="flex justify-between items-start mb-4">
+<span class="font-headline text-2xl font-bold tracking-tighter text-on-background">#ORD-402</span>
+<span class="font-label text-[10px] font-black bg-zinc-900 px-2 py-1 text-primary-container tracking-widest uppercase">PRINTING</span>
+</div>
+<div class="space-y-1">
+<p class="font-label text-xs text-zinc-400 uppercase tracking-widest">Client</p>
+<h3 class="font-headline text-lg font-bold text-white uppercase">METRO_STREET_APPAREL</h3>
+</div>
+<div class="mt-6 flex justify-between items-end">
+<div>
+<p class="font-label text-xs text-zinc-400 uppercase tracking-widest">Target Delivery</p>
+<p class="font-headline text-sm font-bold text-white">OCT 24 // 16:00</p>
+</div>
+<span class="material-symbols-outlined text-white/20 text-4xl" data-icon="precision_manufacturing">precision_manufacturing</span>
+</div>
+<!-- Active State Indicator -->
+<div class="absolute bottom-0 left-0 w-full h-[2px] bg-[#E31E24]"></div>
+</div>
+<!-- Order Card: Normal State -->
+<div class="bg-surface-container-high p-5 relative overflow-hidden">
+<div class="flex justify-between items-start mb-4">
+<span class="font-headline text-2xl font-bold tracking-tighter text-on-background">#ORD-398</span>
+<span class="font-label text-[10px] font-black bg-zinc-900 px-2 py-1 text-zinc-500 tracking-widest uppercase">QUEUED</span>
+</div>
+<div class="space-y-1">
+<p class="font-label text-xs text-zinc-400 uppercase tracking-widest">Client</p>
+<h3 class="font-headline text-lg font-bold text-white uppercase">NEON_VOID_STUDIOS</h3>
+</div>
+<div class="mt-6 flex justify-between items-end">
+<div>
+<p class="font-label text-xs text-zinc-400 uppercase tracking-widest">Target Delivery</p>
+<p class="font-headline text-sm font-bold text-white">OCT 25 // 09:00</p>
+</div>
+<span class="material-symbols-outlined text-white/20 text-4xl" data-icon="list_alt">list_alt</span>
+</div>
+</div>
+<!-- Order Card: Printing State (Active) -->
+<div class="bg-surface-container-high p-5 relative overflow-hidden">
+<div class="flex justify-between items-start mb-4">
+<span class="font-headline text-2xl font-bold tracking-tighter text-on-background">#ORD-405</span>
+<span class="font-label text-[10px] font-black bg-zinc-900 px-2 py-1 text-primary-container tracking-widest uppercase">PRINTING</span>
+</div>
+<div class="space-y-1">
+<p class="font-label text-xs text-zinc-400 uppercase tracking-widest">Client</p>
+<h3 class="font-headline text-lg font-bold text-white uppercase">CYBER_PUNK_ZINE</h3>
+</div>
+<div class="mt-6 flex justify-between items-end">
+<div>
+<p class="font-label text-xs text-zinc-400 uppercase tracking-widest">Target Delivery</p>
+<p class="font-headline text-sm font-bold text-white">OCT 24 // 18:30</p>
+</div>
+<span class="material-symbols-outlined text-white/20 text-4xl" data-icon="precision_manufacturing">precision_manufacturing</span>
+</div>
+<div class="absolute bottom-0 left-0 w-full h-[2px] bg-[#E31E24]"></div>
+</div>
+<!-- Visual Texture Element -->
+<div class="bg-surface-container-low h-48 p-6 flex flex-col justify-center items-center opacity-30">
+<span class="material-symbols-outlined text-6xl mb-4" data-icon="layers">layers</span>
+<p class="font-headline text-xs font-bold tracking-[0.4em] uppercase">End of primary queue</p>
+</div>
+</section>
+</main>
+<!-- Footer System Status -->
+<div class="fixed bottom-16 left-0 w-full px-6 py-3 bg-zinc-900/90 backdrop-blur-xl flex justify-between items-center z-40">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+<span class="font-label text-[10px] font-bold text-white uppercase tracking-widest">SYSTEM_STABLE // NO_LATENCY</span>
+</div>
+<div class="font-label text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+            Uptime: 48:12:04
+        </div>
+</div>
+<!-- NavigationDrawer (Mobile BottomNavBar Logic) -->
+<nav class="fixed bottom-0 left-0 w-full bg-[#131313] h-16 flex items-center justify-around z-50 px-2">
+<button class="bg-[#E31E24] text-white font-bold p-3 flex flex-col items-center gap-1 transition-none">
+<span class="material-symbols-outlined" data-icon="list_alt">list_alt</span>
+<span class="font-['Space_Grotesk'] uppercase text-[8px] tracking-[0.2em]">ORDERS</span>
+</button>
+<button class="text-zinc-500 p-3 flex flex-col items-center gap-1 hover:bg-zinc-800 hover:text-white transition-none">
+<span class="material-symbols-outlined" data-icon="precision_manufacturing">precision_manufacturing</span>
+<span class="font-['Space_Grotesk'] uppercase text-[8px] tracking-[0.2em]">STATIONS</span>
+</button>
+<button class="text-zinc-500 p-3 flex flex-col items-center gap-1 hover:bg-zinc-800 hover:text-white transition-none">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-['Space_Grotesk'] uppercase text-[8px] tracking-[0.2em]">STOCK</span>
+</button>
+<button class="text-zinc-500 p-3 flex flex-col items-center gap-1 hover:bg-zinc-800 hover:text-white transition-none">
+<span class="material-symbols-outlined" data-icon="monitor_heart">monitor_heart</span>
+<span class="font-['Space_Grotesk'] uppercase text-[8px] tracking-[0.2em]">HEALTH</span>
+</button>
+<button class="text-zinc-500 p-3 flex flex-col items-center gap-1 hover:bg-zinc-800 hover:text-white transition-none">
+<span class="material-symbols-outlined" data-icon="admin_panel_settings">admin_panel_settings</span>
+<span class="font-['Space_Grotesk'] uppercase text-[8px] tracking-[0.2em]">ACCESS</span>
+</button>
+</nav>
+<!-- Global Layout Separation Logic (Subtle Background shift for footer area) -->
+<footer class="bg-zinc-900 flex justify-between items-center w-full px-8 py-10 mt-auto mb-16">
+<div class="flex flex-col gap-2">
+<p class="font-['Manrope'] text-[10px] font-bold uppercase tracking-[0.2em] text-white">ART 'N ME // INDUSTRIAL_LITHO_v1.0</p>
+<div class="flex gap-4">
+<span class="font-['Manrope'] text-[10px] font-bold uppercase tracking-[0.2em] text-[#E31E24]">SERVER_ONLINE</span>
+<span class="font-['Manrope'] text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">ENCRYPTION_AES</span>
+</div>
+</div>
+</footer>
+</body></html>
