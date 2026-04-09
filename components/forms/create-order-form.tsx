@@ -56,8 +56,9 @@ export function CreateOrderForm({ customers }: CreateOrderFormProps) {
   const [newCustomerContact, setNewCustomerContact] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Zod v4.3 minor version struct mismatch with @hookform/resolvers types
   const form = useForm<OrderFormSchemaValues>({
-    resolver: zodResolver(orderFormSchema as never),
+    resolver: zodResolver(orderFormSchema as any),
     defaultValues: {
       customerId: "",
       title: "",
