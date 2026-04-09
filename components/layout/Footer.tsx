@@ -5,8 +5,8 @@ export default function Footer() {
     <footer className="w-full border-t border-white/5 bg-[#131313] dark:bg-[#131313]">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-12 py-16 w-full items-start">
         <div>
-          <div className="text-xl font-bold text-white font-body mb-4 uppercase tracking-widest">
-            Art 'n Me
+          <div className="mb-4 h-12 w-12">
+            <img src="/images/art-n-me-logo.jpg" alt="Art 'n Me Logo" className="h-full w-full object-contain" />
           </div>
           <p className="text-white/40 text-sm font-body uppercase tracking-widest max-w-xs leading-relaxed">
             Digital printing sanctuary in the heart of Silay City. We turn ideas into substrate.

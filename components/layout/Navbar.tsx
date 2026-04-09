@@ -15,8 +15,8 @@ export default function Navbar() {
     <>
       <nav className="fixed top-0 w-full z-50 bg-gradient-to-b from-[#131313] via-[#131313]/80 to-transparent">
         <div className="flex justify-between items-center px-6 md:px-8 py-6 max-w-full mx-auto">
-          <Link href="/" className="text-2xl font-black text-[#E31E24] uppercase italic font-headline tracking-tight relative z-50">
-            Art 'n Me
+          <Link href="/" className="relative z-50 flex items-center h-10 w-10">
+            <img src="/images/art-n-me-logo.jpg" alt="Art 'n Me Logo" className="h-full w-full object-contain" />
           </Link>
           
           <div className="hidden md:flex gap-8 items-center">

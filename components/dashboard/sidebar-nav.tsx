@@ -9,7 +9,6 @@ import {
   ShoppingCart,
   Users,
   LogOut,
-  Printer,
   Menu,
   X,
 } from "lucide-react";
@@ -90,8 +89,8 @@ function SidebarFooter() {
 function Brand() {
   return (
     <div className="flex items-center gap-3 px-6 py-5 border-b border-surface-container-high">
-      <div className="flex h-9 w-9 items-center justify-center bg-primary-container dark:bg-primary-container text-white">
-        <Printer className="h-4 w-4" strokeWidth={2.5} />
+      <div className="flex h-9 w-9 items-center justify-center overflow-hidden">
+        <img src="/images/art-n-me-logo.jpg" alt="Logo" className="h-full w-full object-cover" />
       </div>
       <div className="flex flex-col">
         <span
@@ -127,8 +126,8 @@ function MobileHeader() {
   return (
     <header className="flex md:hidden items-center justify-between bg-card px-4 py-3 border-b border-surface-container-high sticky top-0 z-40">
       <div className="flex items-center gap-2">
-        <div className="flex h-7 w-7 items-center justify-center bg-primary-container dark:bg-primary-container text-white">
-          <Printer className="h-3.5 w-3.5" strokeWidth={2.5} />
+        <div className="flex h-7 w-7 items-center justify-center overflow-hidden">
+          <img src="/images/art-n-me-logo.jpg" alt="Logo" className="h-full w-full object-cover" />
         </div>
         <span
           className="text-base font-bold tracking-tight uppercase"
@@ -150,8 +149,8 @@ function MobileHeader() {
           <SheetContent side="left" className="w-64 p-0 bg-card">
             <SheetHeader className="px-6 py-5 border-b border-surface-container-high">
               <SheetTitle className="flex items-center gap-2 text-lg">
-                <div className="flex h-8 w-8 items-center justify-center bg-primary-container dark:bg-primary-container text-white">
-                  <Printer className="h-4 w-4" strokeWidth={2.5} />
+                <div className="flex h-8 w-8 items-center justify-center overflow-hidden">
+                  <img src="/images/art-n-me-logo.jpg" alt="Logo" className="h-full w-full object-cover" />
                 </div>
                 <span style={{ fontFamily: "var(--font-headline)" }} className="uppercase tracking-tighter">
                   Art &apos;n Me
