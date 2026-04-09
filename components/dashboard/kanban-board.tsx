@@ -110,10 +110,10 @@ export function KanbanBoard({ orders }: { orders: OrderWithRelations[] }) {
               </div>
 
               {/* Column body */}
-              <div className="space-y-2 rounded-lg bg-muted/40 p-2 min-h-[120px]">
+              <div className="space-y-2 bg-[color:var(--color-surface-container-low)] p-2 min-h-[120px]">
                 {statusOrders.length === 0 ? (
                   <p className="py-8 text-center text-xs text-muted-foreground">
-                    No orders
+                    No active jobs
                   </p>
                 ) : (
                   statusOrders.map((order) => (

@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -12,7 +11,7 @@ import {
   LogOut,
   Printer,
   Menu,
-  ExternalLink,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,16 +44,21 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
           <Link
             key={item.href}
             href={item.href}
+            prefetch={true}
             onClick={onNavigate}
             className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+              "group flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all duration-150 rounded-none relative",
               isActive
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                ? "bg-surface-container-high text-foreground"
+                : "text-muted-foreground hover:bg-surface-container hover:text-foreground",
             )}
           >
-            <item.icon className="h-4 w-4" />
-            {item.label}
+            {/* Active indicator — bleeding red edge */}
+            {isActive && (
+              <span className="absolute left-0 top-1 bottom-1 w-[3px] bg-primary-container dark:bg-primary-container" />
+            )}
+            <item.icon className={cn("h-4 w-4 shrink-0 transition-colors", isActive && "text-primary-container dark:text-primary")} />
+            <span className="truncate">{item.label}</span>
           </Link>
         );
       })}
@@ -62,30 +66,17 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function SidebarFooter({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarFooter() {
   return (
-    <div className="border-t px-3 py-4 space-y-2">
+    <div className="px-3 py-4 space-y-2 border-t border-surface-container-high">
       <div className="flex items-center justify-between px-3">
-        <span className="text-xs text-muted-foreground">Theme</span>
+        <span className="text-xs text-muted-foreground uppercase tracking-wider" style={{ fontFamily: "var(--font-label)" }}>Theme</span>
         <ThemeToggle />
       </div>
-
-      <Button
-        asChild
-        variant="ghost"
-        className="w-full justify-start gap-3 text-muted-foreground"
-        onClick={onNavigate}
-      >
-        <Link href="/">
-          <ExternalLink className="h-4 w-4" />
-          View Website
-        </Link>
-      </Button>
-
       <form action={logout}>
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3 text-muted-foreground"
+          className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive"
           type="submit"
         >
           <LogOut className="h-4 w-4" />
@@ -98,18 +89,21 @@ function SidebarFooter({ onNavigate }: { onNavigate?: () => void }) {
 
 function Brand() {
   return (
-    <div className="flex items-center gap-3 px-6 py-5 border-b">
-      <div className="relative h-8 w-8 overflow-hidden rounded-md border shrink-0">
-        <Image 
-          src="/images/art-n-me-logo.jpg" 
-          alt="Art 'n Me Logo" 
-          fill
-          className="object-cover"
-        />
+    <div className="flex items-center gap-3 px-6 py-5 border-b border-surface-container-high">
+      <div className="flex h-9 w-9 items-center justify-center bg-primary-container dark:bg-primary-container text-white">
+        <Printer className="h-4 w-4" strokeWidth={2.5} />
       </div>
-      <span className="text-lg font-bold tracking-tight">
-        Art &apos;n Me
-      </span>
+      <div className="flex flex-col">
+        <span
+          className="text-lg font-bold tracking-tighter uppercase leading-tight"
+          style={{ fontFamily: "var(--font-headline)" }}
+        >
+          Art &apos;n Me
+        </span>
+        <span className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] leading-none">
+          Staff Portal
+        </span>
+      </div>
     </div>
   );
 }
@@ -117,7 +111,7 @@ function Brand() {
 /** Desktop sidebar — hidden on mobile */
 function DesktopSidebar() {
   return (
-    <aside className="hidden md:flex h-screen w-64 flex-col border-r bg-card">
+    <aside className="hidden md:flex h-screen w-64 flex-col bg-card border-r border-surface-container-high sticky top-0">
       <Brand />
       <NavLinks />
       <SidebarFooter />
@@ -128,19 +122,18 @@ function DesktopSidebar() {
 /** Mobile top bar + sheet sidebar — shown only on mobile */
 function MobileHeader() {
   const [open, setOpen] = useState(false);
+  const closeSheet = useCallback(() => setOpen(false), []);
 
   return (
-    <header className="flex md:hidden items-center justify-between border-b bg-card px-4 py-3">
+    <header className="flex md:hidden items-center justify-between bg-card px-4 py-3 border-b border-surface-container-high sticky top-0 z-40">
       <div className="flex items-center gap-2">
-        <div className="relative h-7 w-7 overflow-hidden rounded-md border">
-          <Image 
-            src="/images/art-n-me-logo.jpg" 
-            alt="Art 'n Me Logo" 
-            fill
-            className="object-cover"
-          />
+        <div className="flex h-7 w-7 items-center justify-center bg-primary-container dark:bg-primary-container text-white">
+          <Printer className="h-3.5 w-3.5" strokeWidth={2.5} />
         </div>
-        <span className="text-base font-bold tracking-tight">
+        <span
+          className="text-base font-bold tracking-tight uppercase"
+          style={{ fontFamily: "var(--font-headline)" }}
+        >
           Art &apos;n Me
         </span>
       </div>
@@ -150,28 +143,34 @@ function MobileHeader() {
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Open menu</span>
+              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              <span className="sr-only">Toggle menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0">
-            <SheetHeader className="px-6 py-5 border-b">
+          <SheetContent side="left" className="w-64 p-0 bg-card">
+            <SheetHeader className="px-6 py-5 border-b border-surface-container-high">
               <SheetTitle className="flex items-center gap-2 text-lg">
-                <div className="relative h-8 w-8 overflow-hidden rounded-md border shrink-0">
-                  <Image 
-                    src="/images/art-n-me-logo.jpg" 
-                    alt="Art 'n Me Logo" 
-                    fill
-                    className="object-cover"
-                  />
+                <div className="flex h-8 w-8 items-center justify-center bg-primary-container dark:bg-primary-container text-white">
+                  <Printer className="h-4 w-4" strokeWidth={2.5} />
                 </div>
-                Art &apos;n Me
+                <span style={{ fontFamily: "var(--font-headline)" }} className="uppercase tracking-tighter">
+                  Art &apos;n Me
+                </span>
               </SheetTitle>
             </SheetHeader>
-            <div className="flex flex-1 flex-col h-[calc(100%-73px)]">
-              <NavLinks onNavigate={() => setOpen(false)} />
-              <div className="mt-auto">
-                <SidebarFooter onNavigate={() => setOpen(false)} />
+            <div className="flex flex-1 flex-col">
+              <NavLinks onNavigate={closeSheet} />
+              <div className="border-t border-surface-container-high px-3 py-4">
+                <form action={logout}>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive"
+                    type="submit"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </Button>
+                </form>
               </div>
             </div>
           </SheetContent>
