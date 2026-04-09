@@ -15,9 +15,15 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://artnme.vercel.app"),
-  title: "Art 'n Me — Digital Printing Services and Studios",
+  title: "Art 'n Me — Where Creativity Belongs",
   description:
     "Silay City's premier destination for high-quality tarpaulins, custom apparel, and personalized souvenirs. Where Creativity Belongs.",
+  openGraph: {
+    images: ["/images/og-image.jpg"],
+  },
+  twitter: {
+    images: ["/images/og-image.jpg"],
+  },
 };
 
 export default function RootLayout({
