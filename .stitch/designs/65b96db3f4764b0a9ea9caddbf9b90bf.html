@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Client Directory | ART 'N ME</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@200;300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#00344f",
+                        "tertiary-container": "#007bb5",
+                        "surface-container-high": "#2a2a2a",
+                        "error-container": "#93000a",
+                        "primary": "#ffb4ab",
+                        "on-primary-container": "#fffafa",
+                        "on-background": "#e2e2e2",
+                        "on-error": "#690005",
+                        "on-secondary": "#303030",
+                        "inverse-surface": "#e2e2e2",
+                        "on-secondary-container": "#b7b5b4",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface-container-highest": "#353535",
+                        "secondary-container": "#474746",
+                        "on-primary-fixed-variant": "#93000d",
+                        "tertiary-fixed": "#cbe6ff",
+                        "tertiary": "#8ecdff",
+                        "primary-fixed": "#ffdad6",
+                        "on-primary-fixed": "#410002",
+                        "surface-tint": "#ffb4ab",
+                        "secondary-fixed": "#e5e2e1",
+                        "on-surface": "#e2e2e2",
+                        "background": "#131313",
+                        "surface-container": "#1f1f1f",
+                        "surface-bright": "#393939",
+                        "inverse-primary": "#c00014",
+                        "primary-container": "#e31e24",
+                        "on-secondary-fixed-variant": "#474746",
+                        "surface-dim": "#131313",
+                        "outline": "#ae8883",
+                        "on-tertiary-container": "#fbfcff",
+                        "on-tertiary-fixed-variant": "#004b71",
+                        "surface": "#131313",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "outline-variant": "#5d3f3c",
+                        "error": "#ffb4ab",
+                        "on-tertiary-fixed": "#001e30",
+                        "secondary": "#c8c6c5",
+                        "surface-container-low": "#1b1b1b",
+                        "on-primary": "#690006",
+                        "inverse-on-surface": "#303030",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "surface-variant": "#353535",
+                        "primary-fixed-dim": "#ffb4ab",
+                        "tertiary-fixed-dim": "#8ecdff",
+                        "on-surface-variant": "#e7bdb8"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0px",
+                        "lg": "0px",
+                        "xl": "0px",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Manrope"],
+                        "label": ["Manrope"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .art-stack-active {
+            border-left: 2px solid #E31E24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-[#131313]/80 backdrop-blur-xl docked full-width top-0 z-50 border-b border-[#E31E24]/10 flex justify-between items-center px-6 h-16 w-full fixed">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#E31E24]" data-icon="terminal">terminal</span>
+<span class="font-['Space_Grotesk'] font-bold tracking-tighter uppercase text-2xl text-[#E31E24] tracking-tight">ART 'N ME</span>
+</div>
+<div class="w-8 h-8 bg-surface-container-highest overflow-hidden">
+<img alt="Admin User Profile" class="w-full h-full object-cover grayscale" data-alt="high contrast black and white portrait of a person with sharp studio lighting and industrial background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDIWVe9pkieAyT20pzzJHs9yEvk7SaQGcQy9azNp7kEmfp0Jk3aBhoXjco9grOM122p4GpVGg6zl4LDse5WN1My66HsZdUYcRBdFtZxEAbKVZyJMg3bhe6p5LCl4OGhZIXEfrC9VEbVpyXPaaoGBrR4fW8myiWdAvQcf32UZqbaigauT3dCR2OdQFdq4JHVsD0BMYKLng0ZOslDx67RZLPL1XP596u39v_yilsqrbbw0Ynlse6YqQU1sh7pIpq7py91FJ7vnrsHjYU"/>
+</div>
+</header>
+<main class="flex-grow pt-24 pb-20 px-6 max-w-2xl mx-auto w-full">
+<!-- Main Headline -->
+<div class="mb-12">
+<h1 class="font-headline text-5xl font-bold tracking-tighter text-[#E31E24] uppercase leading-none">
+                CLIENT<br/>DIRECTORY
+            </h1>
+<div class="mt-4 flex items-center gap-2">
+<span class="w-12 h-[2px] bg-[#E31E24]"></span>
+<span class="font-label text-[10px] tracking-[0.3em] uppercase opacity-60">SYSTEM_AUTH: STAFF_ACCESS</span>
+</div>
+</div>
+<!-- Directory List -->
+<div class="space-y-12">
+<!-- Client Card 1: Neon Void Studios -->
+<div class="group relative bg-surface-container-high p-6 transition-all duration-300 active:art-stack-active hover:art-stack-active">
+<div class="flex flex-col gap-6">
+<div class="flex justify-between items-start">
+<div class="max-w-[70%]">
+<span class="font-label text-[10px] tracking-widest text-[#E31E24] uppercase block mb-1">CLIENT_NAME</span>
+<h2 class="font-headline text-2xl font-bold uppercase leading-tight tracking-tight">Neon Void Studios</h2>
+</div>
+<div class="w-20 h-20 -mt-10 -mr-2 bg-black overflow-hidden border border-[#E31E24]/20 transform rotate-3">
+<img alt="Modern neon art" class="w-full h-full object-cover opacity-80" data-alt="Abstract neon light sculpture with deep reds and purples in a dark industrial loft setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5P1xgH3wHluKYUBFzUJx2vxjp5HW639ot0XLrU-VwxxIXPW4qIxD03nen2qPAXjGiWReJ2hmyKl4lq65HeiIMjf_6wW1DWmdsXwr6f35lh1A1sNEhF0K7szRyp6T2aV7_SzKgqDJCJ8IuhVDEGtbyHIHVM4DoGCxzzqmygGBch2ihaV7AX0r8YzasT5O88xMXiDhlXMV6I-EjJKvBy9n2bDDU0jnAGhiwP0Ynj9NISMelexkHK0pKJOXBFSWjqwZOJ-a3Ux7LAZ4"/>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-y-4 gap-x-2">
+<div>
+<span class="font-label text-[10px] tracking-widest uppercase opacity-40 block">EMAIL_CONTACT</span>
+<p class="text-sm font-medium tracking-tight">void@neonstudios.art</p>
+</div>
+<div class="text-right">
+<span class="font-label text-[10px] tracking-widest uppercase opacity-40 block">ORDER_VOLUME</span>
+<p class="text-sm font-medium tracking-tight">42 COMPLETED</p>
+</div>
+<div class="col-span-2 pt-4 border-t border-[#E31E24]/5">
+<span class="font-label text-[10px] tracking-widest uppercase opacity-40 block">LIFETIME_VALUE</span>
+<p class="text-3xl font-headline font-bold text-[#E31E24]">$12,450.00</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Client Card 2: Metro Street Apparel -->
+<div class="group relative bg-surface-container-high p-6 transition-all duration-300 active:art-stack-active hover:art-stack-active">
+<div class="flex flex-col gap-6">
+<div class="flex justify-between items-start">
+<div class="max-w-[70%]">
+<span class="font-label text-[10px] tracking-widest text-[#E31E24] uppercase block mb-1">CLIENT_NAME</span>
+<h2 class="font-headline text-2xl font-bold uppercase leading-tight tracking-tight">Metro Street Apparel</h2>
+</div>
+<div class="w-24 h-16 -mt-8 -mr-4 bg-black overflow-hidden border border-[#E31E24]/20 transform -rotate-2">
+<img alt="Streetwear photography" class="w-full h-full object-cover opacity-80" data-alt="Urban streetwear close-up showing screen-printed textures on a black heavy cotton hoodie" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmXUKOLnuDz9qw9qUYCsrfGq-ek0SxF_dmxA39RYoVRr6crGxu7XICX_8biEUf6rH2y9ywPHjbz45i2z7XAiIGAMZ1Sak_Ecm7gGWcAf6VhTuETPaqVIGi_3P14a8a4HedKuSvXvqIkVUbJzDnopPHFchJaR1padZw_-fbkcxfgui9ETxH97tva6LdGamMvsayLwiCBy5WZ6jPb6b7oJHlbdiv_WXfu00Mef6AehYNbQnz_MaAvyXSx3lmepn8mSEQjswtPmfy7-g"/>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-y-4 gap-x-2">
+<div>
+<span class="font-label text-[10px] tracking-widest uppercase opacity-40 block">EMAIL_CONTACT</span>
+<p class="text-sm font-medium tracking-tight">ops@metro-street.com</p>
+</div>
+<div class="text-right">
+<span class="font-label text-[10px] tracking-widest uppercase opacity-40 block">ORDER_VOLUME</span>
+<p class="text-sm font-medium tracking-tight">156 COMPLETED</p>
+</div>
+<div class="col-span-2 pt-4 border-t border-[#E31E24]/5">
+<span class="font-label text-[10px] tracking-widest uppercase opacity-40 block">LIFETIME_VALUE</span>
+<p class="text-3xl font-headline font-bold text-[#E31E24]">$48,920.00</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Client Card 3: Gallery X Exhibit -->
+<div class="group relative bg-surface-container-high p-6 transition-all duration-300 active:art-stack-active hover:art-stack-active">
+<div class="flex flex-col gap-6">
+<div class="flex justify-between items-start">
+<div class="max-w-[70%]">
+<span class="font-label text-[10px] tracking-widest text-[#E31E24] uppercase block mb-1">CLIENT_NAME</span>
+<h2 class="font-headline text-2xl font-bold uppercase leading-tight tracking-tight">Gallery X Exhibit</h2>
+</div>
+<div class="w-16 h-24 -mt-12 -mr-1 bg-black overflow-hidden border border-[#E31E24]/20">
+<img alt="Fine art exhibit" class="w-full h-full object-cover opacity-80" data-alt="Interior of a modern art gallery with high-end giclée prints hanging on a textured dark wall" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFP5gFlzod042i-Is68MdyPy_t6Zd97FPZ4Ks4JkL0P7revvRCgW_2tlocxjhSmBrNF1_an-UUAAO1L7MMOrapWl5XSddzsW9AEqelrrPZbvKbDKRrxzUaEuEMAUAcrvXfSKwaOS8POTQkrENd-65vHF6kZaL-8BGVQMi7HcfL6R2tBeuxsGde31Fc17DRpPzGqHjyvAZCXc3tpQvYOPnet84A9GFv8a5vPnnPtejVM794EFfAdjmpZ7MnNVbujnj3zX739K2c8JA"/>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-y-4 gap-x-2">
+<div>
+<span class="font-label text-[10px] tracking-widest uppercase opacity-40 block">EMAIL_CONTACT</span>
+<p class="text-sm font-medium tracking-tight">curator@gallery-x.io</p>
+</div>
+<div class="text-right">
+<span class="font-label text-[10px] tracking-widest uppercase opacity-40 block">ORDER_VOLUME</span>
+<p class="text-sm font-medium tracking-tight">18 COMPLETED</p>
+</div>
+<div class="col-span-2 pt-4 border-t border-[#E31E24]/5">
+<span class="font-label text-[10px] tracking-widest uppercase opacity-40 block">LIFETIME_VALUE</span>
+<p class="text-3xl font-headline font-bold text-[#E31E24]">$21,300.00</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Add Client Floating Button (Contextual for Directory) -->
+<button class="fixed bottom-24 right-6 w-14 h-14 bg-primary-container text-white flex items-center justify-center shadow-2xl active:scale-95 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+</button>
+</main>
+<!-- Navigation Drawer (Mobile Bottom Bar Logic) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-[#131313] border-t border-[#E31E24]/10 flex justify-around items-center h-16 z-50">
+<div class="flex flex-col items-center gap-1 bg-[#E31E24] text-white font-bold p-2 w-1/5">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">group</span>
+<span class="font-['Space_Grotesk'] text-[8px] uppercase tracking-tighter">Directory</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-white/50 p-2 w-1/5">
+<span class="material-symbols-outlined">print</span>
+<span class="font-['Space_Grotesk'] text-[8px] uppercase tracking-tighter">Orders</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-white/50 p-2 w-1/5">
+<span class="material-symbols-outlined">palette</span>
+<span class="font-['Space_Grotesk'] text-[8px] uppercase tracking-tighter">Inventory</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-white/50 p-2 w-1/5">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-['Space_Grotesk'] text-[8px] uppercase tracking-tighter">Logs</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-white/50 p-2 w-1/5">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-['Space_Grotesk'] text-[8px] uppercase tracking-tighter">Settings</span>
+</div>
+</nav>
+<!-- Footer -->
+<footer class="bg-[#131313] w-full border-t border-[#E31E24]/10 flex flex-row justify-between items-center px-8 py-4 w-full mt-auto mb-16">
+<span class="font-['Manrope'] text-[10px] tracking-widest uppercase text-white/40">© 2024 ART 'N ME DIGITAL PRINTING. STATUS: SYSTEM_READY</span>
+<div class="flex gap-4">
+<a class="font-['Manrope'] text-[10px] tracking-widest uppercase text-white/40 hover:text-white transition-opacity" href="#">Privacy</a>
+<a class="font-['Manrope'] text-[10px] tracking-widest uppercase text-white/40 hover:text-white transition-opacity" href="#">Security</a>
+</div>
+</footer>
+</body></html>

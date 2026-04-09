@@ -1,30 +1,19 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* Base variables */
-@theme inline {
-  --color-background: #131313;
-  --color-foreground: #e2e2e2;
-  --color-on-background: #e2e2e2;
-  --color-primary: #ffb4ab;
-  --color-primary-container: #e31e24;
-  --color-on-primary-container: #fffafa;
-  --color-error: #ffb4ab;
-  --color-surface: #131313;
-  --color-surface-container-lowest: #0e0e0e;
-  --color-surface-container-low: #1b1b1b;
-  --color-surface-container: #1f1f1f;
-  --color-surface-container-high: #2a2a2a;
-  --color-surface-container-highest: #353535;
-  --color-surface-variant: #353535;
-  --color-secondary: #c8c6c5;
-  --color-secondary-container: #474746;
-  --color-outline-variant: #5d3f3c;
+/* ============================================
+   Art 'n Me — Dual Theme Design System
+   "The Urban Lithograph"
+   ============================================ */
 
+/* Tailwind theme: expose custom tokens */
+@theme inline {
+  /* Fonts */
   --font-headline: 'Space Grotesk', sans-serif;
   --font-body: 'Manrope', sans-serif;
   --font-label: 'Manrope', sans-serif;
 
+  /* Radii — 0px for industrial sharp aesthetic */
   --radius-sm: 0px;
   --radius-md: 0px;
   --radius-lg: 0px;
@@ -33,17 +22,178 @@
   --radius-3xl: 0px;
   --radius-4xl: 0px;
   --radius: 0px;
+
+  /* Dynamic color tokens — populated by :root / .dark */
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-on-background: var(--fg);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-fg);
+  --color-primary-container: var(--primary-container);
+  --color-on-primary: var(--on-primary);
+  --color-on-primary-container: var(--on-primary-container);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-fg);
+  --color-secondary-container: var(--secondary-container);
+
+  --color-destructive: var(--destructive);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-fg);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-fg);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-fg);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-fg);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Surface tonal system */
+  --color-surface: var(--surface);
+  --color-surface-container-lowest: var(--surface-lowest);
+  --color-surface-container-low: var(--surface-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-high);
+  --color-surface-container-highest: var(--surface-highest);
+  --color-surface-variant: var(--surface-variant);
+  --color-on-surface: var(--on-surface);
+
+  --color-outline-variant: var(--outline-variant);
+  --color-error: var(--error);
 }
 
+/* ============================================
+   LIGHT THEME — Clean Studio Daylight
+   High contrast, bright paper with ink accents
+   ============================================ */
 :root {
-  --background: oklch(0.145 0 0); /* roughly #131313 */
-  --foreground: oklch(0.985 0 0); 
+  /* Base */
+  --bg: #f8f7f6;
+  --fg: #1a1a1a;
+
+  /* Primary — High-energy red */
+  --primary: #E31E24;
+  --primary-fg: #ffffff;
+  --primary-container: #ffdad6;
+  --on-primary: #ffffff;
+  --on-primary-container: #410002;
+
+  /* Secondary */
+  --secondary: #e8e6e5;
+  --secondary-fg: #1a1a1a;
+  --secondary-container: #d8d6d5;
+
+  /* Destructive */
+  --destructive: #c00014;
+
+  /* Muted / Accents */
+  --muted: #ece9e8;
+  --muted-fg: #6e6b6a;
+  --accent: #e8e6e5;
+  --accent-fg: #1a1a1a;
+
+  /* Popover */
+  --popover: #ffffff;
+  --popover-fg: #1a1a1a;
+
+  /* Card */
+  --card: #ffffff;
+  --card-fg: #1a1a1a;
+
+  /* Borders & inputs */
+  --border: #dddad9;
+  --input: #dddad9;
+  --ring: #E31E24;
+
+  /* Surface tonal stack */
+  --surface: #f8f7f6;
+  --surface-lowest: #ffffff;
+  --surface-low: #f2f0ef;
+  --surface-container: #ece9e8;
+  --surface-high: #e4e1e0;
+  --surface-highest: #dad7d6;
+  --surface-variant: #d8d6d5;
+  --on-surface: #1a1a1a;
+
+  /* Outline */
+  --outline-variant: #c4b8b6;
+  --error: #ba1a1a;
+}
+
+/* ============================================
+   DARK THEME — Ink Black Deep Studio
+   Premium deep charcoal with red fire highlights
+   ============================================ */
+.dark {
+  /* Base */
+  --bg: #131313;
+  --fg: #e2e2e2;
+
+  /* Primary */
+  --primary: #ffb4ab;
+  --primary-fg: #690006;
+  --primary-container: #e31e24;
+  --on-primary: #690006;
+  --on-primary-container: #fffafa;
+
+  /* Secondary */
+  --secondary: #c8c6c5;
+  --secondary-fg: #303030;
+  --secondary-container: #474746;
+
+  /* Destructive */
+  --destructive: #ffb4ab;
+
+  /* Muted / Accents */
+  --muted: #2a2a2a;
+  --muted-fg: #9e9e9e;
+  --accent: #353535;
+  --accent-fg: #e2e2e2;
+
+  /* Popover */
+  --popover: #1f1f1f;
+  --popover-fg: #e2e2e2;
+
+  /* Card */
+  --card: #1f1f1f;
+  --card-fg: #e2e2e2;
+
+  /* Borders & inputs */
+  --border: #353535;
+  --input: #353535;
+  --ring: #ffb4ab;
+
+  /* Surface tonal stack */
+  --surface: #131313;
+  --surface-lowest: #0e0e0e;
+  --surface-low: #1b1b1b;
+  --surface-container: #1f1f1f;
+  --surface-high: #2a2a2a;
+  --surface-highest: #353535;
+  --surface-variant: #353535;
+  --on-surface: #e2e2e2;
+
+  /* Outline */
+  --outline-variant: #5d3f3c;
+  --error: #ffb4ab;
 }
 
 @layer base {
+  * {
+    border-color: var(--border);
+  }
+
   body {
-    background-color: var(--color-background);
-    color: var(--color-on-background);
+    background-color: var(--bg);
+    color: var(--fg);
     font-family: var(--font-body);
   }
 }

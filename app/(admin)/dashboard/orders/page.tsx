@@ -10,13 +10,13 @@ export default async function OrdersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
-          <p className="text-muted-foreground">
-            Track and manage all printing orders
+        <div className="flex flex-col items-start gap-1 pb-4">
+          <h1 className="text-4xl font-bold tracking-tighter uppercase" style={{ fontFamily: "var(--font-headline)" }}>Orders</h1>
+          <p className="text-muted-foreground/80 font-medium tracking-wide">
+            TRACK AND MANAGE ALL PRINTING ORDERS
           </p>
         </div>
-        <Button asChild>
+        <Button asChild className="rounded-none">
           <Link href="/dashboard/orders/new">
             <Plus className="mr-2 h-4 w-4" />
             New Order
