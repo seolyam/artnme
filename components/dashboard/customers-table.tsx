@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
 import {
   updateCustomer,
   deleteCustomer,
@@ -147,11 +146,7 @@ export function CustomersTable({
               <TableBody>
                 {filtered.map((c) => (
                   <TableRow key={c.id}>
-                    <TableCell className="font-medium">
-                      <Link href={`/dashboard/customers/${c.id}`} className="hover:underline">
-                        {c.name}
-                      </Link>
-                    </TableCell>
+                    <TableCell className="font-medium">{c.name}</TableCell>
                     <TableCell>{c.contactNumber || "\u2014"}</TableCell>
                     <TableCell>
                       {c.fbMessengerLink ? (
