@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { Printer } from "lucide-react";
 
 export default function NotFound() {
   return (
     <div className="flex flex-col items-center justify-center gap-8 px-4 text-center py-48 bg-background min-h-screen">
-      <div className="flex h-24 w-24 items-center justify-center rounded-none bg-surface-container-high">
-        <Printer className="h-12 w-12 text-[#E31E24]" />
+      <div className="flex h-24 w-24 items-center justify-center rounded-none bg-surface-container-high overflow-hidden">
+        <img src="/images/art-n-me-logo.jpg" alt="Logo" className="h-full w-full object-cover" />
       </div>
       <div className="space-y-4">
         <h1 className="text-8xl font-black font-headline tracking-tighter uppercase italic text-white">404</h1>
