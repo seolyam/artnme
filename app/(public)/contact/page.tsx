@@ -1,6 +1,6 @@
 "use client";
 
-import { Mail, Phone, MapPin, Send } from "lucide-react";
+import { Mail, Phone, MapPin, Send, MessageSquare } from "lucide-react";
 
 export default function Contact() {
   return (
@@ -31,6 +31,12 @@ export default function Contact() {
                   <MapPin className="text-primary-container group-hover:text-on-primary-container transition-colors" />
                 </div>
                 <div>
+                <a 
+                  href="https://maps.app.goo.gl/KA781unxzKKvwnMh6" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="hover:opacity-80 transition-opacity"
+                >
                   <h3 className="text-on-surface dark:text-white font-headline font-bold text-xl uppercase tracking-widest">
                     Location
                   </h3>
@@ -40,6 +46,7 @@ export default function Contact() {
                   <p className="text-on-surface-variant text-sm mt-1 opacity-60">
                     Philippines, 6116
                   </p>
+                </a>
                 </div>
               </div>
 
@@ -67,10 +74,32 @@ export default function Contact() {
                     Email
                   </h3>
                   <p className="text-on-surface-variant mt-1">
-                    hello@artnme.com
+                    artinme03@gmail.com
                   </p>
                   <p className="text-on-surface-variant text-sm mt-1 opacity-60">
                     General Inquiries
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-6 group">
+                <div className="bg-surface-container-high p-4 group-hover:bg-primary-container transition-colors duration-500">
+                  <MessageSquare className="text-primary-container group-hover:text-on-primary-container transition-colors" />
+                </div>
+                <div>
+                  <h3 className="text-on-surface dark:text-white font-headline font-bold text-xl uppercase tracking-widest">
+                    Messenger
+                  </h3>
+                  <a 
+                    href="https://www.facebook.com/ArtnMeOfficial" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-on-surface-variant mt-1 hover:text-primary-container transition-colors block"
+                  >
+                    Art 'n Me Digital Printing Services and Studios
+                  </a>
+                  <p className="text-on-surface-variant text-sm mt-1 opacity-60">
+                    Official Facebook Page
                   </p>
                 </div>
               </div>
@@ -159,8 +188,12 @@ export default function Contact() {
         </div>
       </div>
 
-      {/* Map Section */}
-      <section className="mt-32 w-full h-[500px] contrast-125 opacity-50 hover:opacity-100 transition-opacity relative overflow-hidden">
+      <a 
+        href="https://maps.app.goo.gl/KA781unxzKKvwnMh6" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="mt-32 w-full h-[500px] contrast-125 opacity-50 hover:opacity-100 transition-opacity relative overflow-hidden block"
+      >
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background z-10 pointer-events-none"></div>
         <img
           className="w-full h-full object-cover"
@@ -168,11 +201,11 @@ export default function Contact() {
           src="https://res.cloudinary.com/djdifarti/image/upload/TAYCO_REUNION_qv6bqr"
         />
         <div className="absolute inset-0 flex items-center justify-center z-20">
-          <div className="bg-primary-container text-on-primary-container px-12 py-6 font-headline font-black uppercase italic text-3xl shadow-2xl skew-x-[-12deg]">
+          <div className="bg-primary-container text-on-primary-container px-12 py-6 font-headline font-black uppercase italic text-3xl shadow-2xl skew-x-[-12deg] group-hover:scale-105 transition-transform">
             VISIT THE STUDIO
           </div>
         </div>
-      </section>
+      </a>
     </main>
   );
 }
