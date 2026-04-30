@@ -62,9 +62,9 @@ export default function Quote() {
               <div className="hidden lg:block relative pt-12">
                 <div className="absolute -top-4 -left-4 w-32 h-32 border-l-4 border-t-4 border-primary-container opacity-20"></div>
                 <img
-                  className="w-full grayscale contrast-125 hover:grayscale-0 transition-all duration-700"
+                  className="w-full contrast-125 transition-all duration-700"
                   alt="Industrial digital printing press"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDq1_wRlRm5spCN4_0NW0rC_8GDnm3kdqW3pkIXpBGvc7D9gGjKVW5DNrLskZtHmk7wbnuP_F87wBswqeE8n48-ogpAW4MfcTH7r7oYDkF0zG0F5P4SjwFTegdEyKmr2CFhWncIjThzZv1_mz-OOPjd9mWNOE2nsaAgMH-XOCgy53an3-7vpn5ukVoXRpWmYofYpWfCRYCpdSQpjOaJXoMpjZWGw0K-T_vGzhs3pvmYopxFUGr7SScAh181PljeBKBQOGPxJqwIv7o"
+                  src="NEXT_PUBLIC_CLOUDINARY_URL_REMOVED/image/upload/EL_TURO_JERSEY_hwpjf4"
                 />
               </div>
             </div>
@@ -214,12 +214,12 @@ export default function Quote() {
       </main>
 
       {/* Map Section */}
-      <section className="w-full h-[400px] grayscale contrast-125 opacity-50 hover:opacity-100 transition-opacity relative">
+      <section className="w-full h-[400px] contrast-125 opacity-50 hover:opacity-100 transition-opacity relative">
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background z-10 pointer-events-none"></div>
         <img
           className="w-full h-full object-cover"
           alt="Map of Silay City"
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6O2uZ6b9jATZ9wkutCZbgfzovD2vP0nW_x4m30SyazQ532__FaJZfy5PRh8iyUAgD9TSS3BY9JqeOGvFwdfvo_AHSCiLz5_JsDWA4jqedqENA7S8loyM6gvjVYyzGDk5BjUgKUA-cnvnUMYOd-X7B7O008Z01jKI6GYgQzP0s87Dy_KKig13BFAp-maP8_1O9h82VDtDBIe-UOL4tpOvKb0URDRjlx3rgZS63xqhMk4M9zYsSvYTHUrtgAyVfhV48SvrXjf5lO9k"
+          src="NEXT_PUBLIC_CLOUDINARY_URL_REMOVED/image/upload/STE_-_JADE_y9vxos"
         />
         <div className="absolute inset-0 flex items-center justify-center z-20">
           <div className="bg-primary-container text-on-primary-container px-8 py-4 font-headline font-black uppercase italic text-2xl">
