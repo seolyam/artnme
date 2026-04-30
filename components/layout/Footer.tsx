@@ -22,7 +22,9 @@ export default function Footer() {
             Connect
           </span>
           <Link
-            href="#"
+            href="https://www.facebook.com/ArtnMeOfficial"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-on-surface-variant hover:text-primary-container transition-colors font-body text-sm uppercase tracking-widest"
           >
             Facebook
@@ -44,9 +46,14 @@ export default function Footer() {
           <span className="text-primary-container font-body text-sm uppercase tracking-widest font-bold">
             Visit Us
           </span>
-          <span className="text-on-surface-variant font-body text-sm uppercase tracking-widest">
+          <a 
+            href="https://maps.app.goo.gl/KA781unxzKKvwnMh6" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-on-surface-variant font-body text-sm uppercase tracking-widest hover:text-primary-container transition-colors"
+          >
             Location: Silay City, Negros Occidental
-          </span>
+          </a>
           <div className="mt-8 text-[10px] text-on-surface-variant/70 font-body uppercase tracking-[0.3em]">
             © 2024 Art 'n Me Digital Printing. Silay City.
           </div>
