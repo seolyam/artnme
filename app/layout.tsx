@@ -33,8 +33,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+        />
+      </head>
       <body
-        className={`${spaceGrotesk.variable} ${manrope.variable} antialiased bg-background text-foreground min-h-screen flex flex-col`}
+        className={`${spaceGrotesk.variable} ${manrope.variable} antialiased bg-background text-foreground min-h-screen flex flex-col overflow-x-hidden`}
       >
         <ThemeProvider
           attribute="class"
