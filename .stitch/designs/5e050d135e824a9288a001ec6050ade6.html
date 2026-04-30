@@ -1,190 +1,218 @@
 <!DOCTYPE html>
 
-<html class="dark" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>ART 'N ME ADMIN | STAFF ACCESS</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            "colors": {
-                    "on-secondary": "#303030",
-                    "on-primary-container": "#fffafa",
-                    "on-background": "#e2e2e2",
-                    "error-container": "#93000a",
-                    "on-primary-fixed": "#410002",
-                    "on-tertiary-container": "#fbfcff",
-                    "on-error": "#690005",
-                    "on-secondary-container": "#b7b5b4",
-                    "on-secondary-fixed-variant": "#474746",
-                    "surface-container-low": "#1b1b1b",
-                    "surface": "#131313",
-                    "on-primary-fixed-variant": "#93000d",
-                    "primary-container": "#e31e24",
-                    "inverse-surface": "#e2e2e2",
-                    "tertiary-fixed-dim": "#8ecdff",
-                    "secondary-fixed": "#e5e2e1",
-                    "surface-container": "#1f1f1f",
-                    "surface-container-high": "#2a2a2a",
-                    "secondary": "#c8c6c5",
-                    "outline-variant": "#5d3f3c",
-                    "surface-variant": "#353535",
-                    "on-surface-variant": "#e7bdb8",
-                    "on-tertiary-fixed": "#001e30",
-                    "on-tertiary": "#00344f",
-                    "tertiary-fixed": "#cbe6ff",
-                    "tertiary-container": "#007bb5",
-                    "surface-container-highest": "#353535",
-                    "surface-bright": "#393939",
-                    "background": "#131313",
-                    "tertiary": "#8ecdff",
-                    "primary-fixed": "#ffdad6",
-                    "primary": "#ffb4ab",
-                    "surface-dim": "#131313",
-                    "on-surface": "#e2e2e2",
-                    "on-error-container": "#ffdad6",
-                    "surface-container-lowest": "#0e0e0e",
-                    "primary-fixed-dim": "#ffb4ab",
-                    "error": "#ffb4ab",
-                    "secondary-container": "#474746",
-                    "inverse-primary": "#c00014",
-                    "surface-tint": "#ffb4ab",
-                    "secondary-fixed-dim": "#c8c6c5",
-                    "on-secondary-fixed": "#1b1c1c",
-                    "outline": "#ae8883",
-                    "inverse-on-surface": "#303030",
-                    "on-primary": "#690006",
-                    "on-tertiary-fixed-variant": "#004b71"
-            },
-            "borderRadius": {
-                    "DEFAULT": "0rem",
-                    "lg": "0rem",
-                    "xl": "0rem",
-                    "full": "9999px"
-            },
-            "fontFamily": {
-                    "headline": ["Space Grotesk"],
-                    "body": ["Manrope"],
-                    "label": ["Manrope"]
-            }
+<html class="dark" lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>ART 'N ME ADMIN | STAFF ACCESS</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-secondary": "#303030",
+            "on-primary-container": "#fffafa",
+            "on-background": "#e2e2e2",
+            "error-container": "#93000a",
+            "on-primary-fixed": "#410002",
+            "on-tertiary-container": "#fbfcff",
+            "on-error": "#690005",
+            "on-secondary-container": "#b7b5b4",
+            "on-secondary-fixed-variant": "#474746",
+            "surface-container-low": "#1b1b1b",
+            "surface": "#131313",
+            "on-primary-fixed-variant": "#93000d",
+            "primary-container": "#e31e24",
+            "inverse-surface": "#e2e2e2",
+            "tertiary-fixed-dim": "#8ecdff",
+            "secondary-fixed": "#e5e2e1",
+            "surface-container": "#1f1f1f",
+            "surface-container-high": "#2a2a2a",
+            "secondary": "#c8c6c5",
+            "outline-variant": "#5d3f3c",
+            "surface-variant": "#353535",
+            "on-surface-variant": "#e7bdb8",
+            "on-tertiary-fixed": "#001e30",
+            "on-tertiary": "#00344f",
+            "tertiary-fixed": "#cbe6ff",
+            "tertiary-container": "#007bb5",
+            "surface-container-highest": "#353535",
+            "surface-bright": "#393939",
+            "background": "#131313",
+            "tertiary": "#8ecdff",
+            "primary-fixed": "#ffdad6",
+            "primary": "#ffb4ab",
+            "surface-dim": "#131313",
+            "on-surface": "#e2e2e2",
+            "on-error-container": "#ffdad6",
+            "surface-container-lowest": "#0e0e0e",
+            "primary-fixed-dim": "#ffb4ab",
+            "error": "#ffb4ab",
+            "secondary-container": "#474746",
+            "inverse-primary": "#c00014",
+            "surface-tint": "#ffb4ab",
+            "secondary-fixed-dim": "#c8c6c5",
+            "on-secondary-fixed": "#1b1c1c",
+            "outline": "#ae8883",
+            "inverse-on-surface": "#303030",
+            "on-primary": "#690006",
+            "on-tertiary-fixed-variant": "#004b71"
           },
+          "borderRadius": {
+            "DEFAULT": "0rem",
+            "lg": "0rem",
+            "xl": "0rem",
+            "full": "9999px"
+          },
+          "fontFamily": {
+            "headline": ["Space Grotesk"],
+            "body": ["Manrope"],
+            "label": ["Manrope"]
+          }
         },
-      }
-    </script>
-<style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-        .red-glow {
-            background: radial-gradient(circle at 50% 50%, rgba(227, 30, 36, 0.08) 0%, transparent 70%);
-        }
-        .watermark-text {
-            -webkit-text-stroke: 1px rgba(227, 30, 36, 0.05);
-            color: transparent;
-            line-height: 0.8;
-            pointer-events: none;
-        }
-    </style>
-<style>
+      },
+    }
+  </script>
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .red-glow {
+      background: radial-gradient(circle at 50% 50%, rgba(227, 30, 36, 0.08) 0%, transparent 70%);
+    }
+
+    .watermark-text {
+      -webkit-text-stroke: 1px rgba(227, 30, 36, 0.05);
+      color: transparent;
+      line-height: 0.8;
+      pointer-events: none;
+    }
+  </style>
+  <style>
     body {
       min-height: max(884px, 100dvh);
     }
   </style>
-  </head>
-<body class="bg-background text-on-background font-body min-h-screen overflow-hidden selection:bg-primary-container selection:text-on-primary-container">
-<!-- TopAppBar -->
-<header class="bg-[#131313] dark:bg-[#131313] docked full-width top-0 z-50">
-<div class="flex justify-between items-center w-full px-6 py-4 bg-gradient-to-b from-[#131313] to-transparent">
-<div class="flex items-center gap-3">
-<span class="material-symbols-outlined text-red-600 dark:text-red-500" data-icon="terminal">terminal</span>
-<h1 class="font-['Space_Grotesk'] tracking-tighter uppercase text-xl font-black text-red-600 dark:text-red-500">ART 'N ME ADMIN</h1>
-</div>
-<nav class="hidden md:flex gap-8">
-<!-- Navigation suppressed for transactional login page -->
-</nav>
-</div>
-</header>
-<main class="relative min-h-screen flex items-center justify-center px-6 lg:px-24">
-<!-- Ambient Red Glow -->
-<div class="absolute inset-0 red-glow z-0"></div>
-<!-- Oversized Watermark -->
-<div class="absolute inset-0 flex flex-col justify-center items-center z-0 overflow-hidden select-none">
-<div class="watermark-text font-headline font-black text-[15vw] lg:text-[20vw] leading-none uppercase tracking-tighter">
-                ART 'N ME
+</head>
+
+<body
+  class="bg-background text-on-background font-body min-h-screen overflow-hidden selection:bg-primary-container selection:text-on-primary-container">
+  <!-- TopAppBar -->
+  <header class="bg-[#131313] dark:bg-[#131313] docked full-width top-0 z-50">
+    <div class="flex justify-between items-center w-full px-6 py-4 bg-gradient-to-b from-[#131313] to-transparent">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-red-600 dark:text-red-500" data-icon="terminal">terminal</span>
+        <h1 class="font-['Space_Grotesk'] tracking-tighter uppercase text-xl font-black text-red-600 dark:text-red-500">
+          ART 'N ME ADMIN</h1>
+      </div>
+      <nav class="hidden md:flex gap-8">
+        <!-- Navigation suppressed for transactional login page -->
+      </nav>
+    </div>
+  </header>
+  <main class="relative min-h-screen flex items-center justify-center px-6 lg:px-24">
+    <!-- Ambient Red Glow -->
+    <div class="absolute inset-0 red-glow z-0"></div>
+    <!-- Oversized Watermark -->
+    <div class="absolute inset-0 flex flex-col justify-center items-center z-0 overflow-hidden select-none">
+      <div
+        class="watermark-text font-headline font-black text-[15vw] lg:text-[20vw] leading-none uppercase tracking-tighter">
+        ART 'N ME
+      </div>
+      <div
+        class="watermark-text font-headline font-black text-[15vw] lg:text-[20vw] leading-none uppercase tracking-tighter opacity-40">
+        DIGITAL
+      </div>
+    </div>
+    <!-- Login Container (Asymmetric Layout) -->
+    <div class="relative z-10 w-full max-w-md lg:ml-auto lg:mr-[10%]">
+      <div class="bg-surface-container-low p-10 lg:p-14 border-l-4 border-primary-container shadow-2xl">
+        <header class="mb-12">
+          <p class="font-label text-[10px] uppercase tracking-[0.3em] text-red-500 mb-2 font-bold">SYSTEM V2.0</p>
+          <h2 class="font-headline text-5xl font-bold tracking-tighter text-on-background">STAFF ACCESS</h2>
+        </header>
+        <form class="space-y-8">
+          <div class="space-y-6">
+            <!-- Admin ID Field -->
+            <div class="group">
+              <label
+                class="block font-label text-[10px] uppercase tracking-widest text-zinc-500 mb-2 group-focus-within:text-red-500 transition-colors">Admin
+                ID</label>
+              <input
+                class="w-full bg-surface-container-high border-0 border-b-2 border-transparent focus:border-red-600 focus:ring-0 text-on-background px-0 py-4 font-headline text-lg tracking-widest placeholder:text-zinc-700 transition-all"
+                placeholder="000-000-000" type="text" />
             </div>
-<div class="watermark-text font-headline font-black text-[15vw] lg:text-[20vw] leading-none uppercase tracking-tighter opacity-40">
-                DIGITAL
+            <!-- Passcode Field -->
+            <div class="group">
+              <label
+                class="block font-label text-[10px] uppercase tracking-widest text-zinc-500 mb-2 group-focus-within:text-red-500 transition-colors">Passcode</label>
+              <input
+                class="w-full bg-surface-container-high border-0 border-b-2 border-transparent focus:border-red-600 focus:ring-0 text-on-background px-0 py-4 font-headline text-lg tracking-widest placeholder:text-zinc-700 transition-all"
+                placeholder="••••••••" type="password" />
             </div>
-</div>
-<!-- Login Container (Asymmetric Layout) -->
-<div class="relative z-10 w-full max-w-md lg:ml-auto lg:mr-[10%]">
-<div class="bg-surface-container-low p-10 lg:p-14 border-l-4 border-primary-container shadow-2xl">
-<header class="mb-12">
-<p class="font-label text-[10px] uppercase tracking-[0.3em] text-red-500 mb-2 font-bold">SYSTEM V2.0</p>
-<h2 class="font-headline text-5xl font-bold tracking-tighter text-on-background">STAFF ACCESS</h2>
-</header>
-<form class="space-y-8">
-<div class="space-y-6">
-<!-- Admin ID Field -->
-<div class="group">
-<label class="block font-label text-[10px] uppercase tracking-widest text-zinc-500 mb-2 group-focus-within:text-red-500 transition-colors">Admin ID</label>
-<input class="w-full bg-surface-container-high border-0 border-b-2 border-transparent focus:border-red-600 focus:ring-0 text-on-background px-0 py-4 font-headline text-lg tracking-widest placeholder:text-zinc-700 transition-all" placeholder="000-000-000" type="text"/>
-</div>
-<!-- Passcode Field -->
-<div class="group">
-<label class="block font-label text-[10px] uppercase tracking-widest text-zinc-500 mb-2 group-focus-within:text-red-500 transition-colors">Passcode</label>
-<input class="w-full bg-surface-container-high border-0 border-b-2 border-transparent focus:border-red-600 focus:ring-0 text-on-background px-0 py-4 font-headline text-lg tracking-widest placeholder:text-zinc-700 transition-all" placeholder="••••••••" type="password"/>
-</div>
-</div>
-<div class="pt-6 space-y-6">
-<button class="w-full bg-primary-container text-on-primary-container font-headline font-bold text-lg py-5 hover:bg-red-700 active:scale-95 transition-all duration-100 uppercase tracking-widest" type="submit">
-                            AUTHENTICATE
-                        </button>
-<div class="flex justify-center">
-<a class="font-label text-[11px] uppercase tracking-widest text-zinc-500 hover:text-red-500 transition-all duration-300" href="#">
-                                Return to Public Site
-                            </a>
-</div>
-</div>
-</form>
-</div>
-<!-- Contextual Decorative Element (Lithograph style) -->
-<div class="mt-8 flex justify-between items-end opacity-20 group">
-<div class="h-24 w-1 bg-red-600"></div>
-<div class="text-right">
-<p class="font-headline text-4xl font-black leading-none m-0">X-001</p>
-<p class="font-label text-[8px] uppercase tracking-tighter">Secure Link Established</p>
-</div>
-</div>
-</div>
-</main>
-<!-- Footer -->
-<footer class="bg-transparent fixed bottom-0 w-full flex flex-col md:flex-row justify-between items-center px-8 py-6 z-20">
-<div class="flex items-center gap-6 mb-4 md:mb-0">
-<span class="font-['Manrope'] text-[10px] uppercase tracking-widest text-zinc-600">
-                ENC-TYPE: AES-256-GCM
-            </span>
-<span class="font-['Manrope'] text-[10px] uppercase tracking-widest text-zinc-600">
-                LOAD: 0.04ms
-            </span>
-</div>
-<div class="text-center md:text-right">
-<p class="font-['Manrope'] text-[10px] uppercase tracking-widest text-zinc-600">
-                © 2024 ART 'N ME DIGITAL PRINTING. ALL RIGHTS RESERVED.
-            </p>
-</div>
-</footer>
-<!-- Side Graphic (Urban Lithograph Element) -->
-<div class="fixed top-0 right-0 h-full w-2 flex flex-col gap-2 p-1 opacity-10 pointer-events-none">
-<div class="flex-1 bg-red-600"></div>
-<div class="flex-1 bg-zinc-800"></div>
-<div class="flex-[2] bg-red-600"></div>
-<div class="flex-1 bg-zinc-800"></div>
-</div>
-</body></html>
+          </div>
+          <div class="pt-6 space-y-6">
+            <button
+              class="w-full bg-primary-container text-on-primary-container font-headline font-bold text-lg py-5 hover:bg-red-700 active:scale-95 transition-all duration-100 uppercase tracking-widest"
+              type="submit">
+              AUTHENTICATE
+            </button>
+            <div class="flex justify-center">
+              <a class="font-label text-[11px] uppercase tracking-widest text-zinc-500 hover:text-red-500 transition-all duration-300"
+                href="#">
+                Return to Public Site
+              </a>
+            </div>
+          </div>
+        </form>
+      </div>
+      <!-- Contextual Decorative Element (Lithograph style) -->
+      <div class="mt-8 flex justify-between items-end opacity-20 group">
+        <div class="h-24 w-1 bg-red-600"></div>
+        <div class="text-right">
+          <p class="font-headline text-4xl font-black leading-none m-0">X-001</p>
+          <p class="font-label text-[8px] uppercase tracking-tighter">Secure Link Established</p>
+        </div>
+      </div>
+    </div>
+  </main>
+  <!-- Footer -->
+  <footer
+    class="bg-transparent fixed bottom-0 w-full flex flex-col md:flex-row justify-between items-center px-8 py-6 z-20">
+    <div class="flex items-center gap-6 mb-4 md:mb-0">
+      <span class="font-['Manrope'] text-[10px] uppercase tracking-widest text-zinc-600">
+        ENC-TYPE: AES-256-GCM
+      </span>
+      <span class="font-['Manrope'] text-[10px] uppercase tracking-widest text-zinc-600">
+        LOAD: 0.04ms
+      </span>
+    </div>
+    <div class="text-center md:text-right">
+      <p class="font-['Manrope'] text-[10px] uppercase tracking-widest text-zinc-600">
+        © 2026 ART 'N ME DIGITAL PRINTING. ALL RIGHTS RESERVED.
+      </p>
+    </div>
+  </footer>
+  <!-- Side Graphic (Urban Lithograph Element) -->
+  <div class="fixed top-0 right-0 h-full w-2 flex flex-col gap-2 p-1 opacity-10 pointer-events-none">
+    <div class="flex-1 bg-red-600"></div>
+    <div class="flex-1 bg-zinc-800"></div>
+    <div class="flex-[2] bg-red-600"></div>
+    <div class="flex-1 bg-zinc-800"></div>
+  </div>
+</body>
+
+</html>

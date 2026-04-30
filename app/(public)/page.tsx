@@ -50,7 +50,7 @@ export default function Home() {
                 </div>
                 <div className="aspect-square bg-surface-container-high p-4 flex items-end">
                   <span className="font-headline text-4xl font-bold opacity-10">
-                    EST. 2024
+                    EST. 2026
                   </span>
                 </div>
               </div>

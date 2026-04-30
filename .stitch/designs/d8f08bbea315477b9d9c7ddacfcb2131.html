@@ -1,288 +1,334 @@
 <!DOCTYPE html>
 
-<html class="dark" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&amp;family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            "colors": {
-                    "on-surface": "#e2e2e2",
-                    "on-primary": "#690006",
-                    "primary-fixed-dim": "#ffb4ab",
-                    "on-secondary-container": "#b7b5b4",
-                    "on-error-container": "#ffdad6",
-                    "primary-fixed": "#ffdad6",
-                    "secondary-fixed": "#e5e2e1",
-                    "secondary-container": "#474746",
-                    "on-error": "#690005",
-                    "secondary-fixed-dim": "#c8c6c5",
-                    "surface-container-highest": "#353535",
-                    "outline-variant": "#5d3f3c",
-                    "tertiary-fixed-dim": "#8ecdff",
-                    "on-tertiary": "#00344f",
-                    "tertiary-container": "#007bb5",
-                    "on-primary-container": "#fffafa",
-                    "on-background": "#e2e2e2",
-                    "surface-tint": "#ffb4ab",
-                    "error": "#ffb4ab",
-                    "background": "#131313",
-                    "on-tertiary-fixed-variant": "#004b71",
-                    "surface-bright": "#393939",
-                    "tertiary": "#8ecdff",
-                    "surface-container-low": "#1b1b1b",
-                    "surface-container-high": "#2a2a2a",
-                    "on-secondary-fixed": "#1b1c1c",
-                    "inverse-primary": "#c00014",
-                    "inverse-surface": "#e2e2e2",
-                    "inverse-on-surface": "#303030",
-                    "primary-container": "#e31e24",
-                    "surface-variant": "#353535",
-                    "on-primary-fixed-variant": "#93000d",
-                    "error-container": "#93000a",
-                    "outline": "#ae8883",
-                    "tertiary-fixed": "#cbe6ff",
-                    "surface-container-lowest": "#0e0e0e",
-                    "on-tertiary-container": "#fbfcff",
-                    "on-secondary": "#303030",
-                    "surface": "#131313",
-                    "on-primary-fixed": "#410002",
-                    "surface-dim": "#131313",
-                    "secondary": "#c8c6c5",
-                    "primary": "#ffb4ab",
-                    "surface-container": "#1f1f1f",
-                    "on-tertiary-fixed": "#001e30",
-                    "on-surface-variant": "#e7bdb8",
-                    "on-secondary-fixed-variant": "#474746"
-            },
-            "borderRadius": {
-                    "DEFAULT": "0px",
-                    "lg": "0px",
-                    "xl": "0px",
-                    "full": "9999px"
-            },
-            "fontFamily": {
-                    "headline": ["Space Grotesk"],
-                    "body": ["Manrope"],
-                    "label": ["Manrope"]
-            }
+<html class="dark" lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&amp;family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-surface": "#e2e2e2",
+            "on-primary": "#690006",
+            "primary-fixed-dim": "#ffb4ab",
+            "on-secondary-container": "#b7b5b4",
+            "on-error-container": "#ffdad6",
+            "primary-fixed": "#ffdad6",
+            "secondary-fixed": "#e5e2e1",
+            "secondary-container": "#474746",
+            "on-error": "#690005",
+            "secondary-fixed-dim": "#c8c6c5",
+            "surface-container-highest": "#353535",
+            "outline-variant": "#5d3f3c",
+            "tertiary-fixed-dim": "#8ecdff",
+            "on-tertiary": "#00344f",
+            "tertiary-container": "#007bb5",
+            "on-primary-container": "#fffafa",
+            "on-background": "#e2e2e2",
+            "surface-tint": "#ffb4ab",
+            "error": "#ffb4ab",
+            "background": "#131313",
+            "on-tertiary-fixed-variant": "#004b71",
+            "surface-bright": "#393939",
+            "tertiary": "#8ecdff",
+            "surface-container-low": "#1b1b1b",
+            "surface-container-high": "#2a2a2a",
+            "on-secondary-fixed": "#1b1c1c",
+            "inverse-primary": "#c00014",
+            "inverse-surface": "#e2e2e2",
+            "inverse-on-surface": "#303030",
+            "primary-container": "#e31e24",
+            "surface-variant": "#353535",
+            "on-primary-fixed-variant": "#93000d",
+            "error-container": "#93000a",
+            "outline": "#ae8883",
+            "tertiary-fixed": "#cbe6ff",
+            "surface-container-lowest": "#0e0e0e",
+            "on-tertiary-container": "#fbfcff",
+            "on-secondary": "#303030",
+            "surface": "#131313",
+            "on-primary-fixed": "#410002",
+            "surface-dim": "#131313",
+            "secondary": "#c8c6c5",
+            "primary": "#ffb4ab",
+            "surface-container": "#1f1f1f",
+            "on-tertiary-fixed": "#001e30",
+            "on-surface-variant": "#e7bdb8",
+            "on-secondary-fixed-variant": "#474746"
           },
+          "borderRadius": {
+            "DEFAULT": "0px",
+            "lg": "0px",
+            "xl": "0px",
+            "full": "9999px"
+          },
+          "fontFamily": {
+            "headline": ["Space Grotesk"],
+            "body": ["Manrope"],
+            "label": ["Manrope"]
+          }
         },
-      }
-    </script>
-<style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-        body {
-            background-color: #131313;
-            color: #e2e2e2;
-            font-family: 'Manrope', sans-serif;
-        }
-        .asymmetric-grid {
-            display: grid;
-            grid-template-columns: 1fr 1.5fr 1fr;
-            gap: 0px;
-        }
-    </style>
-<style>
+      },
+    }
+  </script>
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    body {
+      background-color: #131313;
+      color: #e2e2e2;
+      font-family: 'Manrope', sans-serif;
+    }
+
+    .asymmetric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr 1fr;
+      gap: 0px;
+    }
+  </style>
+  <style>
     body {
       min-height: max(884px, 100dvh);
     }
   </style>
-  </head>
+</head>
+
 <body class="overflow-x-hidden">
-<!-- TopAppBar -->
-<nav class="bg-[#131313] dark:bg-[#131313] flex justify-between items-center px-6 py-4 w-full fixed top-0 z-50 border-b-[2px] border-[#E31E24]/10">
-<div class="flex items-center gap-4">
-<span class="material-symbols-outlined text-[#E31E24]" data-icon="terminal">terminal</span>
-<span class="text-2xl font-black tracking-tighter text-[#E31E24] uppercase font-['Space_Grotesk']">ART 'N ME ADMIN</span>
-</div>
-<div class="flex items-center gap-8">
-<div class="hidden md:flex gap-6">
-<a class="text-[#E31E24] font-['Space_Grotesk'] font-bold tracking-tighter text-sm" href="#">SYSTEM</a>
-<a class="text-gray-400 font-['Space_Grotesk'] font-bold tracking-tighter text-sm hover:bg-[#E31E24]/5 hover:text-[#E31E24] transition-colors duration-200" href="#">QUEUES</a>
-<a class="text-gray-400 font-['Space_Grotesk'] font-bold tracking-tighter text-sm hover:bg-[#E31E24]/5 hover:text-[#E31E24] transition-colors duration-200" href="#">LOGS</a>
-</div>
-<img alt="Admin User Avatar" class="w-10 h-10 bg-surface-container-high" data-alt="close-up of a high-tech architectural render of a minimalist avatar placeholder in deep red and black tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpz1vkqXvnmAETKcBgusNEXFhFTfz7GdzyxPbC9t79xW579luL7mMgqDJxgqyRxhuRhWuYSbRWKB1Q7i6HtQOiXvuzVRIaW8DHpw2r75sbPJ1dqAX1waS8D2nG9lXiiLcAeRlg1XqzFF5WUOqCIaYEs1TbXxtQmOwb5C05liWodcEzkyAPPILRWERqn2939u-_M9qPOUvDtp5Yj3DrYED6zQbo9qm1rPrxUBYiAXohHKJkNN_qwJePgtOE_GXgCgvEjcM_Gp4mbbg"/>
-</div>
-</nav>
-<!-- NavigationDrawer -->
-<aside class="fixed left-0 top-0 h-full w-64 bg-[#131313] dark:bg-[#131313] flex flex-col pt-24 z-40 hidden lg:flex">
-<div class="px-6 mb-8">
-<h2 class="text-[#E31E24] font-['Space_Grotesk'] uppercase font-black text-xs tracking-[0.2em]">SYSTEM OPS</h2>
-</div>
-<nav class="flex flex-col">
-<a class="bg-[#E31E24] text-white font-['Space_Grotesk'] uppercase font-bold text-sm p-6 flex items-center gap-4 scale-95 active:scale-100 transition-transform" href="#">
-<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
-                Overview
-            </a>
-<a class="text-gray-500 font-['Space_Grotesk'] uppercase font-bold text-sm p-6 flex items-center gap-4 hover:bg-[#E31E24]/10 hover:text-white transition-transform scale-95 active:scale-100" href="#">
-<span class="material-symbols-outlined" data-icon="print">print</span>
-                Active Orders
-            </a>
-<a class="text-gray-500 font-['Space_Grotesk'] uppercase font-bold text-sm p-6 flex items-center gap-4 hover:bg-[#E31E24]/10 hover:text-white transition-transform scale-95 active:scale-100" href="#">
-<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
-                Inventory
-            </a>
-<a class="text-gray-500 font-['Space_Grotesk'] uppercase font-bold text-sm p-6 flex items-center gap-4 hover:bg-[#E31E24]/10 hover:text-white transition-transform scale-95 active:scale-100" href="#">
-<span class="material-symbols-outlined" data-icon="group">group</span>
-                Client Directory
-            </a>
-</nav>
-</aside>
-<!-- Main Content -->
-<main class="lg:ml-64 pt-24 pb-20 px-8 min-h-screen">
-<!-- Hero Header: COMMAND CENTER -->
-<header class="relative mb-16 mt-8">
-<h1 class="text-7xl md:text-9xl font-['Space_Grotesk'] font-black tracking-tighter leading-none mb-2">
-                COMMAND<br/>
-<span class="text-[#E31E24] ml-12 md:ml-24">CENTER</span>
-</h1>
-<div class="absolute -top-4 right-0 w-32 h-1 bg-[#E31E24]"></div>
-<div class="flex justify-between items-end">
-<p class="font-['Manrope'] text-sm tracking-widest text-gray-500 max-w-xs uppercase">Precision-engineered output management for the urban lithograph.</p>
-<button class="bg-[#E31E24] text-white font-['Space_Grotesk'] font-black uppercase text-xl px-10 py-5 transition-all hover:translate-y-[-2px] active:translate-y-[0px]">
-                    NEW JOB
-                </button>
-</div>
-</header>
-<!-- Metrics Grid: Overlapping Tonal Panels -->
-<section class="grid grid-cols-1 md:grid-cols-3 gap-0 mb-20 relative">
-<div class="bg-surface-container-low p-10 h-64 flex flex-col justify-between relative z-10">
-<span class="text-[#E31E24] font-bold text-xs tracking-widest uppercase">REAL-TIME TELEMETRY</span>
-<div>
-<h3 class="text-6xl font-['Space_Grotesk'] font-bold leading-none">14</h3>
-<p class="text-sm uppercase font-bold text-gray-400 mt-2">ACTIVE RUNS</p>
-</div>
-</div>
-<div class="bg-surface-container-high p-10 h-64 flex flex-col justify-between -ml-4 mt-8 md:mt-0 relative z-20">
-<span class="text-white font-bold text-xs tracking-widest uppercase">APPROVAL QUEUE</span>
-<div>
-<h3 class="text-6xl font-['Space_Grotesk'] font-bold leading-none text-[#E31E24]">03</h3>
-<p class="text-sm uppercase font-bold text-gray-200 mt-2">PENDING PROOFS</p>
-</div>
-</div>
-<div class="bg-surface-container-highest p-10 h-64 flex flex-col justify-between -ml-4 mt-8 md:mt-0 relative z-30">
-<span class="text-gray-400 font-bold text-xs tracking-widest uppercase">UPTIME STATUS</span>
-<div>
-<h3 class="text-6xl font-['Space_Grotesk'] font-bold leading-none">99.8%</h3>
-<p class="text-sm uppercase font-bold text-gray-400 mt-2">SYSTEM OPTIMAL</p>
-</div>
-</div>
-</section>
-<!-- Order List: Art Stack Layout -->
-<section class="mb-20">
-<div class="flex items-center gap-4 mb-10">
-<h2 class="text-3xl font-['Space_Grotesk'] font-bold tracking-tighter uppercase">LIVE PRODUCTION DECK</h2>
-<div class="flex-grow h-[2px] bg-white/5"></div>
-</div>
-<div class="flex flex-col gap-1">
-<!-- Order Item 1 -->
-<div class="group bg-surface-container-high p-8 flex flex-col md:flex-row justify-between items-start md:items-center transition-all hover:bg-surface-container-highest">
-<div class="flex items-start gap-8">
-<div class="font-['Space_Grotesk'] font-bold text-2xl text-[#E31E24] tracking-tighter">#PRNT-94</div>
-<div>
-<h4 class="font-bold text-lg leading-none mb-1">MUSEUM OF URBAN ART</h4>
-<p class="text-xs text-gray-500 uppercase tracking-wider font-medium">A3 Matte 300gsm • 500 Units</p>
-</div>
-</div>
-<div class="mt-6 md:mt-0 flex items-center gap-6">
-<span class="bg-[#E31E24] text-on-primary-container text-[10px] font-black px-4 py-1.5 uppercase tracking-widest">PRINTING</span>
-<div class="flex flex-col items-end">
-<span class="text-[10px] text-gray-500 uppercase">Estimated Delivery</span>
-<span class="font-bold text-sm">14:00 PM</span>
-</div>
-<button class="text-white/20 hover:text-[#E31E24] transition-colors">
-<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
-</button>
-</div>
-</div>
-<!-- Order Item 2 -->
-<div class="group bg-surface-container-high p-8 flex flex-col md:flex-row justify-between items-start md:items-center transition-all hover:bg-surface-container-highest">
-<div class="flex items-start gap-8">
-<div class="font-['Space_Grotesk'] font-bold text-2xl text-gray-500 tracking-tighter">#PRNT-95</div>
-<div>
-<h4 class="font-bold text-lg leading-none mb-1">STREET WEAR CO.</h4>
-<p class="text-xs text-gray-500 uppercase tracking-wider font-medium">Vinyl Gloss Wrap • 20 Units</p>
-</div>
-</div>
-<div class="mt-6 md:mt-0 flex items-center gap-6">
-<span class="bg-surface-container-highest text-gray-400 text-[10px] font-black px-4 py-1.5 uppercase tracking-widest">IN QUEUE</span>
-<div class="flex flex-col items-end">
-<span class="text-[10px] text-gray-500 uppercase">Priority Status</span>
-<span class="font-bold text-sm">STANDARD</span>
-</div>
-<button class="text-white/20 hover:text-[#E31E24] transition-colors">
-<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
-</button>
-</div>
-</div>
-<!-- Order Item 3 -->
-<div class="group bg-surface-container-high p-8 flex flex-col md:flex-row justify-between items-start md:items-center transition-all hover:bg-surface-container-highest">
-<div class="flex items-start gap-8">
-<div class="font-['Space_Grotesk'] font-bold text-2xl text-[#E31E24] tracking-tighter">#PRNT-96</div>
-<div>
-<h4 class="font-bold text-lg leading-none mb-1">GALLERY X EXHIBIT</h4>
-<p class="text-xs text-gray-500 uppercase tracking-wider font-medium">Giclee Fine Art Paper • 5 Units</p>
-</div>
-</div>
-<div class="mt-6 md:mt-0 flex items-center gap-6">
-<span class="bg-[#E31E24] text-on-primary-container text-[10px] font-black px-4 py-1.5 uppercase tracking-widest">PRE-FLIGHT</span>
-<div class="flex flex-col items-end">
-<span class="text-[10px] text-gray-500 uppercase">Attention Required</span>
-<span class="font-bold text-sm text-[#E31E24]">COLOR MATCH</span>
-</div>
-<button class="text-white/20 hover:text-[#E31E24] transition-colors">
-<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
-</button>
-</div>
-</div>
-</div>
-</section>
-<!-- Aesthetic Bento-ish section -->
-<section class="asymmetric-grid min-h-[400px]">
-<div class="bg-surface-container-low p-8 flex flex-col justify-end border-r border-white/5">
-<span class="text-xs font-bold tracking-[0.3em] text-[#E31E24] uppercase mb-4">INK LEVELS</span>
-<div class="space-y-4">
-<div class="h-1 bg-white/10 w-full"><div class="h-full bg-[#E31E24] w-3/4"></div></div>
-<div class="h-1 bg-white/10 w-full"><div class="h-full bg-white w-1/2"></div></div>
-<div class="h-1 bg-white/10 w-full"><div class="h-full bg-gray-500 w-full"></div></div>
-</div>
-</div>
-<div class="relative overflow-hidden">
-<img alt="Printing Press Detail" class="w-full h-full object-cover grayscale brightness-50" data-alt="industrial close-up of a high-end digital printing press nozzle and belt in a dark studio with dramatic red lighting accents" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_fU0VKRIaDYEmLVISvB3RfQq1Ic9KGcaRxZv0zr0ahfbzzBB2cWKynuLF8bTaxDKlUoq2TtRPCWtZdl2ty-hLbkWQ20cqdm9v_W1JwUpFo2ujOCdz4TQXWbUHBqg6ktkCuQFD6xOAfumbI9PffKq5zmaCmS3EUWaEFoBXduOtjvf75I0JkGJEEiY0jqLD0Ck7OVecD0D1JmwJUpHXHgkyGxI5rAW2y9-aNGbIS9aJy74BUuSBaYFeHIaeA1SH-RnNQPl8VpfylX8"/>
-<div class="absolute inset-0 bg-[#E31E24]/20 mix-blend-multiply"></div>
-<div class="absolute bottom-10 left-10 text-white font-['Space_Grotesk'] font-bold text-4xl leading-tight">
-                    WET INK<br/>MANIFESTO
-                </div>
-</div>
-<div class="bg-[#1c1c1c] p-8 flex flex-col justify-center">
-<h5 class="font-bold uppercase text-xs tracking-widest mb-6">Recent Log</h5>
-<div class="space-y-4 text-[10px] font-mono text-gray-500 uppercase">
-<div class="flex justify-between"><span>10:42:01</span> <span class="text-[#E31E24]">PRNT-94 CALIBRATED</span></div>
-<div class="flex justify-between"><span>10:38:55</span> <span>PAPER LOADED: BIN 2</span></div>
-<div class="flex justify-between"><span>10:35:12</span> <span>SYSTEM CHECK COMPLETED</span></div>
-<div class="flex justify-between"><span>10:30:00</span> <span>QUEUE REFRESHED</span></div>
-</div>
-</div>
-</section>
-</main>
-<!-- Footer -->
-<footer class="bg-[#131313] dark:bg-[#131313] flex justify-between items-center px-8 py-3 w-full fixed bottom-0 z-50 border-t border-white/5">
-<p class="font-['Manrope'] text-[10px] tracking-widest uppercase text-gray-600">
-            © 2024 ART 'N ME DIGITAL PRINTING | SYSTEM STATUS: <span class="text-[#E31E24]">OPTIMAL</span>
-</p>
-<div class="flex gap-8">
-<a class="font-['Manrope'] text-[10px] tracking-widest uppercase text-gray-600 hover:text-white transition-opacity" href="#">API LOGS</a>
-<a class="font-['Manrope'] text-[10px] tracking-widest uppercase text-gray-600 hover:text-white transition-opacity" href="#">SUPPORT</a>
-<a class="font-['Manrope'] text-[10px] tracking-widest uppercase text-gray-600 hover:text-white transition-opacity" href="#">SECURITY</a>
-</div>
-</footer>
-</body></html>
+  <!-- TopAppBar -->
+  <nav
+    class="bg-[#131313] dark:bg-[#131313] flex justify-between items-center px-6 py-4 w-full fixed top-0 z-50 border-b-[2px] border-[#E31E24]/10">
+    <div class="flex items-center gap-4">
+      <span class="material-symbols-outlined text-[#E31E24]" data-icon="terminal">terminal</span>
+      <span class="text-2xl font-black tracking-tighter text-[#E31E24] uppercase font-['Space_Grotesk']">ART 'N ME
+        ADMIN</span>
+    </div>
+    <div class="flex items-center gap-8">
+      <div class="hidden md:flex gap-6">
+        <a class="text-[#E31E24] font-['Space_Grotesk'] font-bold tracking-tighter text-sm" href="#">SYSTEM</a>
+        <a class="text-gray-400 font-['Space_Grotesk'] font-bold tracking-tighter text-sm hover:bg-[#E31E24]/5 hover:text-[#E31E24] transition-colors duration-200"
+          href="#">QUEUES</a>
+        <a class="text-gray-400 font-['Space_Grotesk'] font-bold tracking-tighter text-sm hover:bg-[#E31E24]/5 hover:text-[#E31E24] transition-colors duration-200"
+          href="#">LOGS</a>
+      </div>
+      <img alt="Admin User Avatar" class="w-10 h-10 bg-surface-container-high"
+        data-alt="close-up of a high-tech architectural render of a minimalist avatar placeholder in deep red and black tones"
+        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpz1vkqXvnmAETKcBgusNEXFhFTfz7GdzyxPbC9t79xW579luL7mMgqDJxgqyRxhuRhWuYSbRWKB1Q7i6HtQOiXvuzVRIaW8DHpw2r75sbPJ1dqAX1waS8D2nG9lXiiLcAeRlg1XqzFF5WUOqCIaYEs1TbXxtQmOwb5C05liWodcEzkyAPPILRWERqn2939u-_M9qPOUvDtp5Yj3DrYED6zQbo9qm1rPrxUBYiAXohHKJkNN_qwJePgtOE_GXgCgvEjcM_Gp4mbbg" />
+    </div>
+  </nav>
+  <!-- NavigationDrawer -->
+  <aside class="fixed left-0 top-0 h-full w-64 bg-[#131313] dark:bg-[#131313] flex flex-col pt-24 z-40 hidden lg:flex">
+    <div class="px-6 mb-8">
+      <h2 class="text-[#E31E24] font-['Space_Grotesk'] uppercase font-black text-xs tracking-[0.2em]">SYSTEM OPS</h2>
+    </div>
+    <nav class="flex flex-col">
+      <a class="bg-[#E31E24] text-white font-['Space_Grotesk'] uppercase font-bold text-sm p-6 flex items-center gap-4 scale-95 active:scale-100 transition-transform"
+        href="#">
+        <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+        Overview
+      </a>
+      <a class="text-gray-500 font-['Space_Grotesk'] uppercase font-bold text-sm p-6 flex items-center gap-4 hover:bg-[#E31E24]/10 hover:text-white transition-transform scale-95 active:scale-100"
+        href="#">
+        <span class="material-symbols-outlined" data-icon="print">print</span>
+        Active Orders
+      </a>
+      <a class="text-gray-500 font-['Space_Grotesk'] uppercase font-bold text-sm p-6 flex items-center gap-4 hover:bg-[#E31E24]/10 hover:text-white transition-transform scale-95 active:scale-100"
+        href="#">
+        <span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+        Inventory
+      </a>
+      <a class="text-gray-500 font-['Space_Grotesk'] uppercase font-bold text-sm p-6 flex items-center gap-4 hover:bg-[#E31E24]/10 hover:text-white transition-transform scale-95 active:scale-100"
+        href="#">
+        <span class="material-symbols-outlined" data-icon="group">group</span>
+        Client Directory
+      </a>
+    </nav>
+  </aside>
+  <!-- Main Content -->
+  <main class="lg:ml-64 pt-24 pb-20 px-8 min-h-screen">
+    <!-- Hero Header: COMMAND CENTER -->
+    <header class="relative mb-16 mt-8">
+      <h1 class="text-7xl md:text-9xl font-['Space_Grotesk'] font-black tracking-tighter leading-none mb-2">
+        COMMAND<br />
+        <span class="text-[#E31E24] ml-12 md:ml-24">CENTER</span>
+      </h1>
+      <div class="absolute -top-4 right-0 w-32 h-1 bg-[#E31E24]"></div>
+      <div class="flex justify-between items-end">
+        <p class="font-['Manrope'] text-sm tracking-widest text-gray-500 max-w-xs uppercase">Precision-engineered output
+          management for the urban lithograph.</p>
+        <button
+          class="bg-[#E31E24] text-white font-['Space_Grotesk'] font-black uppercase text-xl px-10 py-5 transition-all hover:translate-y-[-2px] active:translate-y-[0px]">
+          NEW JOB
+        </button>
+      </div>
+    </header>
+    <!-- Metrics Grid: Overlapping Tonal Panels -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-0 mb-20 relative">
+      <div class="bg-surface-container-low p-10 h-64 flex flex-col justify-between relative z-10">
+        <span class="text-[#E31E24] font-bold text-xs tracking-widest uppercase">REAL-TIME TELEMETRY</span>
+        <div>
+          <h3 class="text-6xl font-['Space_Grotesk'] font-bold leading-none">14</h3>
+          <p class="text-sm uppercase font-bold text-gray-400 mt-2">ACTIVE RUNS</p>
+        </div>
+      </div>
+      <div class="bg-surface-container-high p-10 h-64 flex flex-col justify-between -ml-4 mt-8 md:mt-0 relative z-20">
+        <span class="text-white font-bold text-xs tracking-widest uppercase">APPROVAL QUEUE</span>
+        <div>
+          <h3 class="text-6xl font-['Space_Grotesk'] font-bold leading-none text-[#E31E24]">03</h3>
+          <p class="text-sm uppercase font-bold text-gray-200 mt-2">PENDING PROOFS</p>
+        </div>
+      </div>
+      <div
+        class="bg-surface-container-highest p-10 h-64 flex flex-col justify-between -ml-4 mt-8 md:mt-0 relative z-30">
+        <span class="text-gray-400 font-bold text-xs tracking-widest uppercase">UPTIME STATUS</span>
+        <div>
+          <h3 class="text-6xl font-['Space_Grotesk'] font-bold leading-none">99.8%</h3>
+          <p class="text-sm uppercase font-bold text-gray-400 mt-2">SYSTEM OPTIMAL</p>
+        </div>
+      </div>
+    </section>
+    <!-- Order List: Art Stack Layout -->
+    <section class="mb-20">
+      <div class="flex items-center gap-4 mb-10">
+        <h2 class="text-3xl font-['Space_Grotesk'] font-bold tracking-tighter uppercase">LIVE PRODUCTION DECK</h2>
+        <div class="flex-grow h-[2px] bg-white/5"></div>
+      </div>
+      <div class="flex flex-col gap-1">
+        <!-- Order Item 1 -->
+        <div
+          class="group bg-surface-container-high p-8 flex flex-col md:flex-row justify-between items-start md:items-center transition-all hover:bg-surface-container-highest">
+          <div class="flex items-start gap-8">
+            <div class="font-['Space_Grotesk'] font-bold text-2xl text-[#E31E24] tracking-tighter">#PRNT-94</div>
+            <div>
+              <h4 class="font-bold text-lg leading-none mb-1">MUSEUM OF URBAN ART</h4>
+              <p class="text-xs text-gray-500 uppercase tracking-wider font-medium">A3 Matte 300gsm • 500 Units</p>
+            </div>
+          </div>
+          <div class="mt-6 md:mt-0 flex items-center gap-6">
+            <span
+              class="bg-[#E31E24] text-on-primary-container text-[10px] font-black px-4 py-1.5 uppercase tracking-widest">PRINTING</span>
+            <div class="flex flex-col items-end">
+              <span class="text-[10px] text-gray-500 uppercase">Estimated Delivery</span>
+              <span class="font-bold text-sm">14:00 PM</span>
+            </div>
+            <button class="text-white/20 hover:text-[#E31E24] transition-colors">
+              <span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+            </button>
+          </div>
+        </div>
+        <!-- Order Item 2 -->
+        <div
+          class="group bg-surface-container-high p-8 flex flex-col md:flex-row justify-between items-start md:items-center transition-all hover:bg-surface-container-highest">
+          <div class="flex items-start gap-8">
+            <div class="font-['Space_Grotesk'] font-bold text-2xl text-gray-500 tracking-tighter">#PRNT-95</div>
+            <div>
+              <h4 class="font-bold text-lg leading-none mb-1">STREET WEAR CO.</h4>
+              <p class="text-xs text-gray-500 uppercase tracking-wider font-medium">Vinyl Gloss Wrap • 20 Units</p>
+            </div>
+          </div>
+          <div class="mt-6 md:mt-0 flex items-center gap-6">
+            <span
+              class="bg-surface-container-highest text-gray-400 text-[10px] font-black px-4 py-1.5 uppercase tracking-widest">IN
+              QUEUE</span>
+            <div class="flex flex-col items-end">
+              <span class="text-[10px] text-gray-500 uppercase">Priority Status</span>
+              <span class="font-bold text-sm">STANDARD</span>
+            </div>
+            <button class="text-white/20 hover:text-[#E31E24] transition-colors">
+              <span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+            </button>
+          </div>
+        </div>
+        <!-- Order Item 3 -->
+        <div
+          class="group bg-surface-container-high p-8 flex flex-col md:flex-row justify-between items-start md:items-center transition-all hover:bg-surface-container-highest">
+          <div class="flex items-start gap-8">
+            <div class="font-['Space_Grotesk'] font-bold text-2xl text-[#E31E24] tracking-tighter">#PRNT-96</div>
+            <div>
+              <h4 class="font-bold text-lg leading-none mb-1">GALLERY X EXHIBIT</h4>
+              <p class="text-xs text-gray-500 uppercase tracking-wider font-medium">Giclee Fine Art Paper • 5 Units</p>
+            </div>
+          </div>
+          <div class="mt-6 md:mt-0 flex items-center gap-6">
+            <span
+              class="bg-[#E31E24] text-on-primary-container text-[10px] font-black px-4 py-1.5 uppercase tracking-widest">PRE-FLIGHT</span>
+            <div class="flex flex-col items-end">
+              <span class="text-[10px] text-gray-500 uppercase">Attention Required</span>
+              <span class="font-bold text-sm text-[#E31E24]">COLOR MATCH</span>
+            </div>
+            <button class="text-white/20 hover:text-[#E31E24] transition-colors">
+              <span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- Aesthetic Bento-ish section -->
+    <section class="asymmetric-grid min-h-[400px]">
+      <div class="bg-surface-container-low p-8 flex flex-col justify-end border-r border-white/5">
+        <span class="text-xs font-bold tracking-[0.3em] text-[#E31E24] uppercase mb-4">INK LEVELS</span>
+        <div class="space-y-4">
+          <div class="h-1 bg-white/10 w-full">
+            <div class="h-full bg-[#E31E24] w-3/4"></div>
+          </div>
+          <div class="h-1 bg-white/10 w-full">
+            <div class="h-full bg-white w-1/2"></div>
+          </div>
+          <div class="h-1 bg-white/10 w-full">
+            <div class="h-full bg-gray-500 w-full"></div>
+          </div>
+        </div>
+      </div>
+      <div class="relative overflow-hidden">
+        <img alt="Printing Press Detail" class="w-full h-full object-cover grayscale brightness-50"
+          data-alt="industrial close-up of a high-end digital printing press nozzle and belt in a dark studio with dramatic red lighting accents"
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_fU0VKRIaDYEmLVISvB3RfQq1Ic9KGcaRxZv0zr0ahfbzzBB2cWKynuLF8bTaxDKlUoq2TtRPCWtZdl2ty-hLbkWQ20cqdm9v_W1JwUpFo2ujOCdz4TQXWbUHBqg6ktkCuQFD6xOAfumbI9PffKq5zmaCmS3EUWaEFoBXduOtjvf75I0JkGJEEiY0jqLD0Ck7OVecD0D1JmwJUpHXHgkyGxI5rAW2y9-aNGbIS9aJy74BUuSBaYFeHIaeA1SH-RnNQPl8VpfylX8" />
+        <div class="absolute inset-0 bg-[#E31E24]/20 mix-blend-multiply"></div>
+        <div class="absolute bottom-10 left-10 text-white font-['Space_Grotesk'] font-bold text-4xl leading-tight">
+          WET INK<br />MANIFESTO
+        </div>
+      </div>
+      <div class="bg-[#1c1c1c] p-8 flex flex-col justify-center">
+        <h5 class="font-bold uppercase text-xs tracking-widest mb-6">Recent Log</h5>
+        <div class="space-y-4 text-[10px] font-mono text-gray-500 uppercase">
+          <div class="flex justify-between"><span>10:42:01</span> <span class="text-[#E31E24]">PRNT-94 CALIBRATED</span>
+          </div>
+          <div class="flex justify-between"><span>10:38:55</span> <span>PAPER LOADED: BIN 2</span></div>
+          <div class="flex justify-between"><span>10:35:12</span> <span>SYSTEM CHECK COMPLETED</span></div>
+          <div class="flex justify-between"><span>10:30:00</span> <span>QUEUE REFRESHED</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <!-- Footer -->
+  <footer
+    class="bg-[#131313] dark:bg-[#131313] flex justify-between items-center px-8 py-3 w-full fixed bottom-0 z-50 border-t border-white/5">
+    <p class="font-['Manrope'] text-[10px] tracking-widest uppercase text-gray-600">
+      © 2026 ART 'N ME DIGITAL PRINTING | SYSTEM STATUS: <span class="text-[#E31E24]">OPTIMAL</span>
+    </p>
+    <div class="flex gap-8">
+      <a class="font-['Manrope'] text-[10px] tracking-widest uppercase text-gray-600 hover:text-white transition-opacity"
+        href="#">API LOGS</a>
+      <a class="font-['Manrope'] text-[10px] tracking-widest uppercase text-gray-600 hover:text-white transition-opacity"
+        href="#">SUPPORT</a>
+      <a class="font-['Manrope'] text-[10px] tracking-widest uppercase text-gray-600 hover:text-white transition-opacity"
+        href="#">SECURITY</a>
+    </div>
+  </footer>
+</body>
+
+</html>

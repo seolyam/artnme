@@ -46,16 +46,16 @@ export default function Footer() {
           <span className="text-primary-container font-body text-sm uppercase tracking-widest font-bold">
             Visit Us
           </span>
-          <a 
-            href="https://maps.app.goo.gl/KA781unxzKKvwnMh6" 
-            target="_blank" 
+          <a
+            href="https://maps.app.goo.gl/KA781unxzKKvwnMh6"
+            target="_blank"
             rel="noopener noreferrer"
             className="text-on-surface-variant font-body text-sm uppercase tracking-widest hover:text-primary-container transition-colors"
           >
             Location: Silay City, Negros Occidental
           </a>
           <div className="mt-8 text-[10px] text-on-surface-variant/70 font-body uppercase tracking-[0.3em]">
-            © 2024 Art 'n Me Digital Printing. Silay City.
+            © 2026 Art 'n Me Digital Printing. Silay City.
           </div>
           <div className="mt-4">
             <Link
