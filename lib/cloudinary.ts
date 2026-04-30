@@ -8,6 +8,7 @@ const DEFAULT_MAX_RESULTS = 100;
 export type ShowcaseImage = {
   publicId: string;
   category: string;
+  subcategory?: string;
 };
 
 type CloudinaryResource = {
@@ -22,34 +23,35 @@ type CloudinaryResourcesResponse = {
 
 let isConfigured = false;
 
-function extractCategoryFromPath(path: string) {
+function extractCategoriesFromPath(path: string, isFolder: boolean) {
   const normalized = path.replace(/\\/g, "/").replace(/^\/+/, "");
 
+  let parts: string[] = [];
   if (normalized.toLowerCase().startsWith(SHOWCASE_PREFIX)) {
-    const [folder] = normalized.slice(SHOWCASE_PREFIX.length).split("/");
-
-    if (!folder) {
-      return "Uncategorized";
-    }
-
-    return folder.replace(/[-_]+/g, " ").trim().toUpperCase();
+    parts = normalized.slice(SHOWCASE_PREFIX.length).split("/").filter(Boolean);
+  } else {
+    parts = normalized.split("/").filter(Boolean);
   }
 
-  const [, folder] = normalized.split("/");
-
-  if (!folder) {
-    return "Uncategorized";
+  if (!isFolder && parts.length > 0) {
+    parts.pop(); // remove filename
   }
 
-  return folder.replace(/[-_]+/g, " ").trim().toUpperCase();
+  if (parts.length === 0) {
+    return { category: "Uncategorized" };
+  }
+
+  const category = parts[0].replace(/_/g, " ").trim().toUpperCase();
+  const subcategory = parts.length > 1 ? parts[1].replace(/_/g, " ").trim().toUpperCase() : undefined;
+
+  return { category, subcategory };
 }
 
-function extractCategory(resource: CloudinaryResource) {
+function extractCategories(resource: CloudinaryResource) {
   if (resource.asset_folder) {
-    return extractCategoryFromPath(resource.asset_folder);
+    return extractCategoriesFromPath(resource.asset_folder, true);
   }
-
-  return extractCategoryFromPath(resource.public_id);
+  return extractCategoriesFromPath(resource.public_id, false);
 }
 
 function configureCloudinary() {
@@ -112,7 +114,7 @@ export async function getShowcaseImages(
 
         images.push({
           publicId: resource.public_id,
-          category: extractCategory(resource),
+          ...extractCategories(resource),
         });
       }
 
@@ -138,7 +140,7 @@ export async function getShowcaseImages(
 
           images.push({
             publicId: resource.public_id,
-            category: extractCategory(resource),
+            ...extractCategories(resource),
           });
         }
 
