@@ -14,8 +14,7 @@ export default function Navbar() {
   const getLinkClass = (href: string) => {
     const isActive =
       pathname === href ||
-      (href !== "/" && pathname?.startsWith(`${href}/`)) ||
-      (href === "/products" && pathname?.startsWith("/products"));
+      (href !== "/" && pathname?.startsWith(`${href}/`));
 
     return isActive
       ? "font-headline tracking-tight text-primary-container"
@@ -42,17 +41,8 @@ export default function Navbar() {
             <Link href="/" className={getLinkClass("/")}>
               Home
             </Link>
-            <Link href="/products" className={getLinkClass("/products")}>
-              Products
-            </Link>
             <Link href="/portfolio" className={getLinkClass("/portfolio")}>
               Portfolio
-            </Link>
-            <Link
-              href="/products/custom-jerseys"
-              className={getLinkClass("/products/custom-jerseys")}
-            >
-              Jerseys
             </Link>
             <Link href="/contact" className={getLinkClass("/contact")}>
               Contact
@@ -90,25 +80,11 @@ export default function Navbar() {
             Home
           </Link>
           <Link
-            href="/products"
-            onClick={toggleMobileMenu}
-            className="text-3xl font-black text-on-surface hover:text-primary-container uppercase italic font-headline tracking-tight"
-          >
-            Products
-          </Link>
-          <Link
             href="/portfolio"
             onClick={toggleMobileMenu}
             className="text-3xl font-black text-on-surface hover:text-primary-container uppercase italic font-headline tracking-tight"
           >
             Portfolio
-          </Link>
-          <Link
-            href="/products/custom-jerseys"
-            onClick={toggleMobileMenu}
-            className="text-3xl font-black text-on-surface hover:text-primary-container uppercase italic font-headline tracking-tight"
-          >
-            Jerseys
           </Link>
           <Link
             href="/contact"
