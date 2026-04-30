@@ -9,9 +9,9 @@
 /* Tailwind theme: expose custom tokens */
 @theme inline {
   /* Fonts */
-  --font-headline: 'Space Grotesk', sans-serif;
-  --font-body: 'Manrope', sans-serif;
-  --font-label: 'Manrope', sans-serif;
+  --font-headline: "Space Grotesk", sans-serif;
+  --font-body: "Manrope", sans-serif;
+  --font-label: "Manrope", sans-serif;
 
   /* Radii — 0px for industrial sharp aesthetic */
   --radius-sm: 0px;
@@ -65,6 +65,7 @@
   --color-surface-container-highest: var(--surface-highest);
   --color-surface-variant: var(--surface-variant);
   --color-on-surface: var(--on-surface);
+  --color-on-surface-variant: var(--on-surface-variant);
 
   --color-outline-variant: var(--outline-variant);
   --color-error: var(--error);
@@ -76,28 +77,28 @@
    ============================================ */
 :root {
   /* Base */
-  --bg: #f8f7f6;
-  --fg: #1a1a1a;
+  --bg: #f7f5f2;
+  --fg: #161514;
 
   /* Primary — High-energy red */
-  --primary: #E31E24;
+  --primary: #b31218;
   --primary-fg: #ffffff;
-  --primary-container: #ffdad6;
+  --primary-container: #e31e24;
   --on-primary: #ffffff;
-  --on-primary-container: #410002;
+  --on-primary-container: #fffafa;
 
   /* Secondary */
-  --secondary: #e8e6e5;
-  --secondary-fg: #1a1a1a;
-  --secondary-container: #d8d6d5;
+  --secondary: #e9e4e1;
+  --secondary-fg: #1d1b1a;
+  --secondary-container: #dcd6d2;
 
   /* Destructive */
-  --destructive: #c00014;
+  --destructive: #b9161c;
 
   /* Muted / Accents */
-  --muted: #ece9e8;
-  --muted-fg: #6e6b6a;
-  --accent: #e8e6e5;
+  --muted: #efe9e6;
+  --muted-fg: #5a5250;
+  --accent: #f1ebe8;
   --accent-fg: #1a1a1a;
 
   /* Popover */
@@ -109,23 +110,24 @@
   --card-fg: #1a1a1a;
 
   /* Borders & inputs */
-  --border: #dddad9;
-  --input: #dddad9;
-  --ring: #E31E24;
+  --border: #d2c8c3;
+  --input: #d2c8c3;
+  --ring: #b31218;
 
   /* Surface tonal stack */
-  --surface: #f8f7f6;
+  --surface: #f7f5f2;
   --surface-lowest: #ffffff;
-  --surface-low: #f2f0ef;
-  --surface-container: #ece9e8;
-  --surface-high: #e4e1e0;
-  --surface-highest: #dad7d6;
-  --surface-variant: #d8d6d5;
+  --surface-low: #f3efec;
+  --surface-container: #ece6e2;
+  --surface-high: #e5dfdb;
+  --surface-highest: #ded7d3;
+  --surface-variant: #d3ccc8;
   --on-surface: #1a1a1a;
+  --on-surface-variant: #4c4542;
 
   /* Outline */
-  --outline-variant: #c4b8b6;
-  --error: #ba1a1a;
+  --outline-variant: #bdb3ae;
+  --error: #b9161c;
 }
 
 /* ============================================
@@ -180,6 +182,7 @@
   --surface-highest: #353535;
   --surface-variant: #353535;
   --on-surface: #e2e2e2;
+  --on-surface-variant: #b9b9b9;
 
   /* Outline */
   --outline-variant: #5d3f3c;
@@ -199,7 +202,11 @@
 }
 
 .material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
 }
 
 .hero-text-stroke {
