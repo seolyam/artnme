@@ -79,9 +79,9 @@ export default function Contact() {
             <div className="hidden lg:block relative pt-12 overflow-hidden group">
               <div className="absolute inset-0 bg-primary-container/10 -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
               <img
-                className="w-full grayscale contrast-125 opacity-40 hover:opacity-100 hover:grayscale-0 transition-all duration-700 pointer-events-none"
+                className="w-full contrast-125 opacity-40 hover:opacity-100 transition-all duration-700 pointer-events-none"
                 alt="Studio Detail"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDq1_wRlRm5spCN4_0NW0rC_8GDnm3kdqW3pkIXpBGvc7D9gGjKVW5DNrLskZtHmk7wbnuP_F87wBswqeE8n48-ogpAW4MfcTH7r7oYDkF0zG0F5P4SjwFTegdEyKmr2CFhWncIjThzZv1_mz-OOPjd9mWNOE2nsaAgMH-XOCgy53an3-7vpn5ukVoXRpWmYofYpWfCRYCpdSQpjOaJXoMpjZWGw0K-T_vGzhs3pvmYopxFUGr7SScAh181PljeBKBQOGPxJqwIv7o"
+                src="https://res.cloudinary.com/djdifarti/image/upload/SPJ_ccdj1e"
               />
             </div>
           </div>
@@ -160,12 +160,12 @@ export default function Contact() {
       </div>
 
       {/* Map Section */}
-      <section className="mt-32 w-full h-[500px] grayscale contrast-125 opacity-50 hover:opacity-100 transition-opacity relative overflow-hidden">
+      <section className="mt-32 w-full h-[500px] contrast-125 opacity-50 hover:opacity-100 transition-opacity relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background z-10 pointer-events-none"></div>
         <img
           className="w-full h-full object-cover"
           alt="Map of Silay City"
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6O2uZ6b9jATZ9wkutCZbgfzovD2vP0nW_x4m30SyazQ532__FaJZfy5PRh8iyUAgD9TSS3BY9JqeOGvFwdfvo_AHSCiLz5_JsDWA4jqedqENA7S8loyM6gvjVYyzGDk5BjUgKUA-cnvnUMYOd-X7B7O008Z01jKI6GYgQzP0s87Dy_KKig13BFAp-maP8_1O9h82VDtDBIe-UOL4tpOvKb0URDRjlx3rgZS63xqhMk4M9zYsSvYTHUrtgAyVfhV48SvrXjf5lO9k"
+          src="https://res.cloudinary.com/djdifarti/image/upload/TAYCO_REUNION_qv6bqr"
         />
         <div className="absolute inset-0 flex items-center justify-center z-20">
           <div className="bg-primary-container text-on-primary-container px-12 py-6 font-headline font-black uppercase italic text-3xl shadow-2xl skew-x-[-12deg]">

@@ -43,9 +43,9 @@ export default function Home() {
               <div className="space-y-4">
                 <div className="aspect-3/4 bg-surface-container-high overflow-hidden">
                   <img
-                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"
+                    className="w-full h-full object-cover transition-all duration-500"
                     alt="Close up of high quality custom sublimated sports jersey"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9-wH7z6NiYH2MXrc7vJoTej-9x97OYQPykpOUEHLGoG2KdY5QzZYS9kVvQ_BY3QJz3_QtuA-GwqjkNx1h44uYXGvkA7r77BmHgMAJGUlJTpbIMhyC_aCV1CG79ZUpfKFw06WiELGLX9HXqEq7lfkk6NcVIA2yKTJz1tCmsY_2MhzUGKnJE99XJ4IT1rSkhlaNFqBHYYgZj0pajUdT3P4obcHMeyFLVFNr17JFRuZjW_GdAoMYuQydu522yqidcHuHQPycPQf02ug"
+                    src="https://res.cloudinary.com/djdifarti/image/upload/RHEIMS_BASKETBALL_JERSEY_o2ymc7"
                   />
                 </div>
                 <div className="aspect-square bg-surface-container-high p-4 flex items-end">
@@ -57,9 +57,9 @@ export default function Home() {
               <div className="pt-12 space-y-4">
                 <div className="aspect-square bg-surface-container-high overflow-hidden">
                   <img
-                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"
+                    className="w-full h-full object-cover transition-all duration-500"
                     alt="Modern ceramic mug with professional digital print"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCR4gyXFg2cpQPnD0tqAao5LpkrLicXnjEnDOTowhY7E8MuVWSe5jv_pEzvEXTaFTntdbs5hBGAha1EkDuvtI7hWGWZaVCxNBi83lVKILvdxSHHI7toRZBow_JihCTm1_0Nq1Uc0FJVidmSxMSJemTXZZg6z593HePE9g9NaxkarkTZyFzPQNY4At0x-aX3fc2M0rYcCBDzaUPydBtpUMwI5iEiWXNI4IkoKSuW1ZfGPYuljw6aVbLfsi27_-KaWmsZ7rt4eP8M0hI"
+                    src="https://res.cloudinary.com/djdifarti/image/upload/VERDANT_mpfieg"
                   />
                 </div>
                 <div className="aspect-3/4 bg-primary-container flex flex-col justify-center p-8">
@@ -101,16 +101,16 @@ export default function Home() {
                   T-Shirts
                 </h3>
                 <p className="text-on-surface-variant/80 text-sm font-bold tracking-widest uppercase">
-                  Direct-to-Film &amp; Screen
+                  Direct-to-Film
                 </p>
               </div>
               <img
                 className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
                 alt="T-shirts"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnhhnoH_IrLnJiKp2CbMzSQaT1-Qt-U7DcI6b_12_Vl0YsV7mRwlaR-TDD__-JZphRjDnHmWKkkGEsfk6F4R-OGNa-VjNmlMcSfFOiQqj5ypmPc6pDrNE1UDAH_OcRhwRTHemijNiZ2H4lJAQ9je3ImRe30thjJ7JvJgGdG6oAbiY8Vry48_n6mW30eQUSwrh1fYCYpLRWp42-F3L1_dy1bZxj-PdKmlyxjOieYTlcoO6zFn6kOCm3dPAD0OlynWtImmOwSyR2UbI"
+                src="https://res.cloudinary.com/djdifarti/image/upload/RHEIMS_VOLLEYBALL_MAIN_ff8ryl"
               />
             </div>
-            <div className="group relative h-96 overflow-hidden bg-surface-container-high">
+            <div className="md:col-span-2 group relative h-96 overflow-hidden bg-surface-container-high">
               <div className="absolute inset-0 bg-linear-to-t from-background via-transparent to-transparent z-10"></div>
               <div className="absolute bottom-8 left-8 z-20">
                 <h3 className="text-3xl font-black font-headline uppercase">
@@ -120,20 +120,7 @@ export default function Home() {
               <img
                 className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
                 alt="Mugs"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCZdFyRczPefaq67d-Msvk7WTW5LLQjupUjGrcRTVqgOSJgz7ef8-G4iw7aFGpZqu1ZqQ3D_EKZ-iy7liw9syH904zhTLdfCu0EyVQCuKmwvM3NGx38herDcQ1Ib-NKqsJ2Ow0Kpe1y-RPosxhvegMXQZNkyOcJeX9fXdIe7v1bfdfaKBQviIclShTT0V3n27kLHrbzK02Iyxp8GvQvfxLX2qE4b4jQhDS88wIFL8PIqfx8uaWFRj-UBgv39RuiQufPLTv2SMU8Pg"
-              />
-            </div>
-            <div className="group relative h-96 overflow-hidden bg-surface-container-high">
-              <div className="absolute inset-0 bg-linear-to-t from-background via-transparent to-transparent z-10"></div>
-              <div className="absolute bottom-8 left-8 z-20">
-                <h3 className="text-3xl font-black font-headline uppercase">
-                  Stickers
-                </h3>
-              </div>
-              <img
-                className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
-                alt="Stickers"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBg3YOVBL5HjE5F36qh26jxIRSGVsJUvyIfch8SNm2CepumQBFD4eSqDXyW_9Z4G7aEcT7z0_qhItxS8S2kDBoP5Is6OQVawXelSrHQfZJ6rk7v57DJa_33hnzmXWwm4FYNEH4m-mrpaFY9B6caHlEsBRo6Ec5r5B5yoKEG00sllpqVEc83Pi2ItO5HUe3QynekKQAhsVvH0rSUUPJEosmA5Gzqxm0hFe7tZddtQ0Ec_7lBWDuHbRkZi2KmsQNGGMqI1v4FB2vG8bU"
+                src="https://res.cloudinary.com/djdifarti/image/upload/CHARDONAY_obwsgp"
               />
             </div>
             <div className="md:col-span-4 group relative h-120 overflow-hidden bg-surface-container-high">
@@ -149,7 +136,7 @@ export default function Home() {
               <img
                 className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700"
                 alt="Jerseys"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCS1jmLChV0fE2nNi9MF-Lnu_EwmcPZPVWc1h7ERAPzcr4UBA7c76kOS6F9LJNgaPbA3iEzxtXIj5WT62ygHRrlFY-MOlnrdJggw77IwHwyRWVoLXj-ZGBYgUIufGpU-GqZkffdZk6sM7AcB0F4bOZCkCSME0SBmkc_TB7JiqJEPBXV2NbwAOlD7ifZNkbfRr3_4hYDyzX0_ABDlzvZoVqFjnUF6_wTM1otmHOVfT_lRIFlhmsgYQS7oz-i_lF2Xkvrtzc5isbgpH0"
+                src="https://res.cloudinary.com/djdifarti/image/upload/WHITE_TIGERS_JERSEY_kts1sr"
               />
             </div>
           </div>
@@ -174,7 +161,7 @@ export default function Home() {
             </p>
           </div>
           <div className="space-y-6">
-            <div className="w-16 h-1 bg-surface-container-highest mb-12"></div>
+            <div className="w-16 h-1 bg-[#E31E24] mb-12"></div>
             <span className="material-symbols-outlined text-[#E31E24] text-5xl">
               palette
             </span>
@@ -188,9 +175,9 @@ export default function Home() {
             </p>
           </div>
           <div className="space-y-6">
-            <div className="w-16 h-1 bg-surface-container-highest mb-12"></div>
+            <div className="w-16 h-1 bg-[#E31E24] mb-12"></div>
             <span className="material-symbols-outlined text-[#E31E24] text-5xl">
-              family_restroom
+              groups
             </span>
             <h3 className="text-3xl font-black font-headline uppercase">
               Family Business
