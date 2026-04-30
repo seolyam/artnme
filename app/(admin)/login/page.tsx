@@ -105,7 +105,7 @@ export default function LoginPage() {
               Secure Production Floor Node
             </span>
             <span className="text-[8px] uppercase tracking-[0.4em] text-on-surface/40 dark:text-white/20">
-              © 2024 Art 'n Me
+              © 2026 Art 'n Me
             </span>
           </footer>
         </div>

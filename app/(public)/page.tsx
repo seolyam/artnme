@@ -50,7 +50,7 @@ export default function Home() {
                 </div>
                 <div className="aspect-square bg-surface-container-high p-4 flex items-end">
                   <span className="font-headline text-4xl font-bold opacity-10">
-                    EST. 2024
+                    EST. 2026
                   </span>
                 </div>
               </div>
@@ -204,7 +204,7 @@ export default function Home() {
           </p>
           <a
             className="inline-block bg-primary-container text-on-primary-container px-16 py-6 font-black uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all"
-            href="mailto:hello@artnme.com"
+            href="mailto:artinme03@gmail.com"
           >
             Inquire Now
           </a>
