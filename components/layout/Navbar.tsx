@@ -44,6 +44,9 @@ export default function Navbar() {
             <Link href="/portfolio" className={getLinkClass("/portfolio")}>
               Portfolio
             </Link>
+            <Link href="/customizer" className={getLinkClass("/customizer")}>
+              3D Studio
+            </Link>
             <Link href="/contact" className={getLinkClass("/contact")}>
               Contact
             </Link>
@@ -85,6 +88,13 @@ export default function Navbar() {
             className="text-3xl font-black text-on-surface hover:text-primary-container uppercase italic font-headline tracking-tight"
           >
             Portfolio
+          </Link>
+          <Link
+            href="/customizer"
+            onClick={toggleMobileMenu}
+            className="text-3xl font-black text-on-surface hover:text-primary-container uppercase italic font-headline tracking-tight"
+          >
+            3D Studio
           </Link>
           <Link
             href="/contact"
