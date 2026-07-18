@@ -5,7 +5,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -16,7 +15,11 @@ export type Placement = "front" | "back";
 export interface DesignAsset {
   id: string;
   kind: AssetKind;
-  /** Object URL for image assets. Empty string for text assets (texture is generated). */
+  /**
+   * Source for the artwork. For image assets this is a Base64 data URL string
+   * (compressed on upload) so it survives a page refresh / localStorage round
+   * trip — ObjectURLs cannot be persisted. For text assets this is empty.
+   */
   url: string;
   /** Original file name for image assets. */
   fileName: string | null;
@@ -73,6 +76,19 @@ export const TEXT_COLOR_CHOICES = [
   { name: "Navy", hex: "#1B2A4A" },
 ] as const;
 
+interface PersistedDraft {
+  v: number;
+  shirtColor: string;
+  assets: DesignAsset[];
+}
+
+const STORAGE_KEY = "print_shop_draft";
+const DRAFT_VERSION = 1;
+/** Max edge length in px when rasterizing an uploaded image to Base64. */
+const MAX_TEXTURE_EDGE = 1024;
+/** JPEG quality when the source has no alpha channel. */
+const JPEG_QUALITY = 0.85;
+
 export interface CustomizerState {
   shirtColor: string;
   setShirtColor: (color: string) => void;
@@ -87,15 +103,24 @@ export interface CustomizerState {
   bringToFront: (id: string) => void;
   toggleAssetVisibility: (id: string) => void;
   removeAsset: (id: string) => void;
+  clearDraft: () => void;
+  /**
+   * False until the provider has read (or attempted to read) the saved draft
+   * from localStorage. Consumers should gate rendering of restored state on
+   * this to avoid Next.js hydration mismatches.
+   */
+  hydrated: boolean;
+  /** True the first time a non-empty draft is restored. */
+  draftRestored: boolean;
 }
 
 const CustomizerContext = createContext<CustomizerState | null>(null);
 
-function createImageAsset(file: File, url: string): DesignAsset {
+function createImageAsset(file: File, dataUrl: string): DesignAsset {
   return {
     id: crypto.randomUUID(),
     kind: "image",
-    url,
+    url: dataUrl,
     fileName: file.name,
     placement: "front",
     flipped: false,
@@ -127,27 +152,125 @@ function createTextAsset(text: string, color: string): DesignAsset {
   };
 }
 
+/**
+ * Rasterizes an uploaded image File to a compressed Base64 data URL. PNG/SVG
+ * keep their alpha channel (logos need transparency); opaque formats are JPEG
+ * compressed. Output is downscaled to a max edge so large photos don't bloat
+ * localStorage or stall the main thread. Runs offline — nothing is uploaded to
+ * Cloudinary until the customer submits the final design.
+ */
+function fileToCompressedDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error ?? new Error("FileReader failed"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Could not decode image"));
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > MAX_TEXTURE_EDGE || height > MAX_TEXTURE_EDGE) {
+          const scale = MAX_TEXTURE_EDGE / Math.max(width, height);
+          width = Math.max(1, Math.round(width * scale));
+          height = Math.max(1, Math.round(height * scale));
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Canvas 2D unavailable"));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        // Preserve transparency for PNG/SVG/GIF (logos typically need alpha);
+        // everything else becomes a compressed JPEG.
+        const keepAlpha =
+          file.type === "image/png" ||
+          file.type === "image/svg+xml" ||
+          file.type === "image/gif";
+        resolve(
+          keepAlpha
+            ? canvas.toDataURL("image/png")
+            : canvas.toDataURL("image/jpeg", JPEG_QUALITY),
+        );
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function isPersistableDraft(value: unknown): value is PersistedDraft {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  return Array.isArray(v.assets) && typeof v.shirtColor === "string";
+}
+
 export function CustomizerProvider({ children }: { children: ReactNode }) {
   const [shirtColor, setShirtColor] = useState<string>("#FFFFFF");
   const [assets, setAssets] = useState<DesignAsset[]>([]);
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
+  // Starts false on the server AND the first client render so both produce the
+  // same placeholder UI, then flips after the draft is restored — no hydration
+  // mismatch.
+  const [hydrated, setHydrated] = useState(false);
+  const [draftRestored, setDraftRestored] = useState(false);
 
-  // Tracks live assets so object URLs can be revoked on unmount.
-  const assetsRef = useRef<DesignAsset[]>(assets);
+  // --- Hydration: read the saved draft once on mount (client-only). ---------
   useEffect(() => {
-    assetsRef.current = assets;
-  }, [assets]);
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (isPersistableDraft(parsed) && parsed.v === DRAFT_VERSION) {
+          if (parsed.assets.length > 0 || parsed.shirtColor !== "#FFFFFF") {
+            setDraftRestored(true);
+          }
+          setShirtColor(parsed.shirtColor);
+          setAssets(parsed.assets);
+        }
+      }
+    } catch {
+      // Corrupt draft or quota issues — silently start fresh.
+    } finally {
+      setHydrated(true);
+    }
+  }, []);
+
+  // --- Auto-save: persist whenever the design changes, after hydration. -----
+  // Gating on `hydrated` is essential: before hydration the initial empty
+  // state would otherwise overwrite the draft.
+  useEffect(() => {
+    if (!hydrated || typeof window === "undefined") return;
+    const draft: PersistedDraft = { v: DRAFT_VERSION, shirtColor, assets };
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+    } catch {
+      // Quota exceeded (too many/large images) — keep the session in memory;
+      // we don't block the user's editing flow over persistence failure.
+    }
+  }, [hydrated, shirtColor, assets]);
 
   const selectAsset = useCallback((id: string | null) => {
     setSelectedAssetId(id);
   }, []);
 
-  const addImageAssets = useCallback((files: File[]) => {
+  const addImageAssets = useCallback(async (files: File[]) => {
     const images = files.filter((f) => f.type.startsWith("image/"));
     if (images.length === 0) return;
-    const newAssets = images.map((file) =>
-      createImageAsset(file, URL.createObjectURL(file)),
+    // Convert each file to a Base64 data URL off the render path. toDataURL is
+    // synchronous-ish and runs per-file; large batches will still serialize via
+    // Promise.all, keeping the main thread responsive between decodes.
+    const dataUrls = await Promise.all(
+      images.map((file) => fileToCompressedDataUrl(file).catch(() => "")),
     );
+    const newAssets: DesignAsset[] = [];
+    images.forEach((file, i) => {
+      if (!dataUrls[i]) return;
+      newAssets.push(createImageAsset(file, dataUrls[i]));
+    });
+    if (newAssets.length === 0) return;
     setAssets((prev) => [...prev, ...newAssets]);
     setSelectedAssetId(newAssets[newAssets.length - 1].id);
   }, []);
@@ -172,11 +295,7 @@ export function CustomizerProvider({ children }: { children: ReactNode }) {
   const setPlacement = useCallback((id: string, placement: Placement) => {
     setAssets((prev) =>
       prev.map((asset) => {
-        if (asset.id !== id) return asset;
-        const isAlready = asset.placement === placement;
-        if (isAlready) return asset;
-        // Flip the projector to the opposite side: invert z and add π to
-        // rotation.y, preserving the user's x/y nudge, in-plane spin & scale.
+        if (asset.id !== id || asset.placement === placement) return asset;
         return {
           ...asset,
           placement,
@@ -215,25 +334,21 @@ export function CustomizerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const removeAsset = useCallback((id: string) => {
-    setAssets((prev) => {
-      const target = prev.find((asset) => asset.id === id);
-      if (target?.kind === "image" && target.url) {
-        URL.revokeObjectURL(target.url);
-      }
-      return prev.filter((asset) => asset.id !== id);
-    });
+    setAssets((prev) => prev.filter((asset) => asset.id !== id));
     setSelectedAssetId((prev) => (prev === id ? null : prev));
   }, []);
 
-  // Revoke every outstanding object URL when the provider unmounts.
-  useEffect(() => {
-    return () => {
-      for (const asset of assetsRef.current) {
-        if (asset.kind === "image" && asset.url) {
-          URL.revokeObjectURL(asset.url);
-        }
+  const clearDraft = useCallback(() => {
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.removeItem(STORAGE_KEY);
+      } catch {
+        // ignore
       }
-    };
+    }
+    setShirtColor("#FFFFFF");
+    setAssets([]);
+    setSelectedAssetId(null);
   }, []);
 
   return (
@@ -252,6 +367,9 @@ export function CustomizerProvider({ children }: { children: ReactNode }) {
         bringToFront,
         toggleAssetVisibility,
         removeAsset,
+        clearDraft,
+        hydrated,
+        draftRestored,
       }}
     >
       {children}

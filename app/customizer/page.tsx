@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { CustomizerProvider, useCustomizer } from "@/components/customizer/CustomizerProvider";
 import { Scene, type ViewSide } from "@/components/customizer/Scene";
 import { SwatchChip } from "@/components/customizer/SwatchChip";
@@ -11,10 +12,12 @@ import { LayerEditor } from "@/components/customizer/LayerEditor";
 import { TextAdder } from "@/components/customizer/TextAdder";
 import { PRINT_COLORS } from "@/components/customizer/SwatchChip";
 import { exportCanvasToPng } from "@/lib/customizer/export";
+import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 
 function ConfigPanel() {
-  const { shirtColor, setShirtColor, assets, addImageAssets } = useCustomizer();
+  const { shirtColor, setShirtColor, assets, addImageAssets, clearDraft } =
+    useCustomizer();
   const [submitting, setSubmitting] = useState(false);
 
   const activeColor =
@@ -49,18 +52,38 @@ function ConfigPanel() {
     <aside className="flex h-full flex-col bg-surface-container-low">
       <div className="flex-1 overflow-y-auto px-8 py-10 lg:px-10">
         <header className="mb-10">
-          <span className="text-primary-container font-headline font-bold uppercase tracking-[0.3em] text-xs">
-            3D Configurator
-          </span>
-          <h2 className="mt-3 font-headline text-3xl font-black uppercase leading-none tracking-tighter text-on-surface dark:text-white">
-            Design<br />
-            <span className="text-primary-container">Your Shirt.</span>
-          </h2>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <span className="text-primary-container font-headline font-bold uppercase tracking-[0.3em] text-xs">
+                3D Configurator
+              </span>
+              <h2 className="mt-3 font-headline text-3xl font-black uppercase leading-none tracking-tighter text-on-surface dark:text-white">
+                Design<br />
+                <span className="text-primary-container">Your Shirt.</span>
+              </h2>
+            </div>
+            {(assets.length > 0 || shirtColor !== "#FFFFFF") && (
+              <button
+                type="button"
+                onClick={() => {
+                  clearDraft();
+                  toast.success("Draft cleared — starting fresh.");
+                }}
+                title="Clear saved draft and start over"
+                className="flex shrink-0 items-center gap-1 border border-outline-variant/30 bg-surface-container-high px-3 py-2 font-headline text-[10px] font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:border-error hover:text-error"
+              >
+                <span className="material-symbols-outlined text-base">
+                  restart_alt
+                </span>
+                Clear
+              </button>
+            )}
+          </div>
           <p className="mt-4 text-sm font-light leading-relaxed text-on-surface-variant">
             Spin the shirt a full 360°, pick a base color, then add image and
             text layers. Select a print on the shirt or in the list, then use
             these controls to nudge, rotate, flip, resize, or send it to the
-            back.
+            back. Your work auto-saves locally as you go.
           </p>
         </header>
 
@@ -225,30 +248,71 @@ function StageToggle({
 export default function CustomizerPage() {
   return (
     <CustomizerProvider>
-      <main className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-background lg:flex-row">
-        <header className="absolute left-0 top-0 z-30 flex w-full items-center justify-between px-6 py-5 lg:px-8">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-on-surface transition-colors hover:text-primary-container"
-          >
-            <span className="material-symbols-outlined text-2xl">arrow_back</span>
-            <span className="font-headline text-sm font-bold uppercase tracking-widest">
-              Art&apos;n Me
-            </span>
-          </Link>
-          <span className="font-headline text-[10px] uppercase tracking-[0.3em] text-on-surface-variant opacity-60">
-            Live 3D Preview
-          </span>
-        </header>
-
-        <section className="h-[45vh] w-full shrink-0 pt-16 lg:h-full lg:w-[62%] lg:pt-0">
-          <CustomizerStage />
-        </section>
-
-        <section className="h-[55vh] w-full lg:h-full lg:w-[38%]">
-          <ConfigPanel />
-        </section>
-      </main>
+      <CustomizerShell />
     </CustomizerProvider>
+  );
+}
+
+/**
+ * Lives inside the CustomizerProvider so it can read `hydrated`/`draftRestored`
+ * and gate the full UI behind hydration to avoid Next.js SSR hydration
+ * mismatches (the saved draft only exists on the client).
+ */
+function CustomizerShell() {
+  const { hydrated, draftRestored } = useCustomizer();
+
+  // Fire the "draft restored" notice exactly once, after hydration, only on the
+  // client. Runs after Toaster is mounted so the toast actually appears.
+  useEffect(() => {
+    if (hydrated && draftRestored) {
+      toast.success("Draft restored — your design is back.");
+    }
+  }, [hydrated, draftRestored]);
+
+  // SSR-safe hydration gate: this placeholder is identical on the server and
+  // the first client render (hydrated === false on both), so there is no
+  // hydration mismatch. The restored draft only swaps in once we've read
+  // localStorage on the client.
+  return (
+    <>
+      <Toaster richColors />
+      {!hydrated ? (
+        <div className="flex h-[100dvh] w-full items-center justify-center bg-surface-container-lowest">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <span className="material-symbols-outlined animate-spin text-4xl text-primary-container">
+              progress_activity
+            </span>
+            <p className="font-headline text-[10px] uppercase tracking-[0.3em] text-on-surface-variant opacity-60">
+              Restoring your design…
+            </p>
+          </div>
+        </div>
+      ) : (
+        <main className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-background lg:flex-row">
+          <header className="absolute left-0 top-0 z-30 flex w-full items-center justify-between px-6 py-5 lg:px-8">
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-on-surface transition-colors hover:text-primary-container"
+            >
+              <span className="material-symbols-outlined text-2xl">arrow_back</span>
+              <span className="font-headline text-sm font-bold uppercase tracking-widest">
+                Art&apos;n Me
+              </span>
+            </Link>
+            <span className="font-headline text-[10px] uppercase tracking-[0.3em] text-on-surface-variant opacity-60">
+              Live 3D Preview
+            </span>
+          </header>
+
+          <section className="h-[45vh] w-full shrink-0 pt-16 lg:h-full lg:w-[62%] lg:pt-0">
+            <CustomizerStage />
+          </section>
+
+          <section className="h-[55vh] w-full lg:h-full lg:w-[38%]">
+            <ConfigPanel />
+          </section>
+        </main>
+      )}
+    </>
   );
 }
