@@ -110,7 +110,7 @@ export default function Contact() {
               <img
                 className="w-full contrast-125 opacity-40 hover:opacity-100 transition-all duration-700 pointer-events-none"
                 alt="Studio Detail"
-                src="NEXT_PUBLIC_CLOUDINARY_URL_REMOVED/image/upload/SPJ_ccdj1e"
+                src={`${process.env.NEXT_PUBLIC_CLOUDINARY_URL}/SPJ_ccdj1e`}
               />
             </div>
           </div>
@@ -198,7 +198,7 @@ export default function Contact() {
         <img
           className="w-full h-full object-cover"
           alt="Map of Silay City"
-          src="NEXT_PUBLIC_CLOUDINARY_URL_REMOVED/image/upload/TAYCO_REUNION_qv6bqr"
+          src={`${process.env.NEXT_PUBLIC_CLOUDINARY_URL}/TAYCO_REUNION_qv6bqr`}
         />
         <div className="absolute inset-0 flex items-center justify-center z-20">
           <div className="bg-primary-container text-on-primary-container px-12 py-6 font-headline font-black uppercase italic text-3xl shadow-2xl skew-x-[-12deg] group-hover:scale-105 transition-transform">

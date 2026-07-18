@@ -45,7 +45,7 @@ export default function Home() {
                   <img
                     className="w-full h-full object-cover transition-all duration-500"
                     alt="Close up of high quality custom sublimated sports jersey"
-                    src="NEXT_PUBLIC_CLOUDINARY_URL_REMOVED/image/upload/RHEIMS_BASKETBALL_JERSEY_o2ymc7"
+                    src={`${process.env.NEXT_PUBLIC_CLOUDINARY_URL}/RHEIMS_BASKETBALL_JERSEY_o2ymc7`}
                   />
                 </div>
                 <div className="aspect-square bg-surface-container-high p-4 flex items-end">
@@ -59,7 +59,7 @@ export default function Home() {
                   <img
                     className="w-full h-full object-cover transition-all duration-500"
                     alt="Modern ceramic mug with professional digital print"
-                    src="NEXT_PUBLIC_CLOUDINARY_URL_REMOVED/image/upload/VERDANT_mpfieg"
+                    src={`${process.env.NEXT_PUBLIC_CLOUDINARY_URL}/VERDANT_mpfieg`}
                   />
                 </div>
                 <div className="aspect-3/4 bg-primary-container flex flex-col justify-center p-8">
@@ -107,7 +107,7 @@ export default function Home() {
               <img
                 className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
                 alt="T-shirts"
-                src="NEXT_PUBLIC_CLOUDINARY_URL_REMOVED/image/upload/RHEIMS_VOLLEYBALL_MAIN_ff8ryl"
+                src={`${process.env.NEXT_PUBLIC_CLOUDINARY_URL}/RHEIMS_VOLLEYBALL_MAIN_ff8ryl`}
               />
             </div>
             <div className="md:col-span-2 group relative h-96 overflow-hidden bg-surface-container-high">
@@ -120,7 +120,7 @@ export default function Home() {
               <img
                 className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
                 alt="Mugs"
-                src="NEXT_PUBLIC_CLOUDINARY_URL_REMOVED/image/upload/CHARDONAY_obwsgp"
+                src={`${process.env.NEXT_PUBLIC_CLOUDINARY_URL}/CHARDONAY_obwsgp`}
               />
             </div>
             <div className="md:col-span-4 group relative h-120 overflow-hidden bg-surface-container-high">
@@ -136,7 +136,7 @@ export default function Home() {
               <img
                 className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700"
                 alt="Jerseys"
-                src="NEXT_PUBLIC_CLOUDINARY_URL_REMOVED/image/upload/WHITE_TIGERS_JERSEY_kts1sr"
+                src={`${process.env.NEXT_PUBLIC_CLOUDINARY_URL}/WHITE_TIGERS_JERSEY_kts1sr`}
               />
             </div>
           </div>

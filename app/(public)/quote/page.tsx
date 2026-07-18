@@ -64,7 +64,7 @@ export default function Quote() {
                 <img
                   className="w-full contrast-125 transition-all duration-700"
                   alt="Industrial digital printing press"
-                  src="NEXT_PUBLIC_CLOUDINARY_URL_REMOVED/image/upload/EL_TURO_JERSEY_hwpjf4"
+                  src={`${process.env.NEXT_PUBLIC_CLOUDINARY_URL}/EL_TURO_JERSEY_hwpjf4`}
                 />
               </div>
             </div>
@@ -219,7 +219,7 @@ export default function Quote() {
         <img
           className="w-full h-full object-cover"
           alt="Map of Silay City"
-          src="NEXT_PUBLIC_CLOUDINARY_URL_REMOVED/image/upload/STE_-_JADE_y9vxos"
+          src={`${process.env.NEXT_PUBLIC_CLOUDINARY_URL}/STE_-_JADE_y9vxos`}
         />
         <div className="absolute inset-0 flex items-center justify-center z-20">
           <div className="bg-primary-container text-on-primary-container px-8 py-4 font-headline font-black uppercase italic text-2xl">
