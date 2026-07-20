@@ -204,7 +204,9 @@ export default function Home() {
           </p>
           <a
             className="inline-block bg-primary-container text-on-primary-container px-16 py-6 font-black uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all"
-            href="mailto:artinme03@gmail.com"
+            href="https://www.facebook.com/ArtnMeOfficial/"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             Inquire Now
           </a>
