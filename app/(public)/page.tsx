@@ -183,7 +183,7 @@ export default function Home() {
               Family Business
             </h3>
             <p className="text-on-surface-variant leading-relaxed font-light">
-              Rooted in Silay City, we treat every project like it's for our own
+              Rooted in Silay City, we treat every project like it&apos;s for our own
               family. Personalized service meets professional-grade digital
               results.
             </p>
@@ -199,8 +199,8 @@ export default function Home() {
             Ready to print your vision?
           </h2>
           <p className="max-w-2xl mx-auto text-on-surface-variant text-lg font-light mb-12">
-            Whether it's a single mug or a thousand jerseys, we bring the same
-            industrial precision to every project. Let's make it real.
+            Whether it&apos;s a single mug or a thousand jerseys, we bring the same
+            industrial precision to every project. Let&apos;s make it real.
           </p>
           <a
             className="inline-block bg-primary-container text-on-primary-container px-16 py-6 font-black uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all"

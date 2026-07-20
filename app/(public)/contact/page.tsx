@@ -1,15 +1,15 @@
 "use client";
 
-import { Mail, Phone, MapPin, Send, MessageSquare } from "lucide-react";
+import { Mail, Phone, MapPin, MessageSquare } from "lucide-react";
 
 export default function Contact() {
   return (
     <main className="pt-32 pb-24 px-6 md:px-12 bg-background min-h-screen">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-          {/* Left Column: Contact Information */}
-          <div className="lg:col-span-5 space-y-12">
-            <div className="space-y-4">
+      <div className="max-w-3xl mx-auto">
+        <div>
+          {/* Contact Information */}
+          <div className="flex flex-col items-center text-center space-y-16">
+            <div className="space-y-4 flex flex-col items-center">
               <span className="text-primary-container font-headline font-bold uppercase tracking-[0.3em] text-sm">
                 Get in Touch
               </span>
@@ -18,16 +18,16 @@ export default function Contact() {
                 <br />
                 <span className="text-primary-container">US.</span>
               </h1>
-              <p className="text-on-surface-variant max-w-md text-lg leading-relaxed pt-4 font-light">
+              <p className="text-on-surface-variant max-w-lg text-lg leading-relaxed pt-4 font-light">
                 Have a project in mind or need a custom printing solution? Reach
-                out to our studio and let's create something exceptional
+                out to our studio and let&apos;s create something exceptional
                 together.
               </p>
             </div>
 
-            <div className="space-y-8 pt-8 border-l-2 border-primary-container/20 pl-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full max-w-2xl text-left pt-8">
               <div className="flex items-start gap-6 group">
-                <div className="bg-surface-container-high p-4 group-hover:bg-primary-container transition-colors duration-500">
+                <div className="bg-surface-container-high p-4 group-hover:bg-primary-container transition-colors duration-500 shrink-0">
                   <MapPin className="text-primary-container group-hover:text-on-primary-container transition-colors" />
                 </div>
                 <div>
@@ -51,7 +51,7 @@ export default function Contact() {
               </div>
 
               <div className="flex items-start gap-6 group">
-                <div className="bg-surface-container-high p-4 group-hover:bg-primary-container transition-colors duration-500">
+                <div className="bg-surface-container-high p-4 group-hover:bg-primary-container transition-colors duration-500 shrink-0">
                   <Phone className="text-primary-container group-hover:text-on-primary-container transition-colors" />
                 </div>
                 <div>
@@ -66,7 +66,7 @@ export default function Contact() {
               </div>
 
               <div className="flex items-start gap-6 group">
-                <div className="bg-surface-container-high p-4 group-hover:bg-primary-container transition-colors duration-500">
+                <div className="bg-surface-container-high p-4 group-hover:bg-primary-container transition-colors duration-500 shrink-0">
                   <Mail className="text-primary-container group-hover:text-on-primary-container transition-colors" />
                 </div>
                 <div>
@@ -83,7 +83,7 @@ export default function Contact() {
               </div>
 
               <div className="flex items-start gap-6 group">
-                <div className="bg-surface-container-high p-4 group-hover:bg-primary-container transition-colors duration-500">
+                <div className="bg-surface-container-high p-4 group-hover:bg-primary-container transition-colors duration-500 shrink-0">
                   <MessageSquare className="text-primary-container group-hover:text-on-primary-container transition-colors" />
                 </div>
                 <div>
@@ -96,7 +96,7 @@ export default function Contact() {
                     rel="noopener noreferrer" 
                     className="text-on-surface-variant mt-1 hover:text-primary-container transition-colors block"
                   >
-                    Art 'n Me Digital Printing Services and Studios
+                    Art &apos;n Me Digital Printing Services and Studios
                   </a>
                   <p className="text-on-surface-variant text-sm mt-1 opacity-60">
                     Official Facebook Page
@@ -105,7 +105,7 @@ export default function Contact() {
               </div>
             </div>
 
-            <div className="hidden lg:block relative pt-12 overflow-hidden group">
+            <div className="w-full relative pt-12 overflow-hidden group">
               <div className="absolute inset-0 bg-primary-container/10 -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
               <img
                 className="w-full contrast-125 opacity-40 hover:opacity-100 transition-all duration-700 pointer-events-none"
@@ -115,76 +115,6 @@ export default function Contact() {
             </div>
           </div>
 
-          {/* Right Column: Contact Form */}
-          <div className="lg:col-span-7 bg-surface-container-low p-8 md:p-12 relative overflow-hidden border border-outline-variant/30 dark:border-white/5 shadow-2xl">
-            <div className="absolute top-0 right-0 w-32 h-1 bg-primary-container"></div>
-            <div className="absolute top-0 right-0 w-1 h-32 bg-primary-container"></div>
-
-            <form className="space-y-12" onSubmit={(e) => e.preventDefault()}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2 group">
-                  <label className="text-xs font-bold uppercase tracking-widest text-primary-container/60 group-focus-within:text-primary-container transition-colors">
-                    Your Name
-                  </label>
-                  <input
-                    className="w-full bg-transparent border-0 border-b border-outline-variant/40 dark:border-white/10 px-0 py-4 focus:border-primary-container focus:outline-none transition-all text-on-surface dark:text-white font-headline tracking-wide text-lg"
-                    placeholder="ALEX MERCER"
-                    type="text"
-                  />
-                </div>
-                <div className="space-y-2 group">
-                  <label className="text-xs font-bold uppercase tracking-widest text-primary-container/60 group-focus-within:text-primary-container transition-colors">
-                    Email Address
-                  </label>
-                  <input
-                    className="w-full bg-transparent border-0 border-b border-outline-variant/40 dark:border-white/10 px-0 py-4 focus:border-primary-container focus:outline-none transition-all text-on-surface dark:text-white font-headline tracking-wide text-lg"
-                    placeholder="ALEX@EXAMPLE.COM"
-                    type="email"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2 group">
-                <label className="text-xs font-bold uppercase tracking-widest text-primary-container/60 group-focus-within:text-primary-container transition-colors">
-                  Subject
-                </label>
-                <input
-                  className="w-full bg-transparent border-0 border-b border-outline-variant/40 dark:border-white/10 px-0 py-4 focus:border-primary-container focus:outline-none transition-all text-on-surface dark:text-white font-headline tracking-wide text-lg"
-                  placeholder="PROJECT INQUIRY"
-                  type="text"
-                />
-              </div>
-
-              <div className="space-y-2 group">
-                <label className="text-xs font-bold uppercase tracking-widest text-primary-container/60 group-focus-within:text-primary-container transition-colors">
-                  Your Message
-                </label>
-                <textarea
-                  className="w-full bg-transparent border-0 border-b border-outline-variant/40 dark:border-white/10 px-0 py-4 focus:border-primary-container focus:outline-none transition-all text-on-surface dark:text-white font-body text-sm min-h-[150px] resize-none"
-                  placeholder="TELL US ABOUT YOUR VISION..."
-                  rows={4}
-                ></textarea>
-              </div>
-
-              <div className="pt-8">
-                <button
-                  className="w-full bg-primary-container py-6 group relative overflow-hidden transition-all active:scale-[0.98] border border-primary-container"
-                  type="submit"
-                >
-                  <div className="relative z-10 flex items-center justify-center gap-4">
-                    <span className="font-headline font-black text-2xl tracking-tighter italic uppercase text-on-primary-container group-hover:tracking-[0.1em] transition-all">
-                      Send Message
-                    </span>
-                    <Send className="w-6 h-6 text-on-primary-container group-hover:translate-x-2 transition-transform" />
-                  </div>
-                  <div className="absolute inset-0 bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-500 mix-blend-overlay"></div>
-                </button>
-                <p className="text-[10px] text-center text-on-surface-variant mt-6 uppercase tracking-[0.3em] opacity-40">
-                  We typically respond within 12 production hours.
-                </p>
-              </div>
-            </form>
-          </div>
         </div>
       </div>
 

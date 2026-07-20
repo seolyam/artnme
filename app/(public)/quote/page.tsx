@@ -79,7 +79,7 @@ export default function Quote() {
                       Full Name
                     </label>
                     <input
-                      className="w-full bg-surface-container-high border-0 border-b border-outline-variant/40 dark:border-white/10 px-0 py-4 focus:border-b-2 focus:border-primary-container focus:outline-none transition-all text-on-surface dark:text-white font-headline tracking-wide"
+                      className="w-full bg-surface-container-high border-0 border-b border-outline-variant/40 dark:border-white/10 px-4 py-4 focus:border-b-2 focus:border-primary-container focus:outline-none transition-all text-on-surface dark:text-white font-headline tracking-wide"
                       placeholder="ALEX MERCER"
                       type="text"
                     />
@@ -89,7 +89,7 @@ export default function Quote() {
                       Contact Email/Phone
                     </label>
                     <input
-                      className="w-full bg-surface-container-high border-0 border-b border-outline-variant/40 dark:border-white/10 px-0 py-4 focus:border-b-2 focus:border-primary-container focus:outline-none transition-all text-on-surface dark:text-white font-headline tracking-wide"
+                      className="w-full bg-surface-container-high border-0 border-b border-outline-variant/40 dark:border-white/10 px-4 py-4 focus:border-b-2 focus:border-primary-container focus:outline-none transition-all text-on-surface dark:text-white font-headline tracking-wide"
                       placeholder="+63 9XX XXX XXXX"
                       type="text"
                     />
@@ -159,7 +159,7 @@ export default function Quote() {
                       Quantity
                     </label>
                     <input
-                      className="w-full bg-surface-container-high border-0 border-b border-outline-variant/40 dark:border-white/10 px-0 py-4 focus:border-b-2 focus:border-primary-container focus:outline-none text-on-surface dark:text-white font-headline text-2xl"
+                      className="w-full h-16 bg-surface-container-high border-0 border-b border-outline-variant/40 dark:border-white/10 px-4 py-4 focus:border-b-2 focus:border-primary-container focus:outline-none text-on-surface dark:text-white font-headline text-2xl"
                       placeholder="01"
                       type="number"
                     />
@@ -169,7 +169,7 @@ export default function Quote() {
                       Project Details
                     </label>
                     <textarea
-                      className="w-full bg-surface-container-high border-0 border-b border-outline-variant/40 dark:border-white/10 px-0 py-4 focus:border-b-2 focus:border-primary-container focus:outline-none text-on-surface dark:text-white font-body text-sm"
+                      className="w-full h-16 bg-surface-container-high border-0 border-b border-outline-variant/40 dark:border-white/10 px-4 py-4 focus:border-b-2 focus:border-primary-container focus:outline-none text-on-surface dark:text-white font-body text-sm resize-none"
                       placeholder="COLORS, FINISH, DEADLINE..."
                       rows={1}
                     ></textarea>
@@ -214,7 +214,12 @@ export default function Quote() {
       </main>
 
       {/* Map Section */}
-      <section className="w-full h-[400px] contrast-125 opacity-50 hover:opacity-100 transition-opacity relative">
+      <a 
+        href="https://maps.app.goo.gl/KA781unxzKKvwnMh6"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-full h-[400px] contrast-125 opacity-50 hover:opacity-100 transition-opacity relative block"
+      >
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background z-10 pointer-events-none"></div>
         <img
           className="w-full h-full object-cover"
@@ -222,11 +227,11 @@ export default function Quote() {
           src={`${process.env.NEXT_PUBLIC_CLOUDINARY_URL}/STE_-_JADE_y9vxos`}
         />
         <div className="absolute inset-0 flex items-center justify-center z-20">
-          <div className="bg-primary-container text-on-primary-container px-8 py-4 font-headline font-black uppercase italic text-2xl">
+          <div className="bg-primary-container text-on-primary-container px-8 py-4 font-headline font-black uppercase italic text-2xl shadow-2xl skew-x-[-12deg] group-hover:scale-105 transition-transform">
             Find Us In Silay
           </div>
         </div>
-      </section>
+      </a>
     </>
   );
 }

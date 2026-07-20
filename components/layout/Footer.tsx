@@ -55,7 +55,7 @@ export default function Footer() {
             Location: Silay City, Negros Occidental
           </a>
           <div className="mt-8 text-[10px] text-on-surface-variant/70 font-body uppercase tracking-[0.3em]">
-            © 2026 Art 'n Me Digital Printing. Silay City.
+            © 2026 Art &apos;n Me Digital Printing. Silay City.
           </div>
           <div className="mt-4">
             <Link
