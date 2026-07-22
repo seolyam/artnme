@@ -182,7 +182,7 @@ function AssetDecal({ asset, layerIndex, selected, onSelect }: AssetDecalProps) 
         // placed at the projector pose and nudged outward along its local +Z so
         // it floats just above the artwork without z-fighting.
         <group position={asset.position} rotation={asset.rotation}>
-          <mesh position={[0, 0, 0.012]} renderOrder={9999}>
+          <mesh name="selection-ring" position={[0, 0, 0.012]} renderOrder={9999}>
             <ringGeometry args={[ringRadius * 0.92, ringRadius * 0.99, 80]} />
             <meshBasicMaterial
               color="#e31e24"
@@ -209,6 +209,7 @@ function useAssetTexture(asset: DesignAsset): THREE.Texture {
     asset.kind === "text" ? (asset.text ?? "") : null,
     asset.textColor ?? "#D32F2F",
     asset.flipped,
+    asset.fontFamily,
   );
 
   // For images, mirror via a cloned texture (repeat.x = -1) only when flipped,
@@ -251,11 +252,12 @@ function useTextTexture(
   text: string | null,
   color: string,
   flipped: boolean,
+  fontFamily: string = "Inter",
 ): THREE.Texture | null {
   const texture = useMemo(() => {
     if (!text) return null;
-    return createTextTexture(text, color, flipped);
-  }, [text, color, flipped]);
+    return createTextTexture(text, color, flipped, fontFamily);
+  }, [text, color, flipped, fontFamily]);
 
   useEffect(() => {
     return () => {
@@ -270,6 +272,7 @@ function createTextTexture(
   text: string,
   color: string,
   flipped: boolean,
+  fontFamily: string = "Inter",
 ): THREE.Texture {
   const canvas = document.createElement("canvas");
   canvas.width = 1024;
@@ -288,7 +291,7 @@ function createTextTexture(
 
   let fontSize = 220;
   const maxWidth = canvas.width * 0.88;
-  const fontStack = '"Space Grotesk", "Arial Black", Arial, sans-serif';
+  const fontStack = `"${fontFamily}", Arial, sans-serif`;
   ctx.font = `900 ${fontSize}px ${fontStack}`;
   const measured = ctx.measureText(text).width;
   if (measured > maxWidth) {

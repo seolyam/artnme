@@ -46,3 +46,9 @@ next-env.d.ts
 # agent and dev artifacts
 .agent/
 screenshot_*.html
+
+# Custom docs
+/documentations/
+
+# IDEs
+.idea/
