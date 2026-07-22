@@ -2,16 +2,45 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "../db/schema";
 import { eq } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
 
-const client = postgres(process.env.DATABASE_URL!);
+if (!process.env.DATABASE_URL) {
+  console.error("Missing DATABASE_URL environment variable.");
+  process.exit(1);
+}
+if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
+  console.error(
+    "Missing ADMIN_EMAIL or ADMIN_PASSWORD environment variable. " +
+      "Set both in .env.local before running this script."
+  );
+  process.exit(1);
+}
+
+const DATABASE_URL: string = process.env.DATABASE_URL;
+const ADMIN_EMAIL: string = process.env.ADMIN_EMAIL;
+const ADMIN_PASSWORD: string = process.env.ADMIN_PASSWORD;
+
+if (ADMIN_PASSWORD.length < 12) {
+  if (process.env.ADMIN_ALLOW_WEAK_PASSWORD !== "1") {
+    console.error(
+      "ADMIN_PASSWORD must be at least 12 characters long. " +
+        "Set ADMIN_ALLOW_WEAK_PASSWORD=1 to bypass this check (not recommended)."
+    );
+    process.exit(1);
+  }
+  console.warn(
+    "WARNING: ADMIN_PASSWORD is shorter than 12 characters and the length check was bypassed."
+  );
+}
+
+const client = postgres(DATABASE_URL, { prepare: false });
 const db = drizzle(client, { schema });
 
 async function main() {
-  console.log("Creating admin user directly via SQL...");
-  
+  console.log(`Creating admin user (${ADMIN_EMAIL}) directly via SQL...`);
+
   try {
-    // Check if user already exists
-    const existing = await client`SELECT id FROM auth.users WHERE email = 'admin@gmail.com' LIMIT 1`;
+    const existing = await client`SELECT id FROM auth.users WHERE email = ${ADMIN_EMAIL} LIMIT 1`;
     let userId: string;
 
     if (existing.length > 0) {
@@ -19,7 +48,7 @@ async function main() {
       userId = existing[0].id;
       await client`
         UPDATE auth.users 
-        SET encrypted_password = crypt('admin123', gen_salt('bf')),
+        SET encrypted_password = crypt(${ADMIN_PASSWORD}, gen_salt('bf')),
             email_confirmed_at = COALESCE(email_confirmed_at, NOW())
         WHERE id = ${userId}
       `;
@@ -44,11 +73,11 @@ async function main() {
           recovery_token
         ) VALUES (
           '00000000-0000-0000-0000-000000000000',
-          gen_random_uuid(),
+          ${randomUUID()},
           'authenticated',
           'authenticated',
-          'admin@gmail.com',
-          crypt('admin123', gen_salt('bf')),
+          ${ADMIN_EMAIL},
+          crypt(${ADMIN_PASSWORD}, gen_salt('bf')),
           NOW(),
           '{"provider":"email","providers":["email"]}',
           '{}',
@@ -73,7 +102,12 @@ async function main() {
       });
       console.log("Profile created in database.");
     } catch (dbError: unknown) {
-      if (dbError && typeof dbError === 'object' && 'code' in dbError && dbError.code === '23505') { 
+      const errCode =
+        dbError && typeof dbError === 'object' &&
+        ('code' in dbError ? (dbError as { code?: unknown }).code :
+         'cause' in dbError ? ((dbError as { cause?: { code?: unknown } }).cause?.code) :
+         undefined);
+      if (errCode === '23505') { 
           console.log("Profile already exists. Updating to admin...");
           await db.update(schema.profiles)
               .set({ role: "admin", fullName: "Admin User" })
@@ -84,7 +118,6 @@ async function main() {
       }
     }
 
-    // Insert into auth.identities
     const hasIdentity = await client`SELECT id FROM auth.identities WHERE user_id = ${userId} AND provider = 'email'`;
     if (hasIdentity.length === 0) {
       await client`
@@ -101,7 +134,7 @@ async function main() {
           gen_random_uuid(),
           ${userId},
           ${userId},
-          json_build_object('sub', ${userId}::text, 'email', 'admin@gmail.com'),
+          json_build_object('sub', ${userId}::text, 'email', ${ADMIN_EMAIL}::text),
           'email',
           NOW(),
           NOW(),
@@ -111,11 +144,13 @@ async function main() {
       console.log("Auth identity created.");
     }
 
+    console.log("Admin user ready.");
   } catch (e) {
     console.error("Database error:", e);
+    process.exit(1);
+  } finally {
+    await client.end();
   }
-
-  process.exit(0);
 }
 
 main();

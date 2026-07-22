@@ -22,8 +22,8 @@ A premium digital printing services management system and interactive customer p
 
 ### 1. Setup Environment
 ```bash
-cp .env.local.example .env.local
-# Update with your Supabase credentials and Cloudinary URLs
+cp .env.example .env.local
+# Fill in your Supabase, database, and Cloudinary credentials
 ```
 
 ### 2. Database Sync
