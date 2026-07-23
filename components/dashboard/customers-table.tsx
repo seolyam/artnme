@@ -12,14 +12,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -30,8 +22,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Users, Search, Pencil, Trash2 } from "lucide-react";
+import { Users, Search, Pencil, Trash2, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 
 interface CustomerRow {
   id: string;
@@ -134,7 +127,12 @@ export function CustomersTable({
           ) : (
             <div className="grid gap-2">
               {filtered.map((c) => (
-                <div key={c.id} className="relative grid grid-cols-1 md:grid-cols-12 gap-4 p-5 items-start md:items-center bg-[color:var(--color-surface-container-low)] hover:bg-[color:var(--color-surface-container-highest)] transition-colors border-l-2 border-l-transparent hover:border-l-primary group">
+                <Link
+                  key={c.id}
+                  href={`/dashboard/customers/${c.id}`}
+                  prefetch={true}
+                  className="relative grid grid-cols-1 md:grid-cols-12 gap-4 p-5 items-start md:items-center bg-[color:var(--color-surface-container-low)] hover:bg-[color:var(--color-surface-container-highest)] transition-colors border-l-2 border-l-transparent hover:border-l-primary group cursor-pointer"
+                >
                   <div className="md:col-span-4">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Client Name</p>
                     <p className="font-bold text-lg leading-none text-foreground">{c.name}</p>
@@ -146,14 +144,21 @@ export function CustomersTable({
                   <div className="md:col-span-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Network</p>
                     {c.fbMessengerLink ? (
-                      <a
-                        href={c.fbMessengerLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary text-sm font-semibold hover:underline"
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          window.open(
+                            c.fbMessengerLink!,
+                            "_blank",
+                            "noopener,noreferrer",
+                          );
+                        }}
+                        className="text-primary text-sm font-semibold hover:underline text-left"
                       >
                         Messenger
-                      </a>
+                      </button>
                     ) : (
                       <span className="text-sm text-muted-foreground">\u2014</span>
                     )}
@@ -168,12 +173,18 @@ export function CustomersTable({
                       {"\u20B1"}{c.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </p>
                   </div>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-end gap-1 bg-[color:var(--color-surface-container-highest)] pl-4">
+                  <div
+                    className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-end gap-1 bg-[color:var(--color-surface-container-highest)] pl-4"
+                    onClick={(e) => e.preventDefault()}
+                  >
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0"
-                      onClick={() => openEdit(c)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        openEdit(c);
+                      }}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -181,12 +192,16 @@ export function CustomersTable({
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                      onClick={() => setDeleteTarget(c)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setDeleteTarget(c);
+                      }}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}
