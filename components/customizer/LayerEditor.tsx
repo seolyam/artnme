@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
+
 import { cn } from "@/lib/utils";
-import { useCustomizer, type Placement, BACK_ROTATION_Y, NUDGE_STEP, PLACEMENT_BOUNDS } from "./CustomizerProvider";
+import { useCustomizer, type Placement, BACK_ROTATION_Y, NUDGE_STEP, PLACEMENT_BOUNDS, SCALE_RANGE } from "./CustomizerProvider";
 
 const clamp = (v: number, bounds: readonly number[]) =>
   Math.max(bounds[0], Math.min(bounds[1], v));
@@ -45,6 +47,7 @@ const PRESETS = [
 ];
 
 export function LayerEditor() {
+  const [isLinked, setIsLinked] = useState(true);
   const {
     assets,
     selectedAssetId,
@@ -97,17 +100,113 @@ export function LayerEditor() {
   return (
     <div className="space-y-6 border border-outline-variant/20 bg-surface-container-high p-6 shadow-sm">
       <div className="space-y-3">
+        <Label>Placement Side</Label>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setPlacement(selected.id, "front")}
+            className={cn(
+              "flex-1 py-2 text-center font-headline text-[10px] font-bold uppercase tracking-widest border transition-all",
+              !isBack
+                ? "bg-primary-container text-on-primary-container border-primary-container"
+                : "bg-surface-container-lowest text-on-surface-variant border-outline-variant/20 hover:border-primary-container"
+            )}
+          >
+            Front
+          </button>
+          <button
+            onClick={() => setPlacement(selected.id, "back")}
+            className={cn(
+              "flex-1 py-2 text-center font-headline text-[10px] font-bold uppercase tracking-widest border transition-all",
+              isBack
+                ? "bg-primary-container text-on-primary-container border-primary-container"
+                : "bg-surface-container-lowest text-on-surface-variant border-outline-variant/20 hover:border-primary-container"
+            )}
+          >
+            Back
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-3 border-t border-outline-variant/20 pt-4">
         <Label>Quick Placement</Label>
         <div className="grid grid-cols-2 gap-2">
           {PRESETS.map((preset) => (
             <button
               key={preset.id}
               onClick={() => applyPreset(preset)}
-              className="bg-surface-container-lowest px-3 py-3 text-center font-headline text-[11px] font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:bg-primary-container hover:text-on-primary-container active:scale-95 border border-outline-variant/20"
+              className="bg-surface-container-lowest px-2 py-2 text-center font-headline text-[9px] font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:bg-primary-container hover:text-on-primary-container active:scale-95 border border-outline-variant/20"
             >
               {preset.label}
             </button>
           ))}
+        </div>
+      </div>
+
+      <div className="space-y-3 border-t border-outline-variant/20 pt-4">
+        <div className="flex items-center justify-between">
+          <Label>Dimensions</Label>
+          <button
+            onClick={() => setIsLinked(!isLinked)}
+            title={isLinked ? "Unlink aspect ratio" : "Link aspect ratio"}
+            className={cn(
+              "flex items-center justify-center p-1 border transition-colors",
+              isLinked
+                ? "border-primary-container text-primary-container bg-primary-container/10"
+                : "border-outline-variant/30 text-on-surface-variant hover:border-primary-container"
+            )}
+          >
+            <span className="material-symbols-outlined text-sm">
+              {isLinked ? "link" : "link_off"}
+            </span>
+          </button>
+        </div>
+        
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <span className="w-12 text-[10px] font-bold uppercase text-on-surface-variant">Width</span>
+            <input
+              type="range"
+              min={SCALE_RANGE[0]}
+              max={SCALE_RANGE[1]}
+              step={0.01}
+              value={selected.scale[0]}
+              onChange={(e) => {
+                const newW = parseFloat(e.target.value);
+                let newH = selected.scale[1];
+                if (isLinked) {
+                  const aspect = selected.scale[0] / selected.scale[1];
+                  newH = newW / aspect;
+                }
+                updateAssetTransform(selected.id, {
+                  scale: [newW, newH, selected.scale[2]],
+                });
+              }}
+              className="flex-1 accent-[#E31E24]"
+            />
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <span className="w-12 text-[10px] font-bold uppercase text-on-surface-variant">Height</span>
+            <input
+              type="range"
+              min={SCALE_RANGE[0]}
+              max={SCALE_RANGE[1]}
+              step={0.01}
+              value={selected.scale[1]}
+              onChange={(e) => {
+                const newH = parseFloat(e.target.value);
+                let newW = selected.scale[0];
+                if (isLinked) {
+                  const aspect = selected.scale[0] / selected.scale[1];
+                  newW = newH * aspect;
+                }
+                updateAssetTransform(selected.id, {
+                  scale: [newW, newH, selected.scale[2]],
+                });
+              }}
+              className="flex-1 accent-[#E31E24]"
+            />
+          </div>
         </div>
       </div>
 

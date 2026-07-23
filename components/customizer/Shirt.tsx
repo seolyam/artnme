@@ -141,14 +141,14 @@ function AssetDecal({ asset, layerIndex, selected, onSelect }: AssetDecalProps) 
   //    and bakes the decal onto the opposite wall — "punch-through".
   //
   // We scale mildly with the footprint (bigger art spans more curvature) but
-  // cap hard at 0.22 so the inner face never reaches the back panel. With
-  // position.z = 0.14 and depth <= 0.22, the inner face stays >= 0.03 (inside
+  // cap hard at 0.4 so the inner face never reaches the back panel. With
+  // position.z = 0.14 and depth <= 0.4, the inner face stays >= -0.06 (inside
   // the cavity, ahead of the back panel at -0.08) — front art stays front-only.
   const footprint = Math.max(asset.scale[0], asset.scale[1]);
   const projectionDepth = THREE.MathUtils.clamp(
-    footprint * 0.5 + 0.08,
-    0.14,
-    0.22,
+    footprint * 1.5 + 0.1,
+    0.3,
+    0.4,
   );
 
   const decalScale: [number, number, number] = [
