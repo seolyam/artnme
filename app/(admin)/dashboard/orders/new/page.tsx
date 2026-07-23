@@ -1,8 +1,18 @@
 import { getCustomers } from "@/app/actions/customers";
 import { CreateOrderForm } from "@/components/forms/create-order-form";
 
-export default async function NewOrderPage() {
-  const customers = await getCustomers();
+export default async function NewOrderPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ customer?: string }>;
+}) {
+  const [customers, sp] = await Promise.all([
+    getCustomers(),
+    searchParams,
+  ]);
+
+  const preselectCustomerId =
+    typeof sp.customer === "string" ? sp.customer : undefined;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -15,6 +25,7 @@ export default async function NewOrderPage() {
 
       <CreateOrderForm
         customers={customers.map((c) => ({ id: c.id, name: c.name }))}
+        preselectCustomerId={preselectCustomerId}
       />
     </div>
   );

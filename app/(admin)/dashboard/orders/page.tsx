@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getOrders } from "@/app/actions/orders";
 import { KanbanBoard } from "@/components/dashboard/kanban-board";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 
 export default async function OrdersPage() {
   const orders = await getOrders();
@@ -16,12 +16,20 @@ export default async function OrdersPage() {
             TRACK AND MANAGE ALL PRINTING ORDERS
           </p>
         </div>
-        <Button asChild className="rounded-none">
-          <Link href="/dashboard/orders/new">
-            <Plus className="mr-2 h-4 w-4" />
-            New Order
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/dashboard/orders/trash" prefetch={true}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              Trash
+            </Link>
+          </Button>
+          <Button asChild className="rounded-none">
+            <Link href="/dashboard/orders/new">
+              <Plus className="mr-2 h-4 w-4" />
+              New Order
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <KanbanBoard orders={orders} />
