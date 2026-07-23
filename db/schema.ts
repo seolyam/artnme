@@ -7,7 +7,7 @@ import {
   integer,
   pgEnum,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 // ─── Enums ──────────────────────────────────────────────────────────────────
 
@@ -55,6 +55,7 @@ export const customers = pgTable("customers", {
 
 export const orders = pgTable("orders", {
   id: uuid("id").primaryKey().defaultRandom(),
+  orderNumber: integer("order_number").notNull().default(sql`nextval('order_number_seq')`),
   customerId: uuid("customer_id")
     .notNull()
     .references(() => customers.id, { onDelete: "restrict" }),
@@ -70,6 +71,10 @@ export const orders = pgTable("orders", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  createdBy: uuid("created_by"),
+  updatedBy: uuid("updated_by"),
 });
 
 export const orderItems = pgTable("order_items", {
