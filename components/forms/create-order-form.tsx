@@ -47,19 +47,28 @@ interface Customer {
 
 interface CreateOrderFormProps {
   customers: Customer[];
+  preselectCustomerId?: string;
 }
 
-export function CreateOrderForm({ customers }: CreateOrderFormProps) {
+export function CreateOrderForm({
+  customers,
+  preselectCustomerId,
+}: CreateOrderFormProps) {
   const router = useRouter();
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [newCustomerName, setNewCustomerName] = useState("");
   const [newCustomerContact, setNewCustomerContact] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const validPreselect =
+    preselectCustomerId && customers.some((c) => c.id === preselectCustomerId)
+      ? preselectCustomerId
+      : "";
+
   const form = useForm<OrderFormSchemaValues>({
     resolver: zodResolver(orderFormSchema as never),
     defaultValues: {
-      customerId: "",
+      customerId: validPreselect,
       title: "",
       status: "Pending",
       totalAmount: 0,
@@ -131,7 +140,28 @@ export function CreateOrderForm({ customers }: CreateOrderFormProps) {
       const result = await createOrder(orderData);
 
       if (result.error) {
-        toast.error(result.error);
+        if (result.fieldErrors && Array.isArray(result.fieldErrors)) {
+          for (const fe of result.fieldErrors) {
+            if (!fe.path) {
+              toast.error(fe.message);
+              continue;
+            }
+            // Map "items.0.quantity" -> ["items", "0", "quantity"]
+            const segments = fe.path.split(".");
+            form.setError(segments.join(".") as never, {
+              message: fe.message,
+            });
+          }
+          if (result.fieldErrors.length === 0) {
+            toast.error(result.error);
+          } else {
+            toast.error(result.error, {
+              description: "Please fix the highlighted fields.",
+            });
+          }
+        } else {
+          toast.error(result.error);
+        }
       } else {
         toast.success("Order created successfully!");
         router.push("/dashboard/orders");
