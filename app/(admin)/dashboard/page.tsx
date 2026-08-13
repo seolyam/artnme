@@ -1,4 +1,8 @@
 import { getOrderStats, getRecentOrders } from "@/app/actions/orders";
+import {
+  getRevenueOverTime,
+  getTopCustomers,
+} from "@/app/actions/analytics";
 import Link from "next/link";
 import {
   ClipboardList,
@@ -8,8 +12,11 @@ import {
   AlertTriangle,
   ArrowRight,
   TrendingUp,
+  Crown,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { RevenueChart } from "@/components/dashboard/revenue-chart";
+import { TopCustomers } from "@/components/dashboard/top-customers";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bgClass: string }> = {
   Pending: {
@@ -40,9 +47,11 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bgClass: str
 };
 
 export default async function DashboardPage() {
-  const [stats, recentOrders] = await Promise.all([
+  const [stats, recentOrders, revenueData, topCustomers] = await Promise.all([
     getOrderStats(),
     getRecentOrders(7),
+    getRevenueOverTime(),
+    getTopCustomers(5),
   ]);
 
   return (
@@ -96,6 +105,47 @@ export default async function DashboardPage() {
         />
       </div>
 
+      {/* ═══════════════════ ANALYTICS ROW ═══════════════════ */}
+      <div className="grid gap-3 lg:grid-cols-3">
+        {/* Revenue Chart — spans 2 cols */}
+        <section className="lg:col-span-2 bg-surface-container-low p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="h-4 w-4 text-muted-foreground/60" />
+            <h2
+              className="text-sm font-bold uppercase tracking-tight"
+              style={{ fontFamily: "var(--font-headline)" }}
+            >
+              Revenue Pulse
+            </h2>
+          </div>
+          <RevenueChart data={revenueData} />
+        </section>
+
+        {/* Top Customers — 1 col */}
+        <section className="bg-surface-container-low p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Crown className="h-4 w-4 text-muted-foreground/60" />
+              <h2
+                className="text-sm font-bold uppercase tracking-tight"
+                style={{ fontFamily: "var(--font-headline)" }}
+              >
+                Top Clients
+              </h2>
+            </div>
+            <Link
+              href="/dashboard/customers"
+              prefetch={true}
+              className="text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors font-medium"
+              style={{ fontFamily: "var(--font-label)" }}
+            >
+              All
+            </Link>
+          </div>
+          <TopCustomers customers={topCustomers} />
+        </section>
+      </div>
+
       {/* ═══════════════════ RECENT ORDERS ═══════════════════ */}
       <section>
         <div className="flex items-center justify-between mb-4">
@@ -147,7 +197,7 @@ export default async function DashboardPage() {
               return (
                 <Link
                   key={order.id}
-                  href={`/dashboard/orders/${order.id}`}
+                  href={`/dashboard/orders/${order.orderNumber}`}
                   prefetch={true}
                   className={`group relative flex items-center justify-between px-4 py-4 transition-all duration-150 hover:bg-surface-container ${
                     idx !== recentOrders.length - 1
@@ -167,6 +217,13 @@ export default async function DashboardPage() {
                   <div className="flex flex-col gap-1 min-w-0 flex-1">
                     {/* Title row */}
                     <div className="flex items-center gap-2.5">
+                      <span
+                        className="text-[10px] font-bold tabular-nums text-muted-foreground bg-muted/60 px-1.5 py-0.5 shrink-0"
+                        style={{ fontFamily: "var(--font-label)" }}
+                        title={`Order #${order.orderNumber}`}
+                      >
+                        #{order.orderNumber}
+                      </span>
                       <span className="text-sm font-semibold truncate">
                         {order.title}
                       </span>

@@ -15,6 +15,7 @@ import { ORDER_STATUSES, type OrderStatus } from "@/db/schema";
 
 interface OrderCardOrder {
   id: string;
+  orderNumber: number;
   title: string;
   status: string;
   totalAmount: string;
@@ -22,6 +23,17 @@ interface OrderCardOrder {
   dueDate: Date | null;
   customer: { name: string };
   items: { productType: string; quantity: number }[];
+}
+
+function OrderBadge({ orderNumber }: { orderNumber: number }) {
+  return (
+    <span
+      className="text-[10px] font-bold tabular-nums text-muted-foreground bg-muted/60 px-1.5 py-0.5 align-top"
+      title="Order number"
+    >
+      #{orderNumber}
+    </span>
+  );
 }
 
 interface OrderCardProps {
@@ -54,11 +66,12 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
       <CardHeader className="p-3 pb-1">
         <div className="flex items-start justify-between gap-1">
           <Link
-            href={`/dashboard/orders/${order.id}`}
+            href={`/dashboard/orders/${order.orderNumber}`}
             className="text-sm font-medium leading-tight truncate hover:underline"
           >
             {order.title}
           </Link>
+          <OrderBadge orderNumber={order.orderNumber} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

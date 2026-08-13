@@ -41,6 +41,7 @@ import { Plus, Trash2, Loader2 } from "lucide-react";
 
 interface OrderData {
   id: string;
+  orderNumber: number;
   title: string;
   status: string;
   totalAmount: string;
@@ -79,6 +80,7 @@ export function EditOrderForm({ order }: EditOrderFormProps) {
         ? new Date(order.dueDate).toISOString().slice(0, 16)
         : "",
       items: order.items.map((item) => ({
+        id: item.id,
         productType: item.productType as OrderFormSchemaValues["items"][number]["productType"],
         description: item.description || "",
         quantity: item.quantity,
@@ -115,10 +117,30 @@ export function EditOrderForm({ order }: EditOrderFormProps) {
       const result = await updateOrder(order.id, orderData);
 
       if (result.error) {
-        toast.error(result.error);
+        if (result.fieldErrors && Array.isArray(result.fieldErrors)) {
+          for (const fe of result.fieldErrors) {
+            if (!fe.path) {
+              toast.error(fe.message);
+              continue;
+            }
+            const segments = fe.path.split(".");
+            form.setError(segments.join(".") as never, {
+              message: fe.message,
+            });
+          }
+          if (result.fieldErrors.length === 0) {
+            toast.error(result.error);
+          } else {
+            toast.error(result.error, {
+              description: "Please fix the highlighted fields.",
+            });
+          }
+        } else {
+          toast.error(result.error);
+        }
       } else {
         toast.success("Order updated successfully!");
-        router.push(`/dashboard/orders/${order.id}`);
+        router.push(`/dashboard/orders/${order.orderNumber}`);
       }
     } finally {
       setSubmitting(false);

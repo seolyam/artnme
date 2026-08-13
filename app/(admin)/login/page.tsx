@@ -1,12 +1,24 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, use } from "react";
 import { login } from "@/app/actions/auth";
 import { ArrowRight, Lock, Mail } from "lucide-react";
 import Link from "next/link";
 
-export default function LoginPage() {
-  const [state, formAction, pending] = useActionState(login, { error: "" });
+export default function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ redirect?: string }>;
+}) {
+  const sp = use(searchParams);
+  const redirectTo =
+    typeof sp.redirect === "string" && sp.redirect.startsWith("/dashboard")
+      ? sp.redirect
+      : undefined;
+  const [state, formAction, pending] = useActionState(login, {
+    error: "",
+    redirect: redirectTo,
+  });
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 font-body selection:bg-primary-container selection:text-on-primary-container">
@@ -37,6 +49,9 @@ export default function LoginPage() {
           </header>
 
           <form action={formAction} className="space-y-10">
+            {redirectTo && (
+              <input type="hidden" name="redirect" value={redirectTo} />
+            )}
             {state?.error && (
               <div className="bg-primary-container/10 border-l-4 border-primary-container p-6 animate-in fade-in slide-in-from-left-4">
                 <p className="text-primary-container font-headline font-bold uppercase text-xs tracking-widest">

@@ -4,10 +4,10 @@ import { getOrder } from "@/app/actions/orders";
 export default async function PrintOrderPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ orderNumber: string }>;
 }) {
-  const { id } = await params;
-  const order = await getOrder(id);
+  const { orderNumber } = await params;
+  const order = await getOrder(orderNumber);
 
   if (!order) {
     notFound();
@@ -31,7 +31,7 @@ export default async function PrintOrderPage({
           <p className="text-sm text-gray-500">Receipt / Invoice</p>
         </div>
         <div className="text-right">
-          <p className="text-sm font-semibold text-gray-700">Order ID: <span className="font-normal">{order.id.slice(0,8)}</span></p>
+          <p className="text-sm font-semibold text-gray-700">Order #: <span className="font-normal text-lg">#{order.orderNumber}</span></p>
           <p className="text-sm text-gray-700">Date: <span className="font-normal">{new Date(order.createdAt).toLocaleDateString()}</span></p>
           {order.dueDate && (
              <p className="text-sm text-gray-700">Due: <span className="font-normal">{new Date(order.dueDate).toLocaleDateString()}</span></p>

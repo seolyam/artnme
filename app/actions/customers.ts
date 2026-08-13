@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { customers, orders } from "@/db/schema";
-import { eq, count } from "drizzle-orm";
+import { eq, count, isNull, sql, and, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireAuth, requireAdmin } from "@/lib/auth";
 import { customerSchema, type CustomerFormValues } from "@/lib/validators";
@@ -15,20 +15,33 @@ export async function getCustomers() {
 
 export async function getCustomersWithOrderCount() {
   await requireAuth();
-  const result = await db.query.customers.findMany({
-    with: {
-      orders: true,
-    },
-    orderBy: (customers, { asc }) => [asc(customers.name)],
-  });
 
-  return result.map((c) => ({
-    ...c,
-    orderCount: c.orders.length,
-    totalRevenue: c.orders.reduce(
-      (sum, o) => sum + parseFloat(o.totalAmount),
-      0,
-    ),
+  const rows = await db
+    .select({
+      id: customers.id,
+      name: customers.name,
+      contactNumber: customers.contactNumber,
+      fbMessengerLink: customers.fbMessengerLink,
+      createdAt: customers.createdAt,
+      orderCount: sql<number>`count(${orders.id})::int`,
+      totalRevenue: sql<number>`coalesce(sum(${orders.totalAmount}::numeric), 0)`,
+    })
+    .from(customers)
+    .leftJoin(
+      orders,
+      and(eq(orders.customerId, customers.id), isNull(orders.deletedAt)),
+    )
+    .groupBy(customers.id)
+    .orderBy(customers.name);
+
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    contactNumber: r.contactNumber,
+    fbMessengerLink: r.fbMessengerLink,
+    createdAt: r.createdAt,
+    orderCount: Number(r.orderCount) || 0,
+    totalRevenue: Number(r.totalRevenue) || 0,
   }));
 }
 
@@ -79,13 +92,14 @@ export async function updateCustomer(
 
   revalidatePath("/dashboard/customers");
   revalidatePath("/dashboard/orders");
+  revalidatePath(`/dashboard/customers/${customerId}`);
   return { success: true };
 }
 
 export async function deleteCustomer(customerId: string) {
   try {
     await requireAdmin();
-  } catch (e) {
+  } catch {
     return { error: "Unauthorized: Admin access required to delete customers." };
   }
 
@@ -94,11 +108,11 @@ export async function deleteCustomer(customerId: string) {
     return { error: "Invalid customer ID" };
   }
 
-  // Check if customer has orders
+  // Check if customer has any non-deleted orders
   const customerOrders = await db
     .select({ value: count() })
     .from(orders)
-    .where(eq(orders.customerId, parsed.data));
+    .where(and(eq(orders.customerId, parsed.data), isNull(orders.deletedAt)));
 
   if (customerOrders[0]?.value > 0) {
     return {
@@ -123,10 +137,11 @@ export async function getCustomerById(id: string) {
     where: eq(customers.id, parsed.data),
     with: {
       orders: {
+        where: isNull(orders.deletedAt),
         with: {
           items: true,
         },
-        orderBy: (orders, { desc }) => [desc(orders.createdAt)],
+        orderBy: [desc(orders.createdAt)],
       },
     },
   });

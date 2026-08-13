@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { ORDER_STATUSES, PRODUCT_TYPES, type OrderStatus } from "@/db/schema";
 import { updateOrderStatus } from "@/app/actions/orders";
 import { OrderCard } from "@/components/dashboard/order-card";
@@ -13,11 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface OrderWithRelations {
   id: string;
+  orderNumber: number;
   title: string;
   status: string;
   totalAmount: string;
@@ -39,17 +40,55 @@ const STATUS_COLORS: Record<string, string> = {
 export function KanbanBoard({ orders }: { orders: OrderWithRelations[] }) {
   const [search, setSearch] = useState("");
   const [productFilter, setProductFilter] = useState<string>("all");
+  // Local mirror used for optimistic status transitions.
+  const [localOrders, setLocalOrders] = useState(orders);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+
+  // Keep local mirror in sync when the server prop changes (e.g. after
+  // revalidatePath triggers a re-render with fresh data).
+  useEffect(() => {
+    setLocalOrders(orders);
+  }, [orders]);
 
   async function handleStatusChange(orderId: string, newStatus: OrderStatus) {
-    const result = await updateOrderStatus({ orderId, status: newStatus });
-    if (result.error) {
-      toast.error(result.error);
-    } else {
-      toast.success(`Moved to "${newStatus}"`);
-    }
+    const previousStatus =
+      localOrders.find((o) => o.id === orderId)?.status ?? newStatus;
+
+    // Optimistic update — move the card immediately.
+    setLocalOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)),
+    );
+    setPendingId(orderId);
+
+    startTransition(async () => {
+      try {
+        const result = await updateOrderStatus({ orderId, status: newStatus });
+        if (result.error) {
+          // Roll back on failure.
+          setLocalOrders((prev) =>
+            prev.map((o) =>
+              o.id === orderId ? { ...o, status: previousStatus } : o,
+            ),
+          );
+          toast.error(result.error);
+        } else {
+          toast.success(`Moved to "${newStatus}"`);
+        }
+      } catch {
+        setLocalOrders((prev) =>
+          prev.map((o) =>
+            o.id === orderId ? { ...o, status: previousStatus } : o,
+          ),
+        );
+        toast.error("Failed to update status. Reverted.");
+      } finally {
+        setPendingId(null);
+      }
+    });
   }
 
-  const filteredOrders = orders.filter((order) => {
+  const filteredOrders = localOrders.filter((order) => {
     const matchesSearch =
       search === "" ||
       order.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -117,11 +156,17 @@ export function KanbanBoard({ orders }: { orders: OrderWithRelations[] }) {
                   </p>
                 ) : (
                   statusOrders.map((order) => (
-                    <OrderCard
-                      key={order.id}
-                      order={order}
-                      onStatusChange={handleStatusChange}
-                    />
+                    <div key={order.id} className="relative">
+                      {pendingId === order.id && (
+                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/40 backdrop-blur-[1px]">
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        </div>
+                      )}
+                      <OrderCard
+                        order={order}
+                        onStatusChange={handleStatusChange}
+                      />
+                    </div>
                   ))
                 )}
               </div>

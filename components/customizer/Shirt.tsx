@@ -141,14 +141,14 @@ function AssetDecal({ asset, layerIndex, selected, onSelect }: AssetDecalProps) 
   //    and bakes the decal onto the opposite wall — "punch-through".
   //
   // We scale mildly with the footprint (bigger art spans more curvature) but
-  // cap hard at 0.22 so the inner face never reaches the back panel. With
-  // position.z = 0.14 and depth <= 0.22, the inner face stays >= 0.03 (inside
+  // cap hard at 0.4 so the inner face never reaches the back panel. With
+  // position.z = 0.14 and depth <= 0.4, the inner face stays >= -0.06 (inside
   // the cavity, ahead of the back panel at -0.08) — front art stays front-only.
   const footprint = Math.max(asset.scale[0], asset.scale[1]);
   const projectionDepth = THREE.MathUtils.clamp(
-    footprint * 0.5 + 0.08,
-    0.14,
-    0.22,
+    footprint * 1.5 + 0.1,
+    0.3,
+    0.4,
   );
 
   const decalScale: [number, number, number] = [
@@ -182,7 +182,7 @@ function AssetDecal({ asset, layerIndex, selected, onSelect }: AssetDecalProps) 
         // placed at the projector pose and nudged outward along its local +Z so
         // it floats just above the artwork without z-fighting.
         <group position={asset.position} rotation={asset.rotation}>
-          <mesh position={[0, 0, 0.012]} renderOrder={9999}>
+          <mesh name="selection-ring" position={[0, 0, 0.012]} renderOrder={9999}>
             <ringGeometry args={[ringRadius * 0.92, ringRadius * 0.99, 80]} />
             <meshBasicMaterial
               color="#e31e24"
@@ -209,6 +209,7 @@ function useAssetTexture(asset: DesignAsset): THREE.Texture {
     asset.kind === "text" ? (asset.text ?? "") : null,
     asset.textColor ?? "#D32F2F",
     asset.flipped,
+    asset.fontFamily,
   );
 
   // For images, mirror via a cloned texture (repeat.x = -1) only when flipped,
@@ -251,11 +252,12 @@ function useTextTexture(
   text: string | null,
   color: string,
   flipped: boolean,
+  fontFamily: string = "Inter",
 ): THREE.Texture | null {
   const texture = useMemo(() => {
     if (!text) return null;
-    return createTextTexture(text, color, flipped);
-  }, [text, color, flipped]);
+    return createTextTexture(text, color, flipped, fontFamily);
+  }, [text, color, flipped, fontFamily]);
 
   useEffect(() => {
     return () => {
@@ -270,6 +272,7 @@ function createTextTexture(
   text: string,
   color: string,
   flipped: boolean,
+  fontFamily: string = "Inter",
 ): THREE.Texture {
   const canvas = document.createElement("canvas");
   canvas.width = 1024;
@@ -288,7 +291,7 @@ function createTextTexture(
 
   let fontSize = 220;
   const maxWidth = canvas.width * 0.88;
-  const fontStack = '"Space Grotesk", "Arial Black", Arial, sans-serif';
+  const fontStack = `"${fontFamily}", Arial, sans-serif`;
   ctx.font = `900 ${fontSize}px ${fontStack}`;
   const measured = ctx.measureText(text).width;
   if (measured > maxWidth) {

@@ -1,31 +1,25 @@
 "use client";
 
-import { Suspense, useEffect, useRef, type MutableRefObject } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   Center,
   ContactShadows,
-  Environment,
   OrbitControls,
   PerspectiveCamera,
 } from "@react-three/drei";
 import * as THREE from "three";
 import { Shirt } from "./Shirt";
 import { useCustomizer } from "./CustomizerProvider";
-
-/** Minimal structural type for the makeDefault OrbitControls instance. */
-interface OrbitControlsLike {
-  update: () => void;
-}
+import type { ThreeSnapshot } from "@/lib/customizer/export";
 
 export type ViewSide = "front" | "back";
 
 interface SceneProps {
   viewSide: ViewSide;
-  onCanvasReady?: (canvas: HTMLCanvasElement) => void;
 }
 
-export function Scene({ viewSide, onCanvasReady }: SceneProps) {
+export function Scene({ viewSide }: SceneProps) {
   const {
     shirtColor,
     assets,
@@ -40,14 +34,22 @@ export function Scene({ viewSide, onCanvasReady }: SceneProps) {
       // preserveDrawingBuffer lets us call canvas.toDataURL() for PNG export.
       gl={{ preserveDrawingBuffer: true, antialias: true }}
       className="!bg-transparent"
-      onCreated={({ gl }) => {
-        onCanvasReady?.(gl.domElement);
-      }}
     >
       <PerspectiveCamera makeDefault position={[0, 0.05, 2.4]} fov={38} />
+      <R3FStateBridge />
       <Suspense fallback={null}>
-        <ambientLight intensity={0.5} />
-        <Environment preset="city" />
+        <ambientLight intensity={0.45} />
+        <hemisphereLight args={["#ffffff", "#888888", 0.35]} />
+        <directionalLight
+          position={[3, 4, 2]}
+          intensity={1.1}
+          castShadow
+          shadow-mapSize={[1024, 1024]}
+          shadow-bias={-0.0001}
+          shadow-normalBias={0.02}
+        />
+        <directionalLight position={[-3, 2.5, 1.5]} intensity={0.45} />
+        <directionalLight position={[0, 3, -3]} intensity={0.55} />
         <Center>
           <Shirt
             shirtColor={shirtColor}
@@ -82,6 +84,31 @@ export function Scene({ viewSide, onCanvasReady }: SceneProps) {
   );
 }
 
+/**
+ * Invisible component that bridges the live R3F runtime objects (renderer,
+ * scene, camera, and the makeDefault OrbitControls) into a ref exposed via
+ * CustomizerProvider, so the Export button can drive programmatic captures
+ * from outside the <Canvas> tree.
+ */
+function R3FStateBridge() {
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
+  const controls = useThree((s) => s.controls) as
+    | (ThreeSnapshot["controls"] & object)
+    | null;
+  const { threeRef } = useCustomizer();
+
+  useEffect(() => {
+    threeRef.current = { gl, scene, camera, controls };
+    return () => {
+      if (threeRef.current?.camera === camera) threeRef.current = null;
+    };
+  }, [gl, scene, camera, controls, threeRef]);
+
+  return null;
+}
+
 const FRONT_CAM = new THREE.Vector3(0, 0.05, 2.4);
 const BACK_CAM = new THREE.Vector3(0, 0.05, -2.4);
 
@@ -92,7 +119,7 @@ const BACK_CAM = new THREE.Vector3(0, 0.05, -2.4);
  */
 function CameraPresetController({ side }: { side: ViewSide }) {
   const camera = useThree((s) => s.camera);
-  const controls = useThree((s) => s.controls) as OrbitControlsLike | null;
+  const controls = useThree((s) => s.controls);
   const target = useRef(new THREE.Vector3());
   const animating = useRef(false);
 
@@ -103,17 +130,15 @@ function CameraPresetController({ side }: { side: ViewSide }) {
 
   useFrame(() => {
     if (!animating.current) return;
+    const ctrl = controls as { update: () => void } | null;
     camera.position.lerp(target.current, 0.18);
-    controls?.update();
+    ctrl?.update();
     if (camera.position.distanceTo(target.current) < 0.01) {
       camera.position.copy(target.current);
-      controls?.update();
+      ctrl?.update();
       animating.current = false;
     }
   });
 
   return null;
 }
-
-// Keep a ref helper exported so callers can type the canvas element.
-export type CanvasRef = MutableRefObject<HTMLCanvasElement | null>;

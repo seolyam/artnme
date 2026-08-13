@@ -5,9 +5,11 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import type { ThreeSnapshot } from "@/lib/customizer/export";
 
 export type AssetKind = "image" | "text";
 export type Placement = "front" | "back";
@@ -25,6 +27,8 @@ export interface DesignAsset {
   fileName: string | null;
   /** Content for text assets. */
   text?: string;
+  /** Font family for text assets. */
+  fontFamily?: string;
   /** Fill color for text assets. */
   textColor?: string;
   /** Which side of the shirt the decal is projected onto. */
@@ -76,6 +80,13 @@ export const TEXT_COLOR_CHOICES = [
   { name: "Navy", hex: "#1B2A4A" },
 ] as const;
 
+export const FONT_CHOICES = [
+  "Inter",
+  "Space Grotesk",
+  "Merriweather",
+  "Outfit",
+] as const;
+
 interface PersistedDraft {
   v: number;
   shirtColor: string;
@@ -96,7 +107,7 @@ export interface CustomizerState {
   selectedAssetId: string | null;
   selectAsset: (id: string | null) => void;
   addImageAssets: (files: File[]) => void;
-  addTextAsset: (text: string, color: string) => void;
+  addTextAsset: (text: string, color: string, fontFamily?: string) => void;
   updateAssetTransform: (id: string, patch: AssetTransformPatch) => void;
   setPlacement: (id: string, placement: Placement) => void;
   setFlipped: (id: string, flipped: boolean) => void;
@@ -112,6 +123,12 @@ export interface CustomizerState {
   hydrated: boolean;
   /** True the first time a non-empty draft is restored. */
   draftRestored: boolean;
+  /**
+   * Live R3F runtime handle (renderer, scene, camera, controls) bridged out of
+   * the @react-three/fiber <Canvas> by R3FStateBridge. Used by the Export
+   * button to drive a programmatic multi-angle capture.
+   */
+  threeRef: { current: ThreeSnapshot | null };
 }
 
 const CustomizerContext = createContext<CustomizerState | null>(null);
@@ -131,13 +148,14 @@ function createImageAsset(file: File, dataUrl: string): DesignAsset {
   };
 }
 
-function createTextAsset(text: string, color: string): DesignAsset {
+function createTextAsset(text: string, color: string, fontFamily: string = "Inter"): DesignAsset {
   return {
     id: crypto.randomUUID(),
     kind: "text",
     url: "",
     fileName: null,
     text,
+    fontFamily,
     textColor: color,
     placement: "front",
     flipped: false,
@@ -215,6 +233,7 @@ export function CustomizerProvider({ children }: { children: ReactNode }) {
   // mismatch.
   const [hydrated, setHydrated] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
+  const threeRef = useRef<ThreeSnapshot | null>(null);
 
   // --- Hydration: read the saved draft once on mount (client-only). ---------
   useEffect(() => {
@@ -275,10 +294,10 @@ export function CustomizerProvider({ children }: { children: ReactNode }) {
     setSelectedAssetId(newAssets[newAssets.length - 1].id);
   }, []);
 
-  const addTextAsset = useCallback((text: string, color: string) => {
+  const addTextAsset = useCallback((text: string, color: string, fontFamily?: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    const asset = createTextAsset(trimmed, color);
+    const asset = createTextAsset(trimmed, color, fontFamily);
     setAssets((prev) => [...prev, asset]);
     setSelectedAssetId(asset.id);
   }, []);
@@ -370,6 +389,7 @@ export function CustomizerProvider({ children }: { children: ReactNode }) {
         clearDraft,
         hydrated,
         draftRestored,
+        threeRef,
       }}
     >
       {children}

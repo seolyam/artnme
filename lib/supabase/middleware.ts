@@ -36,5 +36,25 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const pathname = request.nextUrl.pathname;
+  const isDashboard = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+  const isLoginPage = pathname === "/login";
+
+  // Edge guard: block unauthenticated dashboard access.
+  if (isDashboard && !user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(url);
+  }
+
+  // Edge guard: skip the login page if already authenticated.
+  if (isLoginPage && user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
   return supabaseResponse;
 }

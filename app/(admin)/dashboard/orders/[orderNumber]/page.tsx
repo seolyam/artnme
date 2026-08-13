@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getOrder } from "@/app/actions/orders";
+import { getOrder, getOrderActorProfile } from "@/app/actions/orders";
 import {
   Card,
   CardContent,
@@ -16,8 +16,11 @@ import {
   User,
   Package,
   Banknote,
+  History,
+  PenLine,
 } from "lucide-react";
 import { OrderActions } from "@/components/dashboard/order-actions";
+import { RecordDepositDialog } from "@/components/dashboard/record-deposit-dialog";
 
 const STATUS_COLORS: Record<string, string> = {
   Pending: "bg-yellow-500",
@@ -30,10 +33,10 @@ const STATUS_COLORS: Record<string, string> = {
 export default async function OrderDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ orderNumber: string }>;
 }) {
-  const { id } = await params;
-  const order = await getOrder(id);
+  const { orderNumber } = await params;
+  const order = await getOrder(orderNumber);
 
   if (!order) {
     notFound();
@@ -46,6 +49,11 @@ export default async function OrderDetailPage({
     new Date(order.dueDate) < new Date() &&
     order.status !== "Completed";
 
+  const [createdByProfile, updatedByProfile] = await Promise.all([
+    getOrderActorProfile(order.createdBy ?? null),
+    getOrderActorProfile(order.updatedBy ?? null),
+  ]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -57,6 +65,13 @@ export default async function OrderDetailPage({
                 <ArrowLeft className="h-4 w-4" />
               </Link>
             </Button>
+            <span
+              className="font-mono text-xs tabular-nums text-muted-foreground bg-surface-container-high px-2 py-1 hidden sm:inline-block"
+              style={{ fontFamily: "var(--font-label)" }}
+              title={`Order #${order.orderNumber} · ${order.id}`}
+            >
+              #{order.orderNumber}
+            </span>
             <h1 className="text-2xl font-bold tracking-tight">
               {order.title}
             </h1>
@@ -70,7 +85,19 @@ export default async function OrderDetailPage({
             </span>
           </div>
         </div>
-        <OrderActions orderId={order.id} currentStatus={order.status} />
+        <div className="flex items-center gap-2">
+          <RecordDepositDialog
+            orderId={order.id}
+            currentDeposit={order.depositAmount}
+            totalAmount={order.totalAmount}
+            orderTitle={order.title}
+          />
+          <OrderActions
+            orderId={order.id}
+            orderNumber={order.orderNumber}
+            currentStatus={order.status}
+          />
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -83,7 +110,13 @@ export default async function OrderDetailPage({
             <div className="flex items-center gap-2 text-sm">
               <User className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">Customer:</span>
-              <span className="font-medium">{order.customer.name}</span>
+              <Link
+                href={`/dashboard/customers/${order.customer.id}`}
+                prefetch={true}
+                className="font-medium hover:underline"
+              >
+                {order.customer.name}
+              </Link>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -201,6 +234,55 @@ export default async function OrderDetailPage({
                 </div>
               ))}
             </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Audit Trail */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <History className="h-4 w-4" />
+            Audit Trail
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center gap-2 text-sm">
+            <User className="h-4 w-4 text-muted-foreground" />
+            <span className="text-muted-foreground">Created by:</span>
+            <span className="font-medium">
+              {createdByProfile?.fullName ?? "Unknown staff"}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              ·{" "}
+              {new Date(order.createdAt).toLocaleDateString("en-PH", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </span>
+          </div>
+          {order.updatedAt && (
+            <div className="flex items-center gap-2 text-sm">
+              <PenLine className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Last updated:</span>
+              <span className="font-medium">
+                {updatedByProfile?.fullName ?? "Unknown staff"}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                ·{" "}
+                {new Date(order.updatedAt).toLocaleDateString("en-PH", {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </span>
+            </div>
+          )}
+          {!order.updatedAt && (
+            <p className="text-xs text-muted-foreground">
+              No edits recorded since creation.
+            </p>
           )}
         </CardContent>
       </Card>

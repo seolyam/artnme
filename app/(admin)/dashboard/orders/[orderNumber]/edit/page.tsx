@@ -8,10 +8,10 @@ import { ArrowLeft } from "lucide-react";
 export default async function EditOrderPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ orderNumber: string }>;
 }) {
-  const { id } = await params;
-  const order = await getOrder(id);
+  const { orderNumber } = await params;
+  const order = await getOrder(orderNumber);
 
   if (!order) {
     notFound();
@@ -21,7 +21,7 @@ export default async function EditOrderPage({
     <div className="space-y-6">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" asChild className="h-7 w-7 p-0">
-          <Link href={`/dashboard/orders/${order.id}`}>
+          <Link href={`/dashboard/orders/${order.orderNumber}`}>
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>

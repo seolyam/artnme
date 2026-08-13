@@ -15,6 +15,7 @@ export type CustomerFormValues = z.infer<typeof customerSchema>;
 // ─── Order Item ─────────────────────────────────────────────────────────────
 
 export const orderItemSchema = z.object({
+  id: z.string().uuid().optional(),
   productType: z.enum(["Tarpaulin", "T-Shirt", "Mug", "Other"]),
   description: z.string().optional(),
   quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),

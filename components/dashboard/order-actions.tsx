@@ -21,9 +21,11 @@ import Link from "next/link";
 
 export function OrderActions({
   orderId,
+  orderNumber,
   currentStatus,
 }: {
   orderId: string;
+  orderNumber: number;
   currentStatus: string;
 }) {
   const router = useRouter();
@@ -44,13 +46,18 @@ export function OrderActions({
   }
 
   function handleDelete() {
-    if (!confirm("Are you sure you want to delete this order?")) return;
+    if (
+      !confirm(
+        "Move this order to trash? You can restore it from the Trash for up to 30 days.",
+      )
+    )
+      return;
     startTransition(async () => {
       const result = await deleteOrder(orderId);
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Order deleted");
+        toast.success("Order moved to trash");
         router.push("/dashboard/orders");
       }
     });
@@ -59,13 +66,13 @@ export function OrderActions({
   return (
     <div className="flex items-center gap-2">
       <Button variant="outline" size="sm" asChild>
-        <a href={`/dashboard/orders/${orderId}/print`} target="_blank" rel="noopener noreferrer">
+        <a href={`/dashboard/orders/${orderNumber}/print`} target="_blank" rel="noopener noreferrer">
           <Printer className="mr-2 h-4 w-4" />
           Print
         </a>
       </Button>
       <Button variant="outline" size="sm" asChild>
-        <Link href={`/dashboard/orders/${orderId}/edit`}>
+        <Link href={`/dashboard/orders/${orderNumber}/edit`}>
           <Pencil className="mr-2 h-4 w-4" />
           Edit
         </Link>
