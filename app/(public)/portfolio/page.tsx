@@ -1,32 +1,45 @@
 import { PortfolioGallery } from "@/components/portfolio/Gallery";
+import { LineReveal } from "@/components/motion/line-reveal";
+import { Reveal } from "@/components/motion/reveal";
 import { getShowcaseImages } from "@/lib/cloudinary";
+
+export const metadata = {
+  title: "Portfolio — Art 'n Me",
+  description: "Real production batches from Art 'n Me: jerseys, shirts, mugs and tarpaulins.",
+};
+
+// Re-read Cloudinary hourly so new showcase uploads appear without a redeploy.
+export const revalidate = 3600;
 
 export default async function PortfolioPage() {
   const showcaseImages = await getShowcaseImages();
 
   return (
-    <main className="pt-24">
-      <section className="relative overflow-hidden bg-surface px-8 py-24">
-        <div className="absolute inset-0 z-0 opacity-25 pointer-events-none">
-          <div className="absolute -left-10 top-8 h-56 w-56 bg-primary-container blur-[100px]" />
-          <div className="absolute -right-10 bottom-8 h-56 w-56 bg-surface-container-highest blur-[100px]" />
-        </div>
-
-        <div className="container relative z-10 mx-auto">
-          <span className="mb-6 block text-sm font-headline font-bold uppercase tracking-[0.3em] text-primary-container">
-            Portfolio
-          </span>
-          <h1 className="max-w-5xl font-headline text-5xl font-black uppercase leading-none tracking-tight md:text-7xl lg:text-8xl">
-            Real Client Work,
-            <br />
-            Studio-Grade Output
-          </h1>
-          <p className="mt-6 max-w-2xl text-sm uppercase tracking-widest text-on-surface-variant">
-            Browse the showcase by print process. Every item below comes from
-            real production batches from Art &apos;n Me.
+    <main>
+      <header className="relative mx-auto max-w-[1360px] overflow-hidden px-4 pb-16 pt-36 md:px-6 md:pt-44">
+        <p
+          aria-hidden
+          className="text-outline pointer-events-none absolute -right-2 top-28 hidden font-headline text-[13rem] font-bold leading-[0.8] tracking-[-0.06em] text-outline-variant/50 lg:block"
+        >
+          {String(showcaseImages.length).padStart(2, "0")}
+        </p>
+        <Reveal immediate y={12}>
+          <p className="spec mb-6 text-accent-ink">Portfolio — real production batches</p>
+        </Reveal>
+        <LineReveal
+          className="relative font-headline text-[clamp(3.25rem,8vw,8rem)] font-bold uppercase leading-[0.86] tracking-[-0.055em]"
+          lines={[
+            { text: "Real client work." },
+            { text: "Studio-grade output.", className: "text-brand" },
+          ]}
+        />
+        <Reveal immediate delay={0.45}>
+          <p className="mt-8 max-w-xl text-lg font-light leading-relaxed text-on-surface-variant">
+            Everything here came off our presses. Filter by process, then open any
+            piece to see it up close.
           </p>
-        </div>
-      </section>
+        </Reveal>
+      </header>
 
       <PortfolioGallery images={showcaseImages} />
     </main>
