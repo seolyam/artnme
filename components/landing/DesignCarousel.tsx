@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CldImage } from "next-cloudinary";
 import { useCallback, useEffect, useState } from "react";
 
+import { EASE_PLATE, EASE_PRESS } from "@/components/motion/reveal";
+import { ArrowRight } from "@/components/motion/icons";
 import { cn } from "@/lib/utils";
 
 type CarouselImage = {
@@ -17,14 +19,12 @@ type DesignCarouselProps = {
   intervalMs?: number;
 };
 
-export function DesignCarousel({
-  images,
-  intervalMs = 4500,
-}: DesignCarouselProps) {
-  const [index, setIndex] = useState(0);
-  const [direction, setDirection] = useState(0);
-  const [paused, setPaused] = useState(false);
+const pad = (n: number) => String(n).padStart(2, "0");
 
+export function DesignCarousel({ images, intervalMs = 5000 }: DesignCarouselProps) {
+  const [index, setIndex] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const [paused, setPaused] = useState(false);
   const count = images.length;
 
   const go = useCallback(
@@ -36,112 +36,113 @@ export function DesignCarousel({
     [count],
   );
 
-  const goNext = useCallback(() => go(index + 1, 1), [go, index]);
-  const goPrev = useCallback(() => go(index - 1, -1), [go, index]);
-
   useEffect(() => {
     if (paused || count <= 1) return;
-
-    const timer = setInterval(() => {
-      setDirection(1);
-      setIndex((prev) => (prev + 1) % count);
-    }, intervalMs);
-
-    return () => clearInterval(timer);
-  }, [paused, count, intervalMs]);
+    const timer = setTimeout(() => go(index + 1, 1), intervalMs);
+    return () => clearTimeout(timer);
+  }, [paused, count, intervalMs, index, go]);
 
   if (count === 0) {
     return (
-      <div className="flex h-96 items-center justify-center bg-surface-container-high text-sm uppercase tracking-widest text-on-surface-variant">
-        No showcase images yet.
+      <div className="halftone flex h-96 items-center justify-center bg-surface-container-high [--dot:var(--outline-variant)]">
+        <p className="spec bg-background px-4 py-3 text-on-surface-variant">
+          No showcase images yet
+        </p>
       </div>
     );
   }
 
   const current = images[index];
+  const label = current.subcategory
+    ? `${current.category} · ${current.subcategory}`
+    : current.category;
 
   return (
     <div
-      className="group relative overflow-hidden bg-surface-container-high"
+      className="relative"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={() => setPaused(false)}
     >
-      <div className="relative aspect-16/10 w-full md:aspect-21/9">
-        <AnimatePresence initial={false} custom={direction} mode="popLayout">
+      <div className="mb-6 flex items-center justify-end gap-2.5">
+        <p className="spec mr-3 text-sm" aria-live="polite">
+          <span className="text-on-surface">{pad(index + 1)}</span>
+          <span className="text-on-surface-variant"> / {pad(count)}</span>
+        </p>
+        <button
+          type="button"
+          onClick={() => go(index - 1, -1)}
+          aria-label="Previous design"
+          disabled={count <= 1}
+          className="flex h-14 w-14 items-center justify-center border border-outline-variant text-on-surface transition-colors hover:border-brand hover:bg-brand hover:text-white disabled:opacity-40"
+        >
+          <ArrowRight className="rotate-180" />
+        </button>
+        <button
+          type="button"
+          onClick={() => go(index + 1, 1)}
+          aria-label="Next design"
+          disabled={count <= 1}
+          className="flex h-14 w-14 items-center justify-center border border-outline-variant text-on-surface transition-colors hover:border-brand hover:bg-brand hover:text-white disabled:opacity-40"
+        >
+          <ArrowRight />
+        </button>
+      </div>
+
+      <div className="relative aspect-4/5 w-full overflow-hidden bg-surface-container-high sm:aspect-16/10 md:aspect-21/9">
+        <AnimatePresence initial={false} custom={direction}>
           <motion.div
             key={current.publicId}
             custom={direction}
-            initial={{ opacity: 0, x: direction > 0 ? 60 : -60 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: direction > 0 ? -60 : 60 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            initial={{
+              clipPath: direction > 0 ? "inset(0 0 0 100%)" : "inset(0 100% 0 0)",
+            }}
+            animate={{ clipPath: "inset(0 0% 0 0%)" }}
+            exit={{ opacity: 0.4 }}
+            transition={{ duration: 0.9, ease: EASE_PLATE }}
             className="absolute inset-0"
           >
-            <CldImage
-              src={current.publicId}
-              alt={`${current.category} design showcase`}
-              width={1600}
-              height={900}
-              crop="fill"
-              sizes="100vw"
-              className="h-full w-full object-cover"
-            />
-            <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-background via-background/40 to-transparent" />
+            <motion.div
+              className="h-full w-full"
+              initial={{ scale: 1.12 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 1.6, ease: EASE_PRESS }}
+            >
+              <CldImage
+                src={current.publicId}
+                alt={`${current.category} design showcase`}
+                width={1600}
+                height={900}
+                crop="fill"
+                sizes="100vw"
+                className="h-full w-full object-cover"
+              />
+            </motion.div>
+            <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/90 via-black/20 to-transparent" />
+            <motion.div
+              className="absolute bottom-0 left-0 p-6 md:p-10"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.35, ease: EASE_PRESS }}
+            >
+              <p className="spec text-[#ff5a5f]">{label}</p>
+            </motion.div>
           </motion.div>
         </AnimatePresence>
-      </div>
 
-      <div className="absolute bottom-0 left-0 z-20 p-6 md:p-10">
-        <p className="font-headline text-xs font-bold uppercase tracking-[0.3em] text-primary-container">
-          {current.subcategory
-            ? `${current.category} - ${current.subcategory}`
-            : current.category}
-        </p>
-      </div>
-
-      {count > 1 && (
-        <>
-          <button
-            type="button"
-            onClick={goPrev}
-            aria-label="Previous image"
-            className={cn(
-              "absolute left-3 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-background/70 text-on-surface backdrop-blur-sm transition-all hover:bg-background hover:scale-110",
-              "opacity-0 group-hover:opacity-100 focus:opacity-100",
-            )}
-          >
-            <span className="material-symbols-outlined">chevron_left</span>
-          </button>
-          <button
-            type="button"
-            onClick={goNext}
-            aria-label="Next image"
-            className={cn(
-              "absolute right-3 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-background/70 text-on-surface backdrop-blur-sm transition-all hover:bg-background hover:scale-110",
-              "opacity-0 group-hover:opacity-100 focus:opacity-100",
-            )}
-          >
-            <span className="material-symbols-outlined">chevron_right</span>
-          </button>
-
-          <div className="absolute bottom-4 right-6 z-20 flex gap-2 md:bottom-6 md:right-10">
-            {images.map((image, i) => (
-              <button
-                key={image.publicId}
-                type="button"
-                onClick={() => go(i, i > index ? 1 : -1)}
-                aria-label={`Go to image ${i + 1}`}
-                className={cn(
-                  "h-2 transition-all",
-                  i === index
-                    ? "w-8 bg-primary-container"
-                    : "w-2 bg-on-surface/40 hover:bg-on-surface/70",
-                )}
-              />
-            ))}
+        {count > 1 && (
+          <div className="absolute inset-x-0 bottom-0 z-10 h-1 bg-white/15">
+            <motion.div
+              key={`${index}-${paused}`}
+              className={cn("h-full origin-left bg-brand")}
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: paused ? 0 : 1 }}
+              transition={{ duration: paused ? 0.2 : intervalMs / 1000, ease: "linear" }}
+            />
           </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 }

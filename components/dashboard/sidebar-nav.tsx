@@ -3,16 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useCallback } from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
-  ShoppingCart,
+  KanbanSquare,
   Users,
+  Trash2,
   LogOut,
   Menu,
   X,
+  ExternalLink,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -24,20 +26,35 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { logout } from "@/app/actions/auth";
 
 const navItems = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Orders", href: "/dashboard/orders", icon: ShoppingCart },
+  { label: "Command center", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Orders board", href: "/dashboard/orders", icon: KanbanSquare, badge: true },
   { label: "Customers", href: "/dashboard/customers", icon: Users },
+  { label: "Trash", href: "/dashboard/orders/trash", icon: Trash2 },
 ];
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+function isActive(pathname: string, href: string) {
+  if (href === "/dashboard") return pathname === href;
+  if (href === "/dashboard/orders") {
+    return pathname.startsWith(href) && !pathname.startsWith("/dashboard/orders/trash");
+  }
+  return pathname.startsWith(href);
+}
+
+function NavLinks({
+  onNavigate,
+  webQuotes,
+  layoutGroup,
+}: {
+  onNavigate?: () => void;
+  webQuotes: number;
+  layoutGroup: string;
+}) {
   const pathname = usePathname();
 
   return (
-    <nav className="flex-1 space-y-1 px-3 py-4">
+    <nav aria-label="Dashboard" className="flex-1 space-y-0.5 px-3 py-4">
       {navItems.map((item) => {
-        const isActive =
-          pathname === item.href ||
-          (item.href !== "/dashboard" && pathname.startsWith(item.href));
+        const active = isActive(pathname, item.href);
 
         return (
           <Link
@@ -45,19 +62,33 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             href={item.href}
             prefetch={true}
             onClick={onNavigate}
+            aria-current={active ? "page" : undefined}
             className={cn(
-              "group flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all duration-150 rounded-none relative",
-              isActive
-                ? "bg-surface-container-high text-foreground"
-                : "text-muted-foreground hover:bg-surface-container hover:text-foreground",
+              "group relative flex min-h-11 items-center gap-3 px-3.5 text-sm font-semibold transition-colors",
+              active ? "text-on-surface" : "text-on-surface-variant hover:text-on-surface",
             )}
           >
-            {/* Active indicator — bleeding red edge */}
-            {isActive && (
-              <span className="absolute left-0 top-1 bottom-1 w-[3px] bg-primary-container dark:bg-primary-container" />
+            {active && (
+              <motion.span
+                layoutId={`${layoutGroup}-active`}
+                className="absolute inset-0 bg-surface-container-high"
+                transition={{ type: "spring", stiffness: 420, damping: 38 }}
+              >
+                <span className="absolute bottom-1.5 left-0 top-1.5 w-[3px] bg-brand" />
+              </motion.span>
             )}
-            <item.icon className={cn("h-4 w-4 shrink-0 transition-colors", isActive && "text-primary-container dark:text-primary")} />
-            <span className="truncate">{item.label}</span>
+            <item.icon
+              className={cn(
+                "relative h-4 w-4 shrink-0 transition-colors",
+                active ? "text-brand" : "group-hover:text-on-surface",
+              )}
+            />
+            <span className="relative truncate">{item.label}</span>
+            {item.badge && webQuotes > 0 && (
+              <span className="spec relative ml-auto bg-brand px-1.5 py-0.5 text-[10px] tracking-[0.08em] text-white">
+                {webQuotes} new
+              </span>
+            )}
           </Link>
         );
       })}
@@ -65,74 +96,66 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function SidebarFooter() {
+function SignOut() {
   return (
-    <div className="px-3 py-4 space-y-2 border-t border-surface-container-high">
-      <div className="flex items-center justify-between px-3">
-        <span className="text-xs text-muted-foreground uppercase tracking-wider" style={{ fontFamily: "var(--font-label)" }}>Theme</span>
-        <ThemeToggle />
-      </div>
-      <form action={logout}>
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive"
-          type="submit"
-        >
-          <LogOut className="h-4 w-4" />
-          Sign Out
-        </Button>
-      </form>
-    </div>
+    <form action={logout}>
+      <button
+        type="submit"
+        className="flex min-h-11 w-full items-center gap-3 px-3.5 text-sm text-on-surface-variant transition-colors hover:text-accent-ink"
+      >
+        <LogOut className="h-4 w-4" />
+        Sign out
+      </button>
+    </form>
   );
 }
 
 function Brand() {
   return (
-    <div className="flex items-center gap-3 px-6 py-5 border-b border-surface-container-high">
-      <div className="flex h-9 w-9 items-center justify-center overflow-hidden">
-        <img src="/images/art-n-me-logo.jpg" alt="Logo" className="h-full w-full object-cover" />
-      </div>
+    <div className="flex items-center gap-3 border-b border-outline-variant/30 px-5 py-5">
+      <img src="/images/art-n-me-logo.jpg" alt="" className="h-10 w-10 object-cover" />
       <div className="flex flex-col">
-        <span
-          className="text-lg font-bold tracking-tighter uppercase leading-tight"
-          style={{ fontFamily: "var(--font-headline)" }}
-        >
+        <span className="font-headline text-lg font-bold uppercase leading-tight tracking-tight">
           Art &apos;n Me
         </span>
-        <span className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] leading-none">
-          Staff Portal
-        </span>
+        <span className="spec text-[10px] text-on-surface-variant">Staff portal</span>
       </div>
     </div>
   );
 }
 
-/** Desktop sidebar — hidden on mobile */
-function DesktopSidebar() {
+function DesktopSidebar({ webQuotes }: { webQuotes: number }) {
   return (
-    <aside className="hidden md:flex h-screen w-64 flex-col bg-card border-r border-surface-container-high sticky top-0">
+    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-outline-variant/30 bg-surface-container-lowest md:flex">
       <Brand />
-      <NavLinks />
-      <SidebarFooter />
+      <NavLinks webQuotes={webQuotes} layoutGroup="desktop" />
+      <div className="space-y-1 border-t border-outline-variant/30 px-3 py-4">
+        <Link
+          href="/"
+          className="flex min-h-11 items-center gap-3 px-3.5 text-sm text-on-surface-variant transition-colors hover:text-on-surface"
+        >
+          <ExternalLink className="h-4 w-4" />
+          View public site
+        </Link>
+        <SignOut />
+        <div className="flex items-center justify-between px-3.5 pt-2">
+          <span className="spec text-[10px] text-on-surface-variant">Theme</span>
+          <ThemeToggle />
+        </div>
+      </div>
     </aside>
   );
 }
 
-/** Mobile top bar + sheet sidebar — shown only on mobile */
-function MobileHeader() {
+function MobileHeader({ webQuotes }: { webQuotes: number }) {
   const [open, setOpen] = useState(false);
   const closeSheet = useCallback(() => setOpen(false), []);
 
   return (
-    <header className="flex md:hidden items-center justify-between bg-card px-4 py-3 border-b border-surface-container-high sticky top-0 z-40">
-      <div className="flex items-center gap-2">
-        <div className="flex h-7 w-7 items-center justify-center overflow-hidden">
-          <img src="/images/art-n-me-logo.jpg" alt="Logo" className="h-full w-full object-cover" />
-        </div>
-        <span
-          className="text-base font-bold tracking-tight uppercase"
-          style={{ fontFamily: "var(--font-headline)" }}
-        >
+    <header className="sticky top-0 z-40 flex items-center justify-between border-b border-outline-variant/30 bg-surface-container-lowest px-4 py-2.5 md:hidden">
+      <div className="flex items-center gap-2.5">
+        <img src="/images/art-n-me-logo.jpg" alt="" className="h-8 w-8 object-cover" />
+        <span className="font-headline text-base font-bold uppercase tracking-tight">
           Art &apos;n Me
         </span>
       </div>
@@ -141,35 +164,28 @@ function MobileHeader() {
         <ThemeToggle />
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <button
+              type="button"
+              className="relative flex h-11 w-11 items-center justify-center"
+              aria-label={open ? "Close menu" : "Open menu"}
+            >
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              <span className="sr-only">Toggle menu</span>
-            </Button>
+              {webQuotes > 0 && !open && (
+                <span className="absolute right-2 top-2 h-2 w-2 bg-brand" />
+              )}
+            </button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0 bg-card">
-            <SheetHeader className="px-6 py-5 border-b border-surface-container-high">
-              <SheetTitle className="flex items-center gap-2 text-lg">
-                <div className="flex h-8 w-8 items-center justify-center overflow-hidden">
-                  <img src="/images/art-n-me-logo.jpg" alt="Logo" className="h-full w-full object-cover" />
-                </div>
-                <span style={{ fontFamily: "var(--font-headline)" }} className="uppercase tracking-tighter">
-                  Art &apos;n Me
-                </span>
+          <SheetContent side="left" className="w-72 bg-surface-container-lowest p-0">
+            <SheetHeader className="border-b border-outline-variant/30 px-5 py-5">
+              <SheetTitle className="flex items-center gap-2.5 font-headline text-lg uppercase tracking-tight">
+                <img src="/images/art-n-me-logo.jpg" alt="" className="h-8 w-8 object-cover" />
+                Art &apos;n Me
               </SheetTitle>
             </SheetHeader>
             <div className="flex flex-1 flex-col">
-              <NavLinks onNavigate={closeSheet} />
-              <div className="border-t border-surface-container-high px-3 py-4">
-                <form action={logout}>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive"
-                    type="submit"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Sign Out
-                  </Button>
-                </form>
+              <NavLinks onNavigate={closeSheet} webQuotes={webQuotes} layoutGroup="mobile" />
+              <div className="border-t border-outline-variant/30 px-3 py-4">
+                <SignOut />
               </div>
             </div>
           </SheetContent>
@@ -179,11 +195,11 @@ function MobileHeader() {
   );
 }
 
-export function SidebarNav() {
+export function SidebarNav({ webQuotes = 0 }: { webQuotes?: number }) {
   return (
     <>
-      <DesktopSidebar />
-      <MobileHeader />
+      <DesktopSidebar webQuotes={webQuotes} />
+      <MobileHeader webQuotes={webQuotes} />
     </>
   );
 }

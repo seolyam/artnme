@@ -9,9 +9,23 @@
 /* Tailwind theme: expose custom tokens */
 @theme inline {
   /* Fonts */
-  --font-headline: "Space Grotesk", sans-serif;
-  --font-body: "Manrope", sans-serif;
-  --font-label: "Manrope", sans-serif;
+  --font-headline: var(--font-space-grotesk), "Space Grotesk", sans-serif;
+  --font-body: var(--font-manrope), "Manrope", sans-serif;
+  --font-label: var(--font-manrope), "Manrope", sans-serif;
+  --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", ui-monospace, monospace;
+
+  /* Print-floor tokens */
+  --color-brand: #e31e24;
+  --color-accent-ink: var(--accent-ink);
+  --color-sheet: var(--sheet);
+  --color-sheet-foreground: var(--sheet-fg);
+  --color-sheet-muted: var(--sheet-muted);
+  --color-sheet-accent: var(--sheet-accent);
+  --color-success: var(--success);
+
+  /* Motion */
+  --ease-press: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-plate: cubic-bezier(0.77, 0, 0.18, 1);
 
   /* Radii — 0px for industrial sharp aesthetic */
   --radius-sm: 0px;
@@ -128,6 +142,15 @@
   /* Outline */
   --outline-variant: #bdb3ae;
   --error: #b9161c;
+
+  /* Small red text that clears 4.5:1 on this ground */
+  --accent-ink: #b31218;
+  /* Inverted "sheet" sections — ink on paper themes become paper on ink */
+  --sheet: #161514;
+  --sheet-fg: #f4f1ec;
+  --sheet-muted: #c9c3bf;
+  --sheet-accent: #ff5a5f;
+  --success: #1f8a4c;
 }
 
 /* ============================================
@@ -187,6 +210,13 @@
   /* Outline */
   --outline-variant: #5d3f3c;
   --error: #ffb4ab;
+
+  --accent-ink: #ff5a5f;
+  --sheet: #f4f1ec;
+  --sheet-fg: #161514;
+  --sheet-muted: #4c4542;
+  --sheet-accent: #b31218;
+  --success: #3ddc84;
 }
 
 @layer base {
@@ -194,10 +224,173 @@
     border-color: var(--border);
   }
 
+  html,
+  body {
+    /* clip (not hidden) so decorative bleed never scrolls and sticky still works */
+    overflow-x: clip;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     background-color: var(--bg);
     color: var(--fg);
     font-family: var(--font-body);
+  }
+
+  ::selection {
+    background: #e31e24;
+    color: #ffffff;
+  }
+
+  :focus-visible {
+    outline: 2px solid #e31e24;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+/* ============================================
+   Print-floor motifs
+   ============================================ */
+
+/* Halftone dot field. Set --dot to change the ink. */
+.halftone {
+  background-image: radial-gradient(var(--dot, #e31e24) 1.3px, transparent 1.6px);
+  background-size: 12px 12px;
+}
+
+/* Outlined display type */
+.text-outline {
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1.5px currentColor;
+}
+
+/* Small mono spec label used for eyebrows and job-ticket data */
+.spec {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Perforated ticket edge */
+.perforation {
+  height: 14px;
+  background-image: radial-gradient(circle at 7px 0, var(--bg) 5px, transparent 5.5px);
+  background-size: 14px 14px;
+}
+
+/* Underline that draws in from the left on hover */
+.link-draw {
+  background: linear-gradient(#e31e24, #e31e24) 0 100% / 0 2px no-repeat;
+  padding-bottom: 4px;
+  transition: background-size 0.35s var(--ease-press);
+}
+.link-draw:hover,
+.link-draw:focus-visible {
+  background-size: 100% 2px;
+}
+
+/* Primary button: paper floods up from below, arrow nudges */
+.ink-fill {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: color 0.35s var(--ease-press);
+}
+.ink-fill::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--ink-flood, #f4f1ec);
+  transform: translateY(101%);
+  transition: transform 0.45s var(--ease-press);
+}
+.ink-fill:hover,
+.ink-fill:focus-visible {
+  color: var(--ink-flood-fg, #131313) !important;
+}
+.ink-fill:hover::before,
+.ink-fill:focus-visible::before {
+  transform: translateY(0);
+}
+.ink-fill .ink-arrow {
+  transition: transform 0.35s var(--ease-press);
+}
+.ink-fill:hover .ink-arrow {
+  transform: translateX(6px);
+}
+
+.animate-marquee { animation: marquee var(--marquee-duration, 32s) linear infinite; }
+.marquee-pause:hover .animate-marquee { animation-play-state: paused; }
+.animate-misregister { animation: misregister 6s 1.2s ease-in-out infinite; }
+.animate-drift-a { animation: drift-a 9s ease-in-out infinite; }
+.animate-drift-b { animation: drift-b 11s ease-in-out infinite; }
+.animate-ping-square { animation: ping-square 1.6s ease-out infinite; }
+.animate-bob { animation: bob 2.4s ease-in-out infinite; }
+.animate-shake { animation: shake 0.45s both; }
+.animate-spin-slow { animation: spin-slow 18s linear infinite; }
+.animate-slow-turn { animation: slow-turn 9s ease-in-out infinite; }
+.animate-grow-x { animation: grow-x 1s var(--ease-press) both; }
+
+}
+
+/* ============================================
+   Keyframes
+   ============================================ */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes misregister {
+  0%, 100% { transform: translate(6px, 6px); }
+  50% { transform: translate(9px, 4px); }
+}
+@keyframes drift-a {
+  0%, 100% { transform: rotate(-5deg) translateY(0); }
+  50% { transform: rotate(-4deg) translateY(-8px); }
+}
+@keyframes drift-b {
+  0%, 100% { transform: rotate(4deg) translateY(0); }
+  50% { transform: rotate(5deg) translateY(6px); }
+}
+@keyframes ping-square {
+  0% { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes shake {
+  0%, 100% { transform: none; }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+@keyframes grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+@keyframes slow-turn {
+  0%, 100% { transform: perspective(900px) rotateY(-14deg); }
+  50% { transform: perspective(900px) rotateY(14deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

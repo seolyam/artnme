@@ -4,7 +4,6 @@ import { useState, useTransition, useEffect } from "react";
 import { ORDER_STATUSES, PRODUCT_TYPES, type OrderStatus } from "@/db/schema";
 import { updateOrderStatus } from "@/app/actions/orders";
 import { OrderCard } from "@/components/dashboard/order-card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -15,6 +14,9 @@ import {
 } from "@/components/ui/select";
 import { Search, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
+import { statusStyle } from "@/lib/order-status";
+import { cn } from "@/lib/utils";
 
 interface OrderWithRelations {
   id: string;
@@ -28,14 +30,6 @@ interface OrderWithRelations {
   customer: { id: string; name: string };
   items: { id: string; productType: string; quantity: number }[];
 }
-
-const STATUS_COLORS: Record<string, string> = {
-  Pending: "bg-yellow-500",
-  Designing: "bg-blue-500",
-  Printing: "bg-purple-500",
-  "Ready for Pickup": "bg-emerald-500",
-  Completed: "bg-gray-400",
-};
 
 export function KanbanBoard({ orders }: { orders: OrderWithRelations[] }) {
   const [search, setSearch] = useState("");
@@ -129,51 +123,67 @@ export function KanbanBoard({ orders }: { orders: OrderWithRelations[] }) {
         </Select>
       </div>
 
-      {/* Board */}
-      <div className="grid auto-cols-[minmax(240px,1fr)] grid-flow-col gap-4 overflow-x-auto pb-4">
-        {ORDER_STATUSES.map((status) => {
-          const statusOrders = filteredOrders.filter(
-            (o) => o.status === status,
-          );
-          return (
-            <div key={status} className="min-w-[240px]">
-              {/* Column header */}
-              <div className="mb-3 flex items-center gap-2">
-                <span
-                  className={`h-2.5 w-2.5 rounded-full ${STATUS_COLORS[status]}`}
-                />
-                <h3 className="text-sm font-semibold">{status}</h3>
-                <Badge variant="secondary" className="ml-auto text-xs">
-                  {statusOrders.length}
-                </Badge>
-              </div>
-
-              {/* Column body */}
-              <div className="space-y-2 bg-[color:var(--color-surface-container-low)] p-2 min-h-[120px]">
-                {statusOrders.length === 0 ? (
-                  <p className="py-8 text-center text-xs text-muted-foreground">
-                    No active jobs
-                  </p>
-                ) : (
-                  statusOrders.map((order) => (
-                    <div key={order.id} className="relative">
-                      {pendingId === order.id && (
-                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/40 backdrop-blur-[1px]">
-                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                        </div>
-                      )}
-                      <OrderCard
-                        order={order}
-                        onStatusChange={handleStatusChange}
-                      />
-                    </div>
-                  ))
+      {/* Board — cards share a layoutId, so a status change glides across columns */}
+      <LayoutGroup>
+        <div className="grid auto-cols-[minmax(250px,1fr)] grid-flow-col gap-3 overflow-x-auto pb-4">
+          {ORDER_STATUSES.map((status, colIdx) => {
+            const statusOrders = filteredOrders.filter((o) => o.status === status);
+            const s = statusStyle(status);
+            return (
+              <motion.section
+                key={status}
+                aria-label={status}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, delay: colIdx * 0.06, ease: [0.22, 1, 0.36, 1] }}
+                className={cn(
+                  "flex min-h-[420px] min-w-[250px] flex-col border-t-[3px] bg-surface-container-low",
+                  s.border,
                 )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+              >
+                <div className="flex items-center gap-2 px-3 pb-2.5 pt-3">
+                  <span className={cn("h-2 w-2", s.dot)} />
+                  <h3 className="font-headline text-xs font-bold uppercase tracking-[0.1em]">
+                    {status}
+                  </h3>
+                  <span className="spec ml-auto text-[11px] text-on-surface-variant">
+                    {String(statusOrders.length).padStart(2, "0")}
+                  </span>
+                </div>
+
+                <div className="flex flex-1 flex-col gap-2 px-2 pb-3">
+                  <AnimatePresence initial={false} mode="popLayout">
+                    {statusOrders.map((order) => (
+                      <motion.div
+                        key={order.id}
+                        layout
+                        layoutId={order.id}
+                        initial={{ opacity: 0, scale: 0.96 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.96 }}
+                        transition={{ type: "spring", stiffness: 380, damping: 34 }}
+                        className="relative"
+                      >
+                        {pendingId === order.id && (
+                          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/40 backdrop-blur-[1px]">
+                            <Loader2 className="h-4 w-4 animate-spin text-on-surface-variant" />
+                          </div>
+                        )}
+                        <OrderCard order={order} onStatusChange={handleStatusChange} />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                  {statusOrders.length === 0 && (
+                    <p className="spec border border-dashed border-outline-variant/50 px-2 py-8 text-center text-[10px] text-on-surface-variant">
+                      No jobs here
+                    </p>
+                  )}
+                </div>
+              </motion.section>
+            );
+          })}
+        </div>
+      </LayoutGroup>
     </div>
   );
 }

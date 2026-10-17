@@ -1,70 +1,88 @@
 import Link from "next/link";
+import { SITE } from "@/lib/site";
+
+const EXPLORE = [
+  { href: "/portfolio", label: "Portfolio" },
+  { href: "/customizer", label: "3D Studio" },
+  { href: "/quote", label: "Get a quote" },
+  { href: "/contact", label: "Contact" },
+];
 
 export default function Footer() {
   return (
-    <footer className="w-full border-t border-outline-variant/20 bg-surface-container-lowest">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-12 py-16 w-full items-start">
-        <div>
-          <div className="mb-4 h-12 w-12">
+    <footer className="border-t border-outline-variant/30 bg-surface-container-lowest">
+      <div className="mx-auto max-w-[1360px] px-4 pb-10 pt-24 md:px-6">
+        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
             <img
               src="/images/art-n-me-logo.jpg"
-              alt="Art 'n Me Logo"
-              className="h-full w-full object-contain"
+              alt="Art 'n Me logo"
+              className="h-18 w-18 object-cover"
             />
+            <p className="mt-5 max-w-64 text-sm leading-relaxed text-on-surface-variant">
+              A digital printing studio in the heart of Silay City. We turn ideas
+              into substrate.
+            </p>
           </div>
-          <p className="text-on-surface-variant text-sm font-body uppercase tracking-widest max-w-xs leading-relaxed">
-            Digital printing sanctuary in the heart of Silay City. We turn ideas
-            into substrate.
-          </p>
+
+          <div>
+            <p className="spec mb-5 text-accent-ink">Visit</p>
+            <address className="not-italic leading-loose">
+              <a
+                href={SITE.mapsHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="link-draw"
+              >
+                {SITE.addressLine1}
+              </a>
+              <br />
+              {SITE.addressLine2}
+              <br />
+              <span className="text-on-surface-variant">{SITE.hoursLabel}</span>
+            </address>
+          </div>
+
+          <div className="flex flex-col items-start gap-3">
+            <p className="spec mb-2 text-accent-ink">Contact</p>
+            <a href={SITE.phoneHref} className="link-draw">
+              {SITE.phoneDisplay}
+            </a>
+            <a href={`mailto:${SITE.email}`} className="link-draw">
+              {SITE.email}
+            </a>
+            <a href={SITE.facebookHref} target="_blank" rel="noopener noreferrer" className="link-draw">
+              Facebook
+            </a>
+            <a href={SITE.whatsappHref} target="_blank" rel="noopener noreferrer" className="link-draw">
+              WhatsApp
+            </a>
+          </div>
+
+          <div className="flex flex-col items-start gap-3">
+            <p className="spec mb-2 text-accent-ink">Explore</p>
+            {EXPLORE.map((l) => (
+              <Link key={l.href} href={l.href} className="link-draw">
+                {l.label}
+              </Link>
+            ))}
+          </div>
         </div>
-        <div className="flex flex-col gap-4">
-          <span className="text-primary-container font-body text-sm uppercase tracking-widest font-bold">
-            Connect
+
+        <p
+          aria-hidden
+          className="text-outline mt-20 whitespace-nowrap font-headline text-[15vw] font-bold uppercase leading-[0.8] tracking-[-0.06em] text-outline-variant/70 xl:text-[13.5rem]"
+        >
+          Art &apos;n Me
+        </p>
+
+        <div className="spec mt-8 flex flex-wrap justify-between gap-3 border-t border-outline-variant/30 pt-6 text-[11px] text-on-surface-variant">
+          <span>
+            © {new Date().getFullYear()} {SITE.legalName}
           </span>
-          <Link
-            href="https://www.facebook.com/ArtnMeOfficial"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-on-surface-variant hover:text-primary-container transition-colors font-body text-sm uppercase tracking-widest"
-          >
-            Facebook
+          <Link href="/login" className="link-draw">
+            Staff login
           </Link>
-          <Link
-            href="#"
-            className="text-on-surface-variant hover:text-primary-container transition-colors font-body text-sm uppercase tracking-widest"
-          >
-            Instagram
-          </Link>
-          <Link
-            href="#"
-            className="text-on-surface-variant hover:text-primary-container transition-colors font-body text-sm uppercase tracking-widest"
-          >
-            WhatsApp
-          </Link>
-        </div>
-        <div className="flex flex-col gap-4">
-          <span className="text-primary-container font-body text-sm uppercase tracking-widest font-bold">
-            Visit Us
-          </span>
-          <a
-            href="https://maps.app.goo.gl/KA781unxzKKvwnMh6"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-on-surface-variant font-body text-sm uppercase tracking-widest hover:text-primary-container transition-colors"
-          >
-            Location: Silay City, Negros Occidental
-          </a>
-          <div className="mt-8 text-[10px] text-on-surface-variant/70 font-body uppercase tracking-[0.3em]">
-            © 2026 Art &apos;n Me Digital Printing. Silay City.
-          </div>
-          <div className="mt-4">
-            <Link
-              href="/login"
-              className="text-[9px] text-on-surface-variant/60 hover:text-primary-container uppercase tracking-[0.5em] transition-colors"
-            >
-              Employee Access / Node Login
-            </Link>
-          </div>
         </div>
       </div>
     </footer>

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { v2 as cloudinary } from "cloudinary";
+import { unstable_cache } from "next/cache";
 
 const SHOWCASE_PREFIX = "showcase/";
 const DEFAULT_MAX_RESULTS = 100;
@@ -81,7 +82,7 @@ function configureCloudinary() {
   return true;
 }
 
-export async function getShowcaseImages(
+async function fetchShowcaseImages(
   maxResults = DEFAULT_MAX_RESULTS,
 ): Promise<ShowcaseImage[]> {
   if (!configureCloudinary()) {
@@ -148,8 +149,8 @@ export async function getShowcaseImages(
       } while (nextCursor);
     }
   } catch (error) {
-    console.error("Failed to fetch Cloudinary showcase images", error);
-    return [];
+    // Rethrow so a failed fetch isn't cached as an empty gallery.
+    throw error;
   }
 
   const deduped = Array.from(
@@ -165,4 +166,57 @@ export async function getShowcaseImages(
 
     return a.publicId.localeCompare(b.publicId);
   });
+}
+
+/**
+ * Showcase listing, cached for an hour across requests (and shared by the home
+ * and portfolio pages) so page loads don't wait on the Cloudinary Search API.
+ */
+const cachedShowcaseImages = unstable_cache(fetchShowcaseImages, ["showcase-images"], {
+  revalidate: 3600,
+  tags: ["showcase"],
+});
+
+export async function getShowcaseImages(maxResults = DEFAULT_MAX_RESULTS) {
+  try {
+    return await cachedShowcaseImages(maxResults);
+  } catch (error) {
+    console.error("Failed to fetch Cloudinary showcase images", error);
+    return [];
+  }
+}
+
+const QUOTE_FOLDER = "quotes";
+
+/**
+ * Uploads a customer's quote attachment to Cloudinary and returns its secure
+ * URL, or null when Cloudinary isn't configured. Throws on upload failure.
+ */
+export async function uploadQuoteAttachment(file: File): Promise<string | null> {
+  if (!configureCloudinary()) {
+    return null;
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: QUOTE_FOLDER,
+        resource_type: "auto",
+        use_filename: true,
+        unique_filename: true,
+      },
+      (error, uploaded) => {
+        if (error || !uploaded) {
+          reject(error ?? new Error("Upload failed"));
+          return;
+        }
+        resolve(uploaded as { secure_url: string });
+      },
+    );
+    stream.end(buffer);
+  });
+
+  return result.secure_url;
 }
