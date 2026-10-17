@@ -27,7 +27,31 @@ function createClient(url: string) {
     // time per connection avoids the race entirely.
     max_pipeline: 0,
   };
-  return postgres(url, options);
+  const client = postgres(url, options);
+
+  // With max_pipeline: 0, postgres.js never runs the hook sql.begin() uses
+  // to pin its connection, and then rejects the BEGIN as UNSAFE_TRANSACTION.
+  // Run transactions on an explicitly reserved connection instead; drizzle's
+  // db.transaction() calls client.begin(fn) and only needs this much.
+  const begin = async (...args: unknown[]) => {
+    const fn = args[args.length - 1] as (sql: postgres.ReservedSql) => unknown;
+    const reserved = await client.reserve();
+    try {
+      await reserved.unsafe("begin");
+      const out = fn(reserved);
+      const result = await (Array.isArray(out) ? Promise.all(out) : out);
+      await reserved.unsafe("commit");
+      return result;
+    } catch (error) {
+      await reserved.unsafe("rollback").catch(() => {});
+      throw error;
+    } finally {
+      reserved.release();
+    }
+  };
+  client.begin = begin as typeof client.begin;
+
+  return client;
 }
 
 // Dev hot reloads re-evaluate this module; reuse one pool instead of leaking
