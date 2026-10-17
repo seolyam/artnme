@@ -177,7 +177,7 @@ export function TrashTable({ orders }: { orders: TrashedOrder[] }) {
                         {deletedDate && (
                           <span>
                             Deleted{" "}
-                            {deletedDate.toLocaleDateString("en-PH", {
+                            {deletedDate.toLocaleDateString("en-PH", { timeZone: "Asia/Manila",
                               month: "short",
                               day: "numeric",
                               year: "numeric",

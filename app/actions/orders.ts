@@ -1,23 +1,57 @@
 "use server";
 
 import { db } from "@/db";
-import { orders, orderItems, profiles } from "@/db/schema";
-import { eq, isNull, sql, and, desc, like } from "drizzle-orm";
+import {
+  orders,
+  orderItems,
+  profiles,
+  payments,
+  orderEvents,
+  customers,
+  type OrderStatus,
+} from "@/db/schema";
+import { eq, isNull, sql, and, desc, like, inArray, gte, lt, asc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireAuth, requireAdmin, getSessionProfile } from "@/lib/auth";
 import {
   orderSchema,
   updateOrderStatusSchema,
+  paymentSchema,
+  orderNoteSchema,
   type OrderFormValues,
   type UpdateOrderStatusValues,
+  type PaymentValues,
   WEB_QUOTE_PREFIX,
 } from "@/lib/validators";
+import { logOrderEvent } from "@/lib/order-events";
+import { BOARD_ARCHIVE_DAYS } from "@/lib/order-status";
+import { peso, roundMoney, toNumber } from "@/lib/money";
+import { parseShopDateTime, shopDayRange, shopToday } from "@/lib/time";
 import { z } from "zod/v4";
+
+/** A web quote nobody has touched for this long is flagged as stale. */
+const STALE_QUOTE_HOURS = 24;
+/** "Due soon" horizon for the action queue. */
+const DUE_SOON_DAYS = 3;
+
+function revalidateOrder(orderNumber?: number | string) {
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/orders");
+  revalidatePath("/dashboard/reports");
+  if (orderNumber !== undefined) revalidatePath(`/dashboard/orders/${orderNumber}`);
+}
+
+function fieldErrorsOf(error: z.ZodError) {
+  return error.issues.map((i) => ({ path: i.path.join("."), message: i.message }));
+}
 
 export async function getOrders() {
   await requireAuth();
   return db.query.orders.findMany({
-    where: isNull(orders.deletedAt),
+    where: and(
+      isNull(orders.deletedAt),
+      sql`(${orders.status} <> 'Completed' OR coalesce(${orders.updatedAt}, ${orders.createdAt}) >= now() - make_interval(days => ${BOARD_ARCHIVE_DAYS}))`,
+    ),
     with: {
       customer: true,
       items: true,
@@ -37,57 +71,36 @@ export async function getOrder(orderIdOrNumber: string) {
     .positive()
     .safeParse(orderIdOrNumber);
 
-  // Always resolve to the canonical UUID via raw SQL — robust against the
-  // drizzle client having a stale schema after the `order_number` migration
-  // (avoids any reliance on `orders.orderNumber` being defined on the
-  // currently-loaded schema object).
-  let orderId: string | null = null;
-
+  let where;
   if (asUuid.success) {
-    orderId = asUuid.data;
+    where = eq(orders.id, asUuid.data);
   } else if (asNumber.success) {
-    const rows = (await db.execute(sql`
-      SELECT id FROM orders
-      WHERE order_number = ${asNumber.data}
-        AND deleted_at IS NULL
-      LIMIT 1
-    `)) as unknown as Array<{ id: string }>;
-    orderId = rows[0]?.id ?? null;
+    where = eq(orders.orderNumber, asNumber.data);
   } else {
     return null;
   }
 
-  if (!orderId) return null;
-
-  return db.query.orders.findFirst({
-    where: and(eq(orders.id, orderId), isNull(orders.deletedAt)),
+  const order = await db.query.orders.findFirst({
+    where: and(where, isNull(orders.deletedAt)),
     with: { customer: true, items: true },
   });
+  return order ?? null;
 }
 
 export async function getOrderStats() {
   await requireAuth();
 
+  const { start: todayStart, end: todayEnd } = shopDayRange(shopToday());
   const now = new Date();
-  const todayStart = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-  );
-  const todayEnd = new Date(todayStart.getTime() + 86_400_000);
-
-  const nowIso = now.toISOString();
-  const todayStartIso = todayStart.toISOString();
-  const todayEndIso = todayEnd.toISOString();
 
   const rows = await db
     .select({
       totalOrders: sql<number>`count(*)::int`,
       activeOrders: sql<number>`count(*) FILTER (WHERE ${orders.status} <> 'Completed')::int`,
-      dueToday: sql<number>`count(*) FILTER (WHERE ${orders.dueDate} IS NOT NULL AND ${orders.dueDate} >= ${todayStartIso}::timestamptz AND ${orders.dueDate} < ${todayEndIso}::timestamptz AND ${orders.status} <> 'Completed')::int`,
-      overdueOrders: sql<number>`count(*) FILTER (WHERE ${orders.dueDate} IS NOT NULL AND ${orders.dueDate} < ${nowIso}::timestamptz AND ${orders.status} <> 'Completed')::int`,
+      dueToday: sql<number>`count(*) FILTER (WHERE ${orders.dueDate} >= ${todayStart.toISOString()}::timestamptz AND ${orders.dueDate} < ${todayEnd.toISOString()}::timestamptz AND ${orders.status} <> 'Completed')::int`,
+      overdueOrders: sql<number>`count(*) FILTER (WHERE ${orders.dueDate} < ${now.toISOString()}::timestamptz AND ${orders.status} <> 'Completed')::int`,
       readyForPickup: sql<number>`count(*) FILTER (WHERE ${orders.status} = 'Ready for Pickup')::int`,
-      pendingRevenue: sql<number>`coalesce(sum(${orders.totalAmount}::numeric) FILTER (WHERE ${orders.status} <> 'Completed'), 0) - coalesce(sum(${orders.depositAmount}::numeric) FILTER (WHERE ${orders.status} <> 'Completed'), 0)`,
+      pendingRevenue: sql<number>`coalesce(sum(${orders.totalAmount} - ${orders.depositAmount}) FILTER (WHERE ${orders.status} <> 'Completed'), 0)`,
     })
     .from(orders)
     .where(isNull(orders.deletedAt));
@@ -132,21 +145,110 @@ export async function getRecentOrders(limit = 5) {
   });
 }
 
+// ─── Action queue ───────────────────────────────────────────────────────────
+
+export type QueueOrder = {
+  id: string;
+  orderNumber: number;
+  title: string;
+  status: string;
+  customerName: string;
+  dueDate: Date | null;
+  totalAmount: string;
+  depositAmount: string;
+  assignedTo: string | null;
+  createdAt: Date;
+};
+
+/**
+ * Everything that needs a human today, bucketed so the dashboard can show one
+ * prioritized list. A single query; bucketing happens on the small result set.
+ */
+export async function getWorkQueue() {
+  const user = await requireAuth();
+  const now = new Date();
+  const { end: todayEnd } = shopDayRange(shopToday());
+  const soonEnd = new Date(todayEnd.getTime() + (DUE_SOON_DAYS - 1) * 86_400_000);
+  const staleBefore = new Date(now.getTime() - STALE_QUOTE_HOURS * 3_600_000);
+
+  const rows: QueueOrder[] = await db
+    .select({
+      id: orders.id,
+      orderNumber: orders.orderNumber,
+      title: orders.title,
+      status: orders.status,
+      customerName: customers.name,
+      dueDate: orders.dueDate,
+      totalAmount: orders.totalAmount,
+      depositAmount: orders.depositAmount,
+      assignedTo: orders.assignedTo,
+      createdAt: orders.createdAt,
+    })
+    .from(orders)
+    .innerJoin(customers, eq(customers.id, orders.customerId))
+    .where(and(isNull(orders.deletedAt), sql`${orders.status} <> 'Completed'`))
+    .orderBy(asc(sql`coalesce(${orders.dueDate}, 'infinity'::timestamptz)`), asc(orders.createdAt));
+
+  const overdue: QueueOrder[] = [];
+  const dueToday: QueueOrder[] = [];
+  const dueSoon: QueueOrder[] = [];
+  const readyUnpaid: QueueOrder[] = [];
+  const staleQuotes: QueueOrder[] = [];
+  const unpriced: QueueOrder[] = [];
+
+  for (const o of rows) {
+    const due = o.dueDate ? new Date(o.dueDate) : null;
+    if (due && due < now) overdue.push(o);
+    else if (due && due < todayEnd) dueToday.push(o);
+    else if (due && due < soonEnd) dueSoon.push(o);
+
+    const balance = toNumber(o.totalAmount) - toNumber(o.depositAmount);
+    if (o.status === "Ready for Pickup" && balance > 0.009) readyUnpaid.push(o);
+    if (
+      o.status === "Pending" &&
+      o.title.startsWith(WEB_QUOTE_PREFIX) &&
+      new Date(o.createdAt) < staleBefore
+    ) {
+      staleQuotes.push(o);
+    }
+    if (o.status !== "Pending" && toNumber(o.totalAmount) <= 0) unpriced.push(o);
+  }
+
+  return {
+    overdue,
+    dueToday,
+    dueSoon,
+    readyUnpaid,
+    staleQuotes,
+    unpriced,
+    mine: rows.filter((o) => o.assignedTo === user.id).length,
+    unassigned: rows.filter((o) => !o.assignedTo).length,
+  };
+}
+
+// ─── Create / update ────────────────────────────────────────────────────────
+
 export async function createOrder(data: OrderFormValues) {
   const { user } = await getSessionProfile();
   const parsed = orderSchema.safeParse(data);
   if (!parsed.success) {
     return {
       error: "Invalid order data",
-      fieldErrors: parsed.error.issues.map((i) => ({
-        path: i.path.join("."),
-        message: i.message,
-      })),
+      fieldErrors: fieldErrorsOf(parsed.error),
       data: null,
     };
   }
 
-  const { items, ...orderData } = parsed.data;
+  const { items, depositMethod, ...orderData } = parsed.data;
+  const total = roundMoney(orderData.totalAmount);
+  const deposit = roundMoney(orderData.depositAmount);
+  if (deposit > total + 0.009) {
+    return {
+      error: "Deposit is more than the order total",
+      fieldErrors: [{ path: "depositAmount", message: "Deposit can't exceed the total" }],
+      data: null,
+    };
+  }
 
   const result = await db.transaction(async (tx) => {
     const [order] = await tx
@@ -155,11 +257,13 @@ export async function createOrder(data: OrderFormValues) {
         customerId: orderData.customerId,
         title: orderData.title,
         status: orderData.status,
-        totalAmount: orderData.totalAmount.toString(),
-        depositAmount: orderData.depositAmount.toString(),
-        dueDate: orderData.dueDate ? new Date(orderData.dueDate) : null,
+        totalAmount: total.toFixed(2),
+        depositAmount: deposit.toFixed(2),
+        dueDate: parseShopDateTime(orderData.dueDate),
         createdBy: user.id,
         updatedBy: user.id,
+        // Whoever takes the order owns it until someone reassigns it.
+        assignedTo: user.id,
         updatedAt: new Date(),
       })
       .returning();
@@ -177,11 +281,33 @@ export async function createOrder(data: OrderFormValues) {
       );
     }
 
+    await logOrderEvent(tx, {
+      orderId: order.id,
+      type: "created",
+      message: "Order created",
+      actorId: user.id,
+    });
+
+    if (deposit > 0) {
+      await tx.insert(payments).values({
+        orderId: order.id,
+        amount: deposit.toFixed(2),
+        method: depositMethod ?? "Cash",
+        note: "Deposit taken with the order",
+        receivedBy: user.id,
+      });
+      await logOrderEvent(tx, {
+        orderId: order.id,
+        type: "payment",
+        message: `Received ${peso(deposit)} deposit (${depositMethod ?? "Cash"})`,
+        actorId: user.id,
+      });
+    }
+
     return order;
   });
 
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/orders");
+  revalidateOrder();
   return { error: null, data: result };
 }
 
@@ -192,17 +318,60 @@ export async function updateOrderStatus(data: UpdateOrderStatusValues) {
     return { error: "Invalid status update" };
   }
 
-  await db
-    .update(orders)
-    .set({
-      status: parsed.data.status,
-      updatedBy: user.id,
-      updatedAt: new Date(),
-    })
-    .where(eq(orders.id, parsed.data.orderId));
+  const result = await db.transaction(async (tx) => {
+    const [current] = await tx
+      .select({
+        status: orders.status,
+        orderNumber: orders.orderNumber,
+        assignedTo: orders.assignedTo,
+        totalAmount: orders.totalAmount,
+        depositAmount: orders.depositAmount,
+      })
+      .from(orders)
+      .where(and(eq(orders.id, parsed.data.orderId), isNull(orders.deletedAt)))
+      .for("update");
 
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/orders");
+    if (!current) return { error: "Order not found" } as const;
+    if (current.status === parsed.data.status) return { orderNumber: current.orderNumber } as const;
+
+    // Picking a job up out of Pending claims it when nobody owns it yet.
+    const claim = !current.assignedTo && current.status === "Pending";
+
+    await tx
+      .update(orders)
+      .set({
+        status: parsed.data.status,
+        updatedBy: user.id,
+        updatedAt: new Date(),
+        ...(claim ? { assignedTo: user.id } : {}),
+      })
+      .where(eq(orders.id, parsed.data.orderId));
+
+    const balance = toNumber(current.totalAmount) - toNumber(current.depositAmount);
+    const suffix =
+      parsed.data.status === "Completed" && balance > 0.009
+        ? ` with ${peso(balance)} still unpaid`
+        : "";
+    await logOrderEvent(tx, {
+      orderId: parsed.data.orderId,
+      type: "status",
+      message: `Moved from ${current.status} to ${parsed.data.status}${suffix}`,
+      actorId: user.id,
+    });
+    if (claim) {
+      await logOrderEvent(tx, {
+        orderId: parsed.data.orderId,
+        type: "assigned",
+        message: "Picked up the job",
+        actorId: user.id,
+      });
+    }
+
+    return { orderNumber: current.orderNumber } as const;
+  });
+
+  if ("error" in result) return { error: result.error };
+  revalidateOrder(result.orderNumber);
   return { success: true };
 }
 
@@ -218,26 +387,42 @@ export async function updateOrder(
   if (!parsed.success) {
     return {
       error: "Invalid order data",
-      fieldErrors: parsed.error.issues.map((i) => ({
-        path: i.path.join("."),
-        message: i.message,
-      })),
+      fieldErrors: fieldErrorsOf(parsed.error),
       data: null,
     };
   }
 
+  // depositMethod only applies at creation; later money goes through the ledger.
   const { items, ...orderData } = parsed.data;
+  const total = roundMoney(orderData.totalAmount);
+  const deposit = roundMoney(orderData.depositAmount);
+  if (deposit > total + 0.009) {
+    return {
+      error: "Amount paid is more than the order total",
+      fieldErrors: [{ path: "depositAmount", message: "Paid can't exceed the total" }],
+      data: null,
+    };
+  }
 
   const result = await db.transaction(async (tx) => {
+    const [before] = await tx
+      .select()
+      .from(orders)
+      .where(eq(orders.id, idParsed.data))
+      .for("update");
+    if (!before) return null;
+
+    const dueDate = parseShopDateTime(orderData.dueDate);
+
     const [updated] = await tx
       .update(orders)
       .set({
         customerId: orderData.customerId,
         title: orderData.title,
         status: orderData.status,
-        totalAmount: orderData.totalAmount.toString(),
-        depositAmount: orderData.depositAmount.toString(),
-        dueDate: orderData.dueDate ? new Date(orderData.dueDate) : null,
+        totalAmount: total.toFixed(2),
+        depositAmount: deposit.toFixed(2),
+        dueDate,
         updatedBy: user.id,
         updatedAt: new Date(),
       })
@@ -250,35 +435,34 @@ export async function updateOrder(
       .from(orderItems)
       .where(eq(orderItems.orderId, idParsed.data));
 
-    // Items in payload that have an id matching an existing item -> UPDATE
-    const incomingById = new Map(
-      items
-        .filter((it) => "id" in it && typeof (it as { id?: unknown }).id === "string")
-        .map((it) => [(it as { id: string }).id, it]),
-    );
+    const incomingIds = new Set(items.map((it) => it.id).filter(Boolean));
+    const existingIds = new Set(existingItems.map((e) => e.id));
 
-    const toDelete = existingItems.filter((e) => !incomingById.has(e.id));
-    const toInsert = items.filter(
-      (it) => !("id" in it) || typeof (it as { id?: unknown }).id !== "string",
-    );
+    const toDelete = existingItems.filter((e) => !incomingIds.has(e.id));
+    const toInsert = items.filter((it) => !it.id || !existingIds.has(it.id));
+    const existingById = new Map(existingItems.map((e) => [e.id, e]));
     const toUpdate = items.filter((it) => {
-      const id = (it as { id?: unknown }).id;
-      return typeof id === "string" && existingItems.some((e) => e.id === id);
+      const e = it.id ? existingById.get(it.id) : undefined;
+      if (!e) return false;
+      return (
+        e.productType !== it.productType ||
+        (e.description ?? "") !== (it.description ?? "") ||
+        e.quantity !== it.quantity ||
+        (e.dimensions ?? "") !== (it.dimensions ?? "") ||
+        toNumber(e.unitPrice) !== it.unitPrice
+      );
     });
 
     if (toDelete.length > 0) {
-      await tx
-        .delete(orderItems)
-        .where(
-          sql`${orderItems.id} IN (${sql.join(
-            toDelete.map((d) => d.id),
-            sql`,`,
-          )})`,
-        );
+      await tx.delete(orderItems).where(
+        inArray(
+          orderItems.id,
+          toDelete.map((d) => d.id),
+        ),
+      );
     }
 
     for (const it of toUpdate) {
-      const id = (it as { id: string }).id;
       await tx
         .update(orderItems)
         .set({
@@ -288,7 +472,7 @@ export async function updateOrder(
           dimensions: it.dimensions || null,
           unitPrice: it.unitPrice.toString(),
         })
-        .where(eq(orderItems.id, id));
+        .where(eq(orderItems.id, it.id!));
     }
 
     if (toInsert.length > 0) {
@@ -304,18 +488,59 @@ export async function updateOrder(
       );
     }
 
+    // Keep the ledger summing to deposit_amount: a hand-edited "paid" figure
+    // becomes an adjustment entry rather than silently rewriting history.
+    const paidDelta = roundMoney(deposit - toNumber(before.depositAmount));
+    if (Math.abs(paidDelta) >= 0.01) {
+      await tx.insert(payments).values({
+        orderId: idParsed.data,
+        amount: paidDelta.toFixed(2),
+        method: "Adjustment",
+        note: "Changed in the order edit form",
+        receivedBy: user.id,
+      });
+    }
+
+    const changes: string[] = [];
+    if (before.title !== orderData.title) changes.push("title");
+    if (before.customerId !== orderData.customerId) changes.push("customer");
+    if ((before.dueDate?.getTime() ?? null) !== (dueDate?.getTime() ?? null)) changes.push("due date");
+    if (toNumber(before.totalAmount) !== total) changes.push(`total (${peso(before.totalAmount)} → ${peso(total)})`);
+    if (Math.abs(paidDelta) >= 0.01) changes.push(`amount paid (${paidDelta > 0 ? "+" : "−"}${peso(Math.abs(paidDelta))})`);
+    if (toDelete.length || toInsert.length || toUpdate.length) changes.push("items");
+
+    if (changes.length > 0) {
+      await logOrderEvent(tx, {
+        orderId: idParsed.data,
+        type: "edit",
+        message: `Edited ${changes.join(", ")}`,
+        actorId: user.id,
+      });
+    }
+    if (before.status !== orderData.status) {
+      await logOrderEvent(tx, {
+        orderId: idParsed.data,
+        type: "status",
+        message: `Moved from ${before.status} to ${orderData.status}`,
+        actorId: user.id,
+      });
+    }
+
     return updated;
   });
 
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/orders");
-  revalidatePath(`/dashboard/orders/${orderId}`);
+  if (!result) return { error: "Order not found", data: null };
+
+  revalidateOrder(result.orderNumber);
   return { error: null, data: result };
 }
 
+// ─── Trash ──────────────────────────────────────────────────────────────────
+
 export async function deleteOrder(orderId: string) {
+  let actorId: string;
   try {
-    await requireAdmin();
+    actorId = (await requireAdmin()).user.id;
   } catch {
     return { error: "Unauthorized: Admin access required to delete orders." };
   }
@@ -326,13 +551,20 @@ export async function deleteOrder(orderId: string) {
   }
 
   // Soft-delete: preserve financial history.
-  await db
-    .update(orders)
-    .set({ deletedAt: new Date() })
-    .where(eq(orders.id, parsed.data));
+  await db.transaction(async (tx) => {
+    await tx
+      .update(orders)
+      .set({ deletedAt: new Date() })
+      .where(eq(orders.id, parsed.data));
+    await logOrderEvent(tx, {
+      orderId: parsed.data,
+      type: "deleted",
+      message: "Moved to trash",
+      actorId,
+    });
+  });
 
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/orders");
+  revalidateOrder();
   revalidatePath("/dashboard/orders/trash");
   return { success: true };
 }
@@ -350,8 +582,9 @@ export async function getTrashedOrders() {
 }
 
 export async function restoreOrder(orderId: string) {
+  let actorId: string;
   try {
-    await requireAdmin();
+    actorId = (await requireAdmin()).user.id;
   } catch {
     return { error: "Unauthorized: Admin access required to restore orders." };
   }
@@ -361,13 +594,20 @@ export async function restoreOrder(orderId: string) {
     return { error: "Invalid order ID" };
   }
 
-  await db
-    .update(orders)
-    .set({ deletedAt: null, updatedAt: new Date() })
-    .where(eq(orders.id, parsed.data));
+  await db.transaction(async (tx) => {
+    await tx
+      .update(orders)
+      .set({ deletedAt: null, updatedAt: new Date() })
+      .where(eq(orders.id, parsed.data));
+    await logOrderEvent(tx, {
+      orderId: parsed.data,
+      type: "restored",
+      message: "Restored from trash",
+      actorId,
+    });
+  });
 
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/orders");
+  revalidateOrder();
   revalidatePath("/dashboard/orders/trash");
   return { success: true };
 }
@@ -402,40 +642,45 @@ export async function getOrderActorProfile(userId: string | null) {
   return profile;
 }
 
-export async function recordDeposit(orderId: string, amount: number) {
+// ─── Payments ───────────────────────────────────────────────────────────────
+
+export async function recordDeposit(
+  orderId: string,
+  amount: number,
+  details: Omit<PaymentValues, "amount"> = {},
+) {
   const { user } = await getSessionProfile();
   const idParsed = z.string().uuid().safeParse(orderId);
   if (!idParsed.success) return { error: "Invalid order ID" };
 
-  const amountParsed = z.coerce
-    .number()
-    .min(0.01, "Payment must be greater than 0")
-    .safeParse(amount);
-  if (!amountParsed.success) {
-    return { error: amountParsed.error.issues[0]?.message ?? "Invalid amount" };
+  const parsed = paymentSchema.safeParse({ ...details, amount });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid payment" };
   }
+  const pay = parsed.data;
+  const value = roundMoney(pay.amount);
 
   try {
     const result = await db.transaction(async (tx) => {
+      // Lock the row so two cashiers can't both take the last balance.
       const [order] = await tx
         .select({
           deposit: orders.depositAmount,
           total: orders.totalAmount,
+          orderNumber: orders.orderNumber,
         })
         .from(orders)
-        .where(eq(orders.id, idParsed.data))
-        .limit(1);
+        .where(and(eq(orders.id, idParsed.data), isNull(orders.deletedAt)))
+        .limit(1)
+        .for("update");
 
       if (!order) throw new Error("Order not found");
 
-      const currentDeposit = parseFloat(order.deposit);
-      const total = parseFloat(order.total);
-      const newDeposit = currentDeposit + amountParsed.data;
+      const total = toNumber(order.total);
+      const newDeposit = roundMoney(toNumber(order.deposit) + value);
 
-      if (newDeposit > total + 0.01) {
-        throw new Error(
-          `Payment exceeds order total (₱${total.toLocaleString()})`,
-        );
+      if (newDeposit > total + 0.009) {
+        throw new Error(`Payment exceeds the remaining balance (${peso(total - toNumber(order.deposit))})`);
       }
 
       await tx
@@ -447,17 +692,308 @@ export async function recordDeposit(orderId: string, amount: number) {
         })
         .where(eq(orders.id, idParsed.data));
 
-      return { newDeposit, total };
+      await tx.insert(payments).values({
+        orderId: idParsed.data,
+        amount: value.toFixed(2),
+        method: pay.method,
+        reference: pay.reference || null,
+        note: pay.note || null,
+        receivedBy: user.id,
+      });
+
+      const remaining = roundMoney(total - newDeposit);
+      await logOrderEvent(tx, {
+        orderId: idParsed.data,
+        type: "payment",
+        message: `Received ${peso(value)} via ${pay.method}${
+          pay.reference ? ` (ref ${pay.reference})` : ""
+        } · ${remaining > 0 ? `${peso(remaining)} left` : "fully paid"}`,
+        actorId: user.id,
+      });
+
+      return { newDeposit, total, orderNumber: order.orderNumber };
     });
 
-    revalidatePath("/dashboard");
-    revalidatePath("/dashboard/orders");
-    revalidatePath(`/dashboard/orders/${orderId}`);
+    revalidateOrder(result.orderNumber);
     revalidatePath(`/dashboard/customers`);
-    return { success: true, ...result };
+    return { success: true as const, newDeposit: result.newDeposit, total: result.total };
   } catch (e) {
     return {
       error: e instanceof Error ? e.message : "Failed to record payment",
     };
   }
+}
+
+/**
+ * Hand-over in one step: take whatever is still owed and close the job.
+ * Used from "Ready for Pickup" so staff can't release goods and forget to
+ * collect.
+ */
+export async function settleAndComplete(
+  orderId: string,
+  details: { method: PaymentValues["method"]; reference?: string } = { method: "Cash" },
+) {
+  const { user } = await getSessionProfile();
+  const idParsed = z.string().uuid().safeParse(orderId);
+  if (!idParsed.success) return { error: "Invalid order ID" };
+  const methodParsed = paymentSchema.shape.method.safeParse(details.method);
+  if (!methodParsed.success) return { error: "Pick a payment method" };
+
+  const result = await db.transaction(async (tx) => {
+    const [order] = await tx
+      .select({
+        deposit: orders.depositAmount,
+        total: orders.totalAmount,
+        status: orders.status,
+        orderNumber: orders.orderNumber,
+      })
+      .from(orders)
+      .where(and(eq(orders.id, idParsed.data), isNull(orders.deletedAt)))
+      .for("update");
+    if (!order) return { error: "Order not found" } as const;
+    if (order.status === "Completed") return { error: "Order is already completed" } as const;
+
+    const balance = roundMoney(toNumber(order.total) - toNumber(order.deposit));
+
+    if (balance > 0) {
+      await tx.insert(payments).values({
+        orderId: idParsed.data,
+        amount: balance.toFixed(2),
+        method: methodParsed.data,
+        reference: details.reference?.trim() || null,
+        note: "Balance collected at pickup",
+        receivedBy: user.id,
+      });
+      await logOrderEvent(tx, {
+        orderId: idParsed.data,
+        type: "payment",
+        message: `Collected ${peso(balance)} balance at pickup via ${methodParsed.data}`,
+        actorId: user.id,
+      });
+    }
+
+    await tx
+      .update(orders)
+      .set({
+        status: "Completed",
+        depositAmount: toNumber(order.total).toFixed(2),
+        updatedBy: user.id,
+        updatedAt: new Date(),
+      })
+      .where(eq(orders.id, idParsed.data));
+
+    await logOrderEvent(tx, {
+      orderId: idParsed.data,
+      type: "status",
+      message: `Released to customer · moved from ${order.status} to Completed`,
+      actorId: user.id,
+    });
+
+    return { orderNumber: order.orderNumber, collected: balance } as const;
+  });
+
+  if ("error" in result) return { error: result.error };
+  revalidateOrder(result.orderNumber);
+  revalidatePath("/dashboard/customers");
+  return { success: true as const, collected: result.collected };
+}
+
+// ─── Assignment & notes ─────────────────────────────────────────────────────
+
+export async function assignOrder(orderId: string, assigneeId: string | null) {
+  const { user } = await getSessionProfile();
+  const idParsed = z.string().uuid().safeParse(orderId);
+  if (!idParsed.success) return { error: "Invalid order ID" };
+
+  let assigneeName: string | null = null;
+  if (assigneeId) {
+    const assigneeParsed = z.string().uuid().safeParse(assigneeId);
+    if (!assigneeParsed.success) return { error: "Invalid staff member" };
+    const profile = await db.query.profiles.findFirst({
+      where: eq(profiles.id, assigneeParsed.data),
+    });
+    if (!profile) return { error: "Staff member not found" };
+    assigneeName = profile.fullName;
+  }
+
+  const [updated] = await db
+    .update(orders)
+    .set({ assignedTo: assigneeId, updatedBy: user.id, updatedAt: new Date() })
+    .where(and(eq(orders.id, idParsed.data), isNull(orders.deletedAt)))
+    .returning({ orderNumber: orders.orderNumber });
+  if (!updated) return { error: "Order not found" };
+
+  await logOrderEvent(db, {
+    orderId: idParsed.data,
+    type: "assigned",
+    message: assigneeId
+      ? assigneeId === user.id
+        ? "Took the job"
+        : `Assigned to ${assigneeName}`
+      : "Unassigned",
+    actorId: user.id,
+  });
+
+  revalidateOrder(updated.orderNumber);
+  return { success: true };
+}
+
+export async function addOrderNote(orderId: string, text: string) {
+  const { user } = await getSessionProfile();
+  const idParsed = z.string().uuid().safeParse(orderId);
+  if (!idParsed.success) return { error: "Invalid order ID" };
+  const noteParsed = orderNoteSchema.safeParse(text);
+  if (!noteParsed.success) return { error: noteParsed.error.issues[0]?.message ?? "Invalid note" };
+
+  const [order] = await db
+    .select({ orderNumber: orders.orderNumber })
+    .from(orders)
+    .where(and(eq(orders.id, idParsed.data), isNull(orders.deletedAt)));
+  if (!order) return { error: "Order not found" };
+
+  await logOrderEvent(db, {
+    orderId: idParsed.data,
+    type: "note",
+    message: noteParsed.data,
+    actorId: user.id,
+  });
+
+  revalidatePath(`/dashboard/orders/${order.orderNumber}`);
+  return { success: true };
+}
+
+/** Timeline + ledger for one order, with staff names resolved. */
+export async function getOrderActivity(orderId: string) {
+  await requireAuth();
+  const parsed = z.string().uuid().safeParse(orderId);
+  if (!parsed.success) return { events: [], payments: [] };
+
+  const [events, ledger] = await Promise.all([
+    db
+      .select({
+        id: orderEvents.id,
+        type: orderEvents.type,
+        message: orderEvents.message,
+        createdAt: orderEvents.createdAt,
+        actorName: profiles.fullName,
+      })
+      .from(orderEvents)
+      .leftJoin(profiles, eq(profiles.id, orderEvents.actorId))
+      .where(eq(orderEvents.orderId, parsed.data))
+      .orderBy(desc(orderEvents.createdAt)),
+    db
+      .select({
+        id: payments.id,
+        amount: payments.amount,
+        method: payments.method,
+        reference: payments.reference,
+        note: payments.note,
+        createdAt: payments.createdAt,
+        receivedByName: profiles.fullName,
+      })
+      .from(payments)
+      .leftJoin(profiles, eq(profiles.id, payments.receivedBy))
+      .where(eq(payments.orderId, parsed.data))
+      .orderBy(desc(payments.createdAt)),
+  ]);
+
+  return { events, payments: ledger };
+}
+
+// ─── Reports ────────────────────────────────────────────────────────────────
+
+/** Money taken on one shop day, for the dashboard tile and the daily report. */
+export async function getCollections(day: string = shopToday()) {
+  await requireAuth();
+  const { start, end } = shopDayRange(day);
+
+  const rows = await db
+    .select({
+      id: payments.id,
+      amount: payments.amount,
+      method: payments.method,
+      reference: payments.reference,
+      note: payments.note,
+      createdAt: payments.createdAt,
+      receivedByName: profiles.fullName,
+      orderNumber: orders.orderNumber,
+      orderTitle: orders.title,
+      customerName: customers.name,
+    })
+    .from(payments)
+    .innerJoin(orders, eq(orders.id, payments.orderId))
+    .innerJoin(customers, eq(customers.id, orders.customerId))
+    .leftJoin(profiles, eq(profiles.id, payments.receivedBy))
+    .where(
+      and(
+        gte(payments.createdAt, start),
+        lt(payments.createdAt, end),
+        isNull(orders.deletedAt),
+      ),
+    )
+    .orderBy(asc(payments.createdAt));
+
+  const byMethod = new Map<string, number>();
+  const byStaff = new Map<string, number>();
+  let total = 0;
+  for (const r of rows) {
+    const amt = toNumber(r.amount);
+    total += amt;
+    byMethod.set(r.method, (byMethod.get(r.method) ?? 0) + amt);
+    const who = r.receivedByName ?? "Unknown staff";
+    byStaff.set(who, (byStaff.get(who) ?? 0) + amt);
+  }
+
+  return {
+    day,
+    total: roundMoney(total),
+    count: rows.length,
+    byMethod: [...byMethod].map(([method, amount]) => ({ method, amount: roundMoney(amount) })),
+    byStaff: [...byStaff].map(([name, amount]) => ({ name, amount: roundMoney(amount) })),
+    payments: rows,
+  };
+}
+
+/** Orders opened and closed on one shop day. */
+export async function getDayActivity(day: string = shopToday()) {
+  await requireAuth();
+  const { start, end } = shopDayRange(day);
+
+  const [created, completed] = await Promise.all([
+    db
+      .select({
+        orderNumber: orders.orderNumber,
+        title: orders.title,
+        customerName: customers.name,
+        totalAmount: orders.totalAmount,
+        status: orders.status,
+      })
+      .from(orders)
+      .innerJoin(customers, eq(customers.id, orders.customerId))
+      .where(and(isNull(orders.deletedAt), gte(orders.createdAt, start), lt(orders.createdAt, end)))
+      .orderBy(asc(orders.createdAt)),
+    db
+      .selectDistinctOn([orders.id], {
+        orderNumber: orders.orderNumber,
+        title: orders.title,
+        customerName: customers.name,
+        totalAmount: orders.totalAmount,
+        depositAmount: orders.depositAmount,
+      })
+      .from(orderEvents)
+      .innerJoin(orders, eq(orders.id, orderEvents.orderId))
+      .innerJoin(customers, eq(customers.id, orders.customerId))
+      .where(
+        and(
+          isNull(orders.deletedAt),
+          eq(orders.status, "Completed" satisfies OrderStatus),
+          eq(orderEvents.type, "status"),
+          like(orderEvents.message, "%to Completed%"),
+          gte(orderEvents.createdAt, start),
+          lt(orderEvents.createdAt, end),
+        ),
+      ),
+  ]);
+
+  return { created, completed };
 }

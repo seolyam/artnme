@@ -12,26 +12,42 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Trash2, Pencil, Printer } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, Printer, ChevronRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { nextStatus } from "@/lib/order-status";
 
 export function OrderActions({
   orderId,
   orderNumber,
   currentStatus,
+  balance = 0,
+  isAdmin = false,
 }: {
   orderId: string;
   orderNumber: number;
   currentStatus: string;
+  balance?: number;
+  isAdmin?: boolean;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const next = nextStatus(currentStatus);
 
   function handleStatusChange(newStatus: OrderStatus) {
+    if (
+      newStatus === "Completed" &&
+      balance > 0.009 &&
+      !confirm(
+        `This order still has ₱${balance.toLocaleString("en-PH", { minimumFractionDigits: 2 })} unpaid. Complete it anyway?\n\nTip: use “Collect & release” to take the balance and complete in one step.`,
+      )
+    ) {
+      return;
+    }
     startTransition(async () => {
       const result = await updateOrderStatus({
         orderId,
@@ -41,6 +57,7 @@ export function OrderActions({
         toast.error(result.error);
       } else {
         toast.success(`Status changed to "${newStatus}"`);
+        router.refresh();
       }
     });
   }
@@ -48,7 +65,7 @@ export function OrderActions({
   function handleDelete() {
     if (
       !confirm(
-        "Move this order to trash? You can restore it from the Trash for up to 30 days.",
+        "Move this order to trash? An admin can restore it from the Trash.",
       )
     )
       return;
@@ -64,14 +81,28 @@ export function OrderActions({
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <Button variant="outline" size="sm" asChild>
+    <div className="flex flex-wrap items-center gap-2">
+      {next && next !== "Completed" && (
+        <Button
+          size="sm"
+          className="rounded-none"
+          disabled={isPending}
+          onClick={() => handleStatusChange(next)}
+        >
+          {isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : null}
+          Move to {next}
+          <ChevronRight className="ml-1 h-4 w-4" />
+        </Button>
+      )}
+      <Button variant="outline" size="sm" asChild className="rounded-none">
         <a href={`/dashboard/orders/${orderNumber}/print`} target="_blank" rel="noopener noreferrer">
           <Printer className="mr-2 h-4 w-4" />
           Print
         </a>
       </Button>
-      <Button variant="outline" size="sm" asChild>
+      <Button variant="outline" size="sm" asChild className="rounded-none">
         <Link href={`/dashboard/orders/${orderNumber}/edit`}>
           <Pencil className="mr-2 h-4 w-4" />
           Edit
@@ -79,12 +110,12 @@ export function OrderActions({
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" disabled={isPending}>
-            <MoreHorizontal className="mr-2 h-4 w-4" />
-            Actions
+          <Button variant="outline" size="sm" disabled={isPending} className="rounded-none" aria-label="More actions">
+            <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuLabel className="text-xs text-muted-foreground">Set status</DropdownMenuLabel>
           {ORDER_STATUSES.filter((s) => s !== currentStatus).map((status) => (
             <DropdownMenuItem
               key={status}
@@ -93,14 +124,18 @@ export function OrderActions({
               Move to {status}
             </DropdownMenuItem>
           ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
-            onClick={handleDelete}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete Order
-          </DropdownMenuItem>
+          {isAdmin && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={handleDelete}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Move to trash
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

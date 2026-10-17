@@ -55,3 +55,29 @@ export function statusStyle(status: string) {
 export function isWebQuote(title: string) {
   return title.startsWith(WEB_QUOTE_PREFIX);
 }
+
+const SEQUENCE = ["Pending", "Designing", "Printing", "Ready for Pickup", "Completed"] as const;
+
+/** The status a job normally moves to next, or null once it's done. */
+export function nextStatus(current: string): (typeof SEQUENCE)[number] | null {
+  const idx = SEQUENCE.indexOf(current as (typeof SEQUENCE)[number]);
+  if (idx === -1 || idx >= SEQUENCE.length - 1) return null;
+  return SEQUENCE[idx + 1];
+}
+
+/** Two-letter initials for assignee chips. */
+export function initials(name: string | null | undefined) {
+  if (!name) return "?";
+  return (
+    name
+      .split(/\s+/)
+      .map((n) => n[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "?"
+  );
+}
+
+/** Completed jobs stay on the board this long, then live on the customer page. */
+export const BOARD_ARCHIVE_DAYS = 14;

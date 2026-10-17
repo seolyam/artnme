@@ -1,11 +1,14 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { getOrders } from "@/app/actions/orders";
+import { getMe, getStaff } from "@/app/actions/staff";
+import { BOARD_ARCHIVE_DAYS } from "@/lib/order-status";
 import { KanbanBoard } from "@/components/dashboard/kanban-board";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
 
 export default async function OrdersPage() {
-  const orders = await getOrders();
+  const [orders, staff, me] = await Promise.all([getOrders(), getStaff(), getMe()]);
 
   return (
     <div className="space-y-6">
@@ -17,12 +20,14 @@ export default async function OrdersPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/dashboard/orders/trash" prefetch={true}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Trash
-            </Link>
-          </Button>
+          {me.role === "admin" && (
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/dashboard/orders/trash" prefetch={true}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Trash
+              </Link>
+            </Button>
+          )}
           <Button asChild className="rounded-none">
             <Link href="/dashboard/orders/new">
               <Plus className="mr-2 h-4 w-4" />
@@ -32,7 +37,9 @@ export default async function OrdersPage() {
         </div>
       </div>
 
-      <KanbanBoard orders={orders} />
+      <Suspense>
+        <KanbanBoard orders={orders} staff={staff} meId={me.id} archiveDays={BOARD_ARCHIVE_DAYS} />
+      </Suspense>
     </div>
   );
 }

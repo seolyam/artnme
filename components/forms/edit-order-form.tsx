@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 
@@ -10,6 +10,7 @@ import { orderFormSchema, type OrderFormSchemaValues } from "@/lib/validators";
 import type { OrderFormValues } from "@/lib/validators";
 import { updateOrder } from "@/app/actions/orders";
 import { PRODUCT_TYPES } from "@/db/schema";
+import { toShopInputValue } from "@/lib/time";
 
 import {
   Form,
@@ -76,9 +77,8 @@ export function EditOrderForm({ order }: EditOrderFormProps) {
       status: order.status as OrderFormSchemaValues["status"],
       totalAmount: parseFloat(order.totalAmount),
       depositAmount: parseFloat(order.depositAmount),
-      dueDate: order.dueDate
-        ? new Date(order.dueDate).toISOString().slice(0, 16)
-        : "",
+      // toISOString() would show UTC and shift the due date 8h on every save.
+      dueDate: toShopInputValue(order.dueDate),
       items: order.items.map((item) => ({
         id: item.id,
         productType: item.productType as OrderFormSchemaValues["items"][number]["productType"],
@@ -95,16 +95,18 @@ export function EditOrderForm({ order }: EditOrderFormProps) {
     name: "items",
   });
 
-  // Auto-calculate total from items
-  const watchedItems = form.watch("items");
+  // Auto-calculate total from items. useWatch + a numeric dependency: the
+  // array from form.watch() is mutated in place, so an effect keyed on it
+  // never re-ran and the total stayed at 0.
+  const watchedItems = useWatch({ control: form.control, name: "items" });
+  const itemsTotal = (watchedItems ?? []).reduce(
+    (sum, item) =>
+      sum + (Number(item?.quantity) || 0) * (Number(item?.unitPrice) || 0),
+    0,
+  );
   useEffect(() => {
-    const total = watchedItems.reduce(
-      (sum, item) =>
-        sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0),
-      0,
-    );
-    form.setValue("totalAmount", total);
-  }, [watchedItems, form]);
+    form.setValue("totalAmount", Math.round(itemsTotal * 100) / 100);
+  }, [itemsTotal, form]);
 
   async function onSubmit(values: OrderFormSchemaValues) {
     setSubmitting(true);
@@ -412,10 +414,13 @@ export function EditOrderForm({ order }: EditOrderFormProps) {
                 name="depositAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Deposit Amount</FormLabel>
+                    <FormLabel>Amount Paid</FormLabel>
                     <FormControl>
                       <Input type="number" min={0} step="0.01" {...field} />
                     </FormControl>
+                    <p className="text-xs text-muted-foreground">
+                      For new payments use “Record Payment” on the order page. Changes here are logged as adjustments.
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Calendar, User, ChevronRight, AlertTriangle } from "lucide-react";
 import { ORDER_STATUSES, type OrderStatus } from "@/db/schema";
-import { isWebQuote } from "@/lib/order-status";
+import { initials, isWebQuote, nextStatus } from "@/lib/order-status";
 import { cn } from "@/lib/utils";
 
 interface OrderCardOrder {
@@ -27,14 +27,8 @@ interface OrderCardOrder {
 interface OrderCardProps {
   order: OrderCardOrder;
   onStatusChange: (orderId: string, status: OrderStatus) => void;
-}
-
-const STATUS_SEQUENCE: OrderStatus[] = [...ORDER_STATUSES];
-
-function getNextStatus(current: string): OrderStatus | null {
-  const idx = STATUS_SEQUENCE.indexOf(current as OrderStatus);
-  if (idx === -1 || idx >= STATUS_SEQUENCE.length - 1) return null;
-  return STATUS_SEQUENCE[idx + 1];
+  assigneeName?: string | null;
+  isMine?: boolean;
 }
 
 function isOverdue(order: OrderCardOrder): boolean {
@@ -45,10 +39,10 @@ function isOverdue(order: OrderCardOrder): boolean {
 
 const chip = "spec px-1.5 py-0.5 text-[10px] tracking-[0.08em]";
 
-export function OrderCard({ order, onStatusChange }: OrderCardProps) {
+export function OrderCard({ order, onStatusChange, assigneeName = null, isMine = false }: OrderCardProps) {
   const total = parseFloat(order.totalAmount);
   const balance = total - parseFloat(order.depositAmount);
-  const nextStatus = getNextStatus(order.status);
+  const next = nextStatus(order.status);
   const overdue = isOverdue(order);
   const web = isWebQuote(order.title);
 
@@ -93,7 +87,20 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
 
       <div className="flex items-center gap-1.5 text-xs text-on-surface-variant">
         <User className="h-3 w-3" />
-        <span className="truncate">{order.customer.name}</span>
+        <span className="min-w-0 flex-1 truncate">{order.customer.name}</span>
+        <span
+          title={assigneeName ? `Assigned to ${assigneeName}${isMine ? " (you)" : ""}` : "Unassigned"}
+          className={cn(
+            "flex h-5 min-w-5 shrink-0 items-center justify-center px-1 font-headline text-[9px] font-bold",
+            isMine
+              ? "bg-brand text-white"
+              : assigneeName
+                ? "bg-on-surface/80 text-surface"
+                : "border border-dashed border-outline-variant text-on-surface-variant",
+          )}
+        >
+          {assigneeName ? initials(assigneeName) : "—"}
+        </span>
       </div>
 
       <div className="flex flex-wrap gap-1">
@@ -110,7 +117,7 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
         {order.dueDate ? (
           <span className={cn("flex items-center gap-1", overdue ? "text-accent-ink" : "text-on-surface-variant")}>
             {overdue ? <AlertTriangle className="h-3 w-3" /> : <Calendar className="h-3 w-3" />}
-            {new Date(order.dueDate).toLocaleDateString("en-PH", { month: "short", day: "numeric" })}
+            {new Date(order.dueDate).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric" })}
           </span>
         ) : (
           <span className="text-on-surface-variant">No due date</span>
@@ -121,13 +128,13 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
         </span>
       </div>
 
-      {nextStatus && (
+      {next && (
         <button
           type="button"
-          onClick={() => onStatusChange(order.id, nextStatus)}
+          onClick={() => onStatusChange(order.id, next)}
           className="group/adv flex min-h-9 items-center justify-center gap-1.5 border border-outline-variant/50 font-headline text-[11px] font-bold uppercase tracking-[0.1em] transition-colors hover:border-brand hover:bg-brand hover:text-white"
         >
-          Move to {nextStatus}
+          Move to {next}
           <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover/adv:translate-x-0.5" />
         </button>
       )}

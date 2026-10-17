@@ -1,5 +1,8 @@
 import { notFound } from "next/navigation";
-import { getOrder } from "@/app/actions/orders";
+import { getOrder, getOrderActivity } from "@/app/actions/orders";
+import { formatShopDate, formatShopTime } from "@/lib/time";
+import { peso } from "@/lib/money";
+import { SITE } from "@/lib/site";
 
 export default async function PrintOrderPage({
   params,
@@ -14,6 +17,8 @@ export default async function PrintOrderPage({
   }
 
   const balance = parseFloat(order.totalAmount) - parseFloat(order.depositAmount);
+  const { payments } = await getOrderActivity(order.id);
+  const ledger = [...payments].reverse();
 
   return (
     <div className="max-w-3xl mx-auto p-8 bg-white text-black min-h-screen">
@@ -28,13 +33,14 @@ export default async function PrintOrderPage({
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Art &apos;n Me</h1>
           <p className="text-sm text-gray-500">Digital Printing Services</p>
+          <p className="text-xs text-gray-500">{SITE.addressLine1}, {SITE.addressLine2} · {SITE.phoneDisplay}</p>
           <p className="text-sm text-gray-500">Receipt / Invoice</p>
         </div>
         <div className="text-right">
           <p className="text-sm font-semibold text-gray-700">Order #: <span className="font-normal text-lg">#{order.orderNumber}</span></p>
-          <p className="text-sm text-gray-700">Date: <span className="font-normal">{new Date(order.createdAt).toLocaleDateString()}</span></p>
+          <p className="text-sm text-gray-700">Date: <span className="font-normal">{formatShopDate(order.createdAt, { month: "short", day: "numeric", year: "numeric" })}</span></p>
           {order.dueDate && (
-             <p className="text-sm text-gray-700">Due: <span className="font-normal">{new Date(order.dueDate).toLocaleDateString()}</span></p>
+             <p className="text-sm text-gray-700">Due: <span className="font-normal">{formatShopDate(order.dueDate, { month: "short", day: "numeric", year: "numeric" })} {formatShopTime(order.dueDate)}</span></p>
           )}
         </div>
       </div>
@@ -92,6 +98,23 @@ export default async function PrintOrderPage({
           </div>
         </div>
       </div>
+
+      {ledger.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-sm font-bold text-gray-800 mb-2">Payments received</h2>
+          <table className="w-full text-left text-xs text-gray-700">
+            <tbody>
+              {ledger.map((p) => (
+                <tr key={p.id} className="border-b border-gray-100 last:border-0">
+                  <td className="py-1.5">{formatShopDate(p.createdAt, { month: "short", day: "numeric", year: "numeric" })}</td>
+                  <td className="py-1.5">{p.method}{p.reference ? ` #${p.reference}` : ""}</td>
+                  <td className="py-1.5 text-right">{peso(p.amount)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <div className="mt-16 text-center text-xs text-gray-500">
         <p>Thank you for your business!</p>

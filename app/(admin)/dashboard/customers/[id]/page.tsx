@@ -103,7 +103,7 @@ export default async function CustomerDetailPage({
               </h1>
               <p className="text-xs text-muted-foreground uppercase tracking-wider">
                 Client since{" "}
-                {new Date(customer.createdAt).toLocaleDateString("en-PH", {
+                {new Date(customer.createdAt).toLocaleDateString("en-PH", { timeZone: "Asia/Manila",
                   month: "long",
                   year: "numeric",
                 })}
@@ -280,7 +280,7 @@ export default async function CustomerDetailPage({
 
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
                         <span>
-                          {new Date(order.createdAt).toLocaleDateString("en-PH", {
+                          {new Date(order.createdAt).toLocaleDateString("en-PH", { timeZone: "Asia/Manila",
                             month: "short",
                             day: "numeric",
                             year: "numeric",
@@ -289,7 +289,7 @@ export default async function CustomerDetailPage({
                         {order.dueDate && (
                           <span>
                             Due{" "}
-                            {new Date(order.dueDate).toLocaleDateString("en-PH", {
+                            {new Date(order.dueDate).toLocaleDateString("en-PH", { timeZone: "Asia/Manila",
                               month: "short",
                               day: "numeric",
                             })}

@@ -1,4 +1,5 @@
 import { z } from "zod/v4";
+import { PAYMENT_METHODS } from "@/db/schema";
 
 // ─── Customer ───────────────────────────────────────────────────────────────
 
@@ -40,6 +41,7 @@ export const orderSchema = z.object({
   totalAmount: z.coerce.number().min(0, "Total must be non-negative"),
   depositAmount: z.coerce.number().min(0, "Deposit must be non-negative"),
   dueDate: z.string().optional(),
+  depositMethod: z.enum(PAYMENT_METHODS).optional(),
   items: z.array(orderItemSchema).min(1, "At least one item is required"),
 });
 
@@ -60,6 +62,7 @@ export const orderFormSchema = z.object({
   totalAmount: z.coerce.number().min(0, "Total must be non-negative"),
   depositAmount: z.coerce.number().min(0, "Deposit must be non-negative"),
   dueDate: z.string().optional(),
+  depositMethod: z.enum(PAYMENT_METHODS).optional(),
   items: z.array(orderItemSchema).min(1, "At least one item is required"),
 });
 
@@ -79,6 +82,23 @@ export const updateOrderStatusSchema = z.object({
 });
 
 export type UpdateOrderStatusValues = z.infer<typeof updateOrderStatusSchema>;
+
+// ─── Payments & notes ───────────────────────────────────────────────────────
+
+export const paymentSchema = z.object({
+  amount: z.coerce.number().min(0.01, "Payment must be greater than 0"),
+  method: z.enum(PAYMENT_METHODS).default("Cash"),
+  reference: z.string().trim().max(80).optional(),
+  note: z.string().trim().max(200).optional(),
+});
+
+export type PaymentValues = z.input<typeof paymentSchema>;
+
+export const orderNoteSchema = z
+  .string()
+  .trim()
+  .min(1, "Write something first")
+  .max(1000, "Keep notes under 1,000 characters");
 
 // ─── Public quote request ───────────────────────────────────────────────────
 

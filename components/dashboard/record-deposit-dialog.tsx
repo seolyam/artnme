@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { recordDeposit } from "@/app/actions/orders";
+import { PAYMENT_METHODS, type PaymentMethod } from "@/db/schema";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +39,8 @@ export function RecordDepositDialog({
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [amount, setAmount] = useState("");
+  const [method, setMethod] = useState<Exclude<PaymentMethod, "Adjustment">>("Cash");
+  const [reference, setReference] = useState("");
 
   const currentDep = parseFloat(currentDeposit) || 0;
   const total = parseFloat(totalAmount) || 0;
@@ -50,7 +54,10 @@ export function RecordDepositDialog({
     e.preventDefault();
     if (!isValid) return;
     startTransition(async () => {
-      const result = await recordDeposit(orderId, parsedAmount);
+      const result = await recordDeposit(orderId, parsedAmount, {
+        method,
+        reference: reference || undefined,
+      });
       if ("error" in result) {
         toast.error(result.error);
       } else {
@@ -61,6 +68,7 @@ export function RecordDepositDialog({
           },
         );
         setAmount("");
+        setReference("");
         setOpen(false);
         router.refresh();
       }
@@ -75,7 +83,7 @@ export function RecordDepositDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger ?? (
-          <Button variant="default" size="sm">
+          <Button variant="default" size="sm" className="rounded-none">
             <Banknote className="mr-2 h-4 w-4" />
             Record Payment
           </Button>
@@ -142,6 +150,39 @@ export function RecordDepositDialog({
                 Payment exceeds remaining balance of ₱
                 {balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </p>
+            )}
+          </div>
+
+          {/* Method */}
+          <div className="space-y-2">
+            <Label>Method</Label>
+            <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Payment method">
+              {PAYMENT_METHODS.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  role="radio"
+                  aria-checked={method === m}
+                  onClick={() => setMethod(m)}
+                  className={cn(
+                    "min-h-9 border px-3 text-xs font-semibold transition-colors",
+                    method === m
+                      ? "border-brand bg-brand text-white"
+                      : "border-outline-variant/60 hover:border-on-surface-variant",
+                  )}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+            {method !== "Cash" && (
+              <Input
+                aria-label="Reference number"
+                placeholder={method === "GCash" || method === "Maya" ? "Reference no. (from the receipt SMS)" : "Reference / transaction no."}
+                value={reference}
+                onChange={(e) => setReference(e.target.value)}
+                maxLength={80}
+              />
             )}
           </div>
 
