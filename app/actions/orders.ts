@@ -10,7 +10,7 @@ import {
   customers,
   type OrderStatus,
 } from "@/db/schema";
-import { eq, isNull, sql, and, desc, like, inArray, gte, lt, asc } from "drizzle-orm";
+import { eq, isNull, isNotNull, sql, and, desc, like, inArray, gte, lt, asc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireAuth, requireAdmin, getSessionProfile } from "@/lib/auth";
 import {
@@ -626,20 +626,33 @@ export async function permanentlyDeleteOrder(orderId: string) {
     return { error: "Invalid order ID" };
   }
 
-  await db.delete(orders).where(eq(orders.id, parsed.data));
+  // Only orders already in the trash can be purged; live jobs go through
+  // deleteOrder first so there is always a chance to restore them.
+  const purged = await db
+    .delete(orders)
+    .where(and(eq(orders.id, parsed.data), isNotNull(orders.deletedAt)))
+    .returning({ id: orders.id });
+  if (purged.length === 0) return { error: "Order is not in the trash" };
 
   revalidatePath("/dashboard/orders/trash");
   return { success: true };
 }
 
-export async function getOrderActorProfile(userId: string | null) {
-  if (!userId) return null;
-  const parsed = z.string().uuid().safeParse(userId);
-  if (!parsed.success) return null;
-  const profile = await db.query.profiles.findFirst({
-    where: eq(profiles.id, parsed.data),
-  });
-  return profile;
+/** Permanently delete everything in the trash now instead of waiting for the daily purge. */
+export async function emptyTrash() {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "Unauthorized: Admin access required to empty the trash." };
+  }
+
+  const purged = await db
+    .delete(orders)
+    .where(isNotNull(orders.deletedAt))
+    .returning({ id: orders.id });
+
+  revalidatePath("/dashboard/orders/trash");
+  return { success: true, count: purged.length };
 }
 
 // ─── Payments ───────────────────────────────────────────────────────────────

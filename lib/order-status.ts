@@ -81,3 +81,6 @@ export function initials(name: string | null | undefined) {
 
 /** Completed jobs stay on the board this long, then live on the customer page. */
 export const BOARD_ARCHIVE_DAYS = 14;
+
+/** Trashed orders are permanently deleted by the daily cron after this long. */
+export const TRASH_RETENTION_DAYS = 30;
