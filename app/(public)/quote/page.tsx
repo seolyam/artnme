@@ -1,237 +1,84 @@
-export default function Quote() {
-  return (
-    <>
-      <main className="pt-32 pb-24 px-6 md:px-12">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-            {/* Left Column: Branding & Contact Info */}
-            <div className="lg:col-span-5 space-y-12">
-              <div className="space-y-4">
-                <span className="text-primary-container font-headline font-bold uppercase tracking-[0.3em] text-sm">
-                  Initiate Project
-                </span>
-                <h1 className="text-6xl md:text-8xl font-headline font-black text-on-surface dark:text-white leading-[0.9] tracking-tighter">
-                  GET A<br />
-                  <span className="text-primary-container">QUOTE.</span>
-                </h1>
-                <p className="text-on-surface-variant max-w-md text-lg leading-relaxed pt-4">
-                  Transforming your vision into high-definition reality. Provide
-                  your specifications below, and our master printers will
-                  architect your masterpiece.
-                </p>
-              </div>
-              <div className="space-y-8 pt-8">
-                <div className="flex items-start gap-6 group">
-                  <div className="bg-surface-container-high p-4">
-                    <span className="material-symbols-outlined text-primary-container">
-                      location_on
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="text-on-surface dark:text-white font-headline font-bold text-xl uppercase tracking-widest">
-                      Silay City
-                    </h3>
-                    <p className="text-on-surface-variant mt-1">
-                      Negros Occidental, Philippines
-                    </p>
-                    <p className="text-on-surface-variant text-sm mt-2 opacity-60">
-                      HQ &amp; Production Floor
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-6 group">
-                  <div className="bg-surface-container-high p-4">
-                    <span className="material-symbols-outlined text-primary-container">
-                      call
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="text-on-surface dark:text-white font-headline font-bold text-xl uppercase tracking-widest">
-                      0968 329 2779
-                    </h3>
-                    <p className="text-on-surface-variant mt-1">
-                      Direct Production Line
-                    </p>
-                    <p className="text-on-surface-variant text-sm mt-2 opacity-60">
-                      Mon - Sat: 9AM - 6PM
-                    </p>
-                  </div>
-                </div>
-              </div>
-              {/* Decorative Graphic */}
-              <div className="hidden lg:block relative pt-12">
-                <div className="absolute -top-4 -left-4 w-32 h-32 border-l-4 border-t-4 border-primary-container opacity-20"></div>
-                <img
-                  className="w-full contrast-125 transition-all duration-700"
-                  alt="Industrial digital printing press"
-                  src={`${process.env.NEXT_PUBLIC_CLOUDINARY_URL}/EL_TURO_JERSEY_hwpjf4`}
-                />
-              </div>
-            </div>
-            {/* Right Column: The Form */}
-            <div className="lg:col-span-7 bg-surface-container-low p-8 md:p-12 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-1/2 h-1 bg-primary-container"></div>
-              <form className="space-y-10">
-                {/* Section 1: Identity */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2 group">
-                    <label className="text-xs font-bold uppercase tracking-widest text-primary-container">
-                      Full Name
-                    </label>
-                    <input
-                      className="w-full bg-surface-container-high border-0 border-b border-outline-variant/40 dark:border-white/10 px-4 py-4 focus:border-b-2 focus:border-primary-container focus:outline-none transition-all text-on-surface dark:text-white font-headline tracking-wide"
-                      placeholder="ALEX MERCER"
-                      type="text"
-                    />
-                  </div>
-                  <div className="space-y-2 group">
-                    <label className="text-xs font-bold uppercase tracking-widest text-primary-container">
-                      Contact Email/Phone
-                    </label>
-                    <input
-                      className="w-full bg-surface-container-high border-0 border-b border-outline-variant/40 dark:border-white/10 px-4 py-4 focus:border-b-2 focus:border-primary-container focus:outline-none transition-all text-on-surface dark:text-white font-headline tracking-wide"
-                      placeholder="+63 9XX XXX XXXX"
-                      type="text"
-                    />
-                  </div>
-                </div>
-                {/* Section 2: Specification */}
-                <div className="space-y-6">
-                  <label className="text-xs font-bold uppercase tracking-widest text-primary-container">
-                    Select Substrate / Item Type
-                  </label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <label className="cursor-pointer group">
-                      <input
-                        className="hidden peer"
-                        name="item_type"
-                        type="radio"
-                        defaultChecked
-                      />
-                      <div className="p-4 border border-outline-variant/40 dark:border-white/5 bg-surface-container peer-checked:bg-primary-container peer-checked:text-on-primary-container transition-all text-center">
-                        <span className="block font-headline font-bold text-sm tracking-tighter">
-                          T-SHIRT
-                        </span>
-                      </div>
-                    </label>
-                    <label className="cursor-pointer group">
-                      <input
-                        className="hidden peer"
-                        name="item_type"
-                        type="radio"
-                      />
-                      <div className="p-4 border border-outline-variant/40 dark:border-white/5 bg-surface-container peer-checked:bg-primary-container peer-checked:text-on-primary-container transition-all text-center">
-                        <span className="block font-headline font-bold text-sm tracking-tighter">
-                          MUG
-                        </span>
-                      </div>
-                    </label>
-                    <label className="cursor-pointer group">
-                      <input
-                        className="hidden peer"
-                        name="item_type"
-                        type="radio"
-                      />
-                      <div className="p-4 border border-outline-variant/40 dark:border-white/5 bg-surface-container peer-checked:bg-primary-container peer-checked:text-on-primary-container transition-all text-center">
-                        <span className="block font-headline font-bold text-sm tracking-tighter">
-                          BANNER
-                        </span>
-                      </div>
-                    </label>
-                    <label className="cursor-pointer group">
-                      <input
-                        className="hidden peer"
-                        name="item_type"
-                        type="radio"
-                      />
-                      <div className="p-4 border border-outline-variant/40 dark:border-white/5 bg-surface-container peer-checked:bg-primary-container peer-checked:text-on-primary-container transition-all text-center">
-                        <span className="block font-headline font-bold text-sm tracking-tighter">
-                          OTHER
-                        </span>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-                {/* Section 3: Quantity & Description */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
-                  <div className="md:col-span-1 space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-widest text-primary-container">
-                      Quantity
-                    </label>
-                    <input
-                      className="w-full h-16 bg-surface-container-high border-0 border-b border-outline-variant/40 dark:border-white/10 px-4 py-4 focus:border-b-2 focus:border-primary-container focus:outline-none text-on-surface dark:text-white font-headline text-2xl"
-                      placeholder="01"
-                      type="number"
-                    />
-                  </div>
-                  <div className="md:col-span-2 space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-widest text-primary-container">
-                      Project Details
-                    </label>
-                    <textarea
-                      className="w-full h-16 bg-surface-container-high border-0 border-b border-outline-variant/40 dark:border-white/10 px-4 py-4 focus:border-b-2 focus:border-primary-container focus:outline-none text-on-surface dark:text-white font-body text-sm resize-none"
-                      placeholder="COLORS, FINISH, DEADLINE..."
-                      rows={1}
-                    ></textarea>
-                  </div>
-                </div>
-                {/* Section 4: File Upload */}
-                <div className="space-y-4">
-                  <label className="text-xs font-bold uppercase tracking-widest text-primary-container">
-                    Asset Depository
-                  </label>
-                  <div className="border-2 border-dashed border-outline-variant/40 dark:border-white/10 bg-surface-container-high p-12 text-center group hover:border-primary-container transition-colors cursor-pointer">
-                    <span className="material-symbols-outlined text-4xl text-on-surface/30 dark:text-white/20 group-hover:text-primary-container transition-colors mb-4">
-                      cloud_upload
-                    </span>
-                    <p className="text-on-surface dark:text-white font-headline font-bold">
-                      UPLOAD YOUR DESIGN
-                    </p>
-                    <p className="text-on-surface-variant text-xs mt-2 uppercase tracking-widest">
-                      AI, PSD, PDF, OR HIGH-RES PNG (MAX 50MB)
-                    </p>
-                  </div>
-                </div>
-                {/* Action */}
-                <div className="pt-8">
-                  <button
-                    className="w-full bg-primary-container py-6 group relative overflow-hidden transition-all active:scale-[0.98]"
-                    type="submit"
-                  >
-                    <span className="relative z-10 font-headline font-black text-2xl tracking-tighter italic uppercase text-on-primary-container group-hover:tracking-[0.1em] transition-all">
-                      Submit Inquiry
-                    </span>
-                    <div className="absolute inset-0 bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-300 mix-blend-overlay"></div>
-                  </button>
-                  <p className="text-[10px] text-center text-on-surface-variant mt-4 uppercase tracking-[0.2em] opacity-40">
-                    Estimate generation usually takes 1-2 production hours.
-                  </p>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </main>
+import { QuoteForm } from "@/components/quote/QuoteForm";
+import { LineReveal } from "@/components/motion/line-reveal";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
+import { SITE } from "@/lib/site";
+import { QUOTE_PRODUCTS, type QuoteProduct } from "@/lib/validators";
 
-      {/* Map Section */}
-      <a 
-        href="https://maps.app.goo.gl/KA781unxzKKvwnMh6"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="w-full h-[400px] contrast-125 opacity-50 hover:opacity-100 transition-opacity relative block"
-      >
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background z-10 pointer-events-none"></div>
-        <img
-          className="w-full h-full object-cover"
-          alt="Map of Silay City"
-          src={`${process.env.NEXT_PUBLIC_CLOUDINARY_URL}/STE_-_JADE_y9vxos`}
+export const metadata = {
+  title: "Get a Quote — Art 'n Me",
+  description: "Request a print quote for shirts, jerseys, mugs and tarpaulins from Art 'n Me in Silay City.",
+};
+
+const STEPS = [
+  { title: "You send the brief", body: "Two minutes. A file helps but is optional." },
+  { title: "We price it", body: "Usually within 1–2 production hours." },
+  { title: "Approve & print", body: "A deposit locks your slot on the press." },
+];
+
+export default async function QuotePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ product?: string; from?: string }>;
+}) {
+  const sp = await searchParams;
+  const initialProduct = QUOTE_PRODUCTS.find(
+    (p) => p.value.toLowerCase() === sp.product?.toLowerCase(),
+  )?.value as QuoteProduct | undefined;
+  const source = sp.from === "studio" ? "studio" : undefined;
+
+  return (
+    <main className="mx-auto flex max-w-[1360px] flex-wrap items-start gap-16 px-4 pb-32 pt-36 md:px-6 md:pt-44">
+      <div className="min-w-0 flex-[1_1_380px]">
+        <Reveal immediate y={12}>
+          <p className="spec mb-6 text-accent-ink">Initiate project</p>
+        </Reveal>
+        <LineReveal
+          className="font-headline text-[clamp(3.5rem,8vw,7.5rem)] font-bold uppercase leading-[0.86] tracking-[-0.055em]"
+          lines={[{ text: "Get a" }, { text: "quote.", className: "text-brand", misregister: true }]}
         />
-        <div className="absolute inset-0 flex items-center justify-center z-20">
-          <div className="bg-primary-container text-on-primary-container px-8 py-4 font-headline font-black uppercase italic text-2xl shadow-2xl skew-x-[-12deg] group-hover:scale-105 transition-transform">
-            Find Us In Silay
-          </div>
-        </div>
-      </a>
-    </>
+        <Reveal immediate delay={0.4}>
+          <p className="mb-12 mt-8 max-w-md text-lg font-light leading-relaxed text-on-surface-variant">
+            Tell us what you need. Your request lands directly on our production
+            board and we reply with a proof and a firm price.
+          </p>
+          {source && (
+            <p className="spec -mt-6 mb-10 inline-flex border border-brand/60 px-3 py-2 text-accent-ink">
+              Coming from the 3D Studio — attach your downloaded mockup below
+            </p>
+          )}
+        </Reveal>
+
+        <Stagger delay={0.5} className="border-t border-outline-variant/40">
+          {STEPS.map((step, i) => (
+            <StaggerItem key={step.title} className="flex gap-5 border-b border-outline-variant/40 py-5">
+              <span className="spec pt-1 text-accent-ink">0{i + 1}</span>
+              <span>
+                <span className="block font-headline text-lg font-bold uppercase">{step.title}</span>
+                <span className="text-sm text-on-surface-variant">{step.body}</span>
+              </span>
+            </StaggerItem>
+          ))}
+        </Stagger>
+
+        <Reveal delay={0.2} className="mt-10 flex flex-col items-start gap-3.5">
+          <a href={SITE.phoneHref} className="link-draw flex items-center gap-3">
+            <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="#e31e24" strokeWidth={2} className="h-4.5 w-4.5">
+              <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" />
+            </svg>
+            {SITE.phoneDisplay} · {SITE.hoursLabel}
+          </a>
+          <a href={SITE.facebookHref} target="_blank" rel="noopener noreferrer" className="link-draw flex items-center gap-3">
+            <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="#e31e24" strokeWidth={2} className="h-4.5 w-4.5">
+              <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />
+            </svg>
+            Prefer chat? Message us on Facebook
+          </a>
+        </Reveal>
+      </div>
+
+      <div className="min-w-0 flex-[1.4_1_560px] pr-3.5">
+        <QuoteForm initialProduct={initialProduct} source={source} />
+      </div>
+    </main>
   );
 }

@@ -1,141 +1,91 @@
-"use client";
+import { ContactRows, OpenBadge } from "@/components/contact/ContactRows";
+import { LineReveal } from "@/components/motion/line-reveal";
+import { Reveal } from "@/components/motion/reveal";
+import { SITE } from "@/lib/site";
 
-import { Mail, Phone, MapPin, MessageSquare } from "lucide-react";
+export const metadata = {
+  title: "Contact — Art 'n Me",
+  description: `Visit Art 'n Me at ${SITE.addressLine1}, ${SITE.addressLine2}. Call ${SITE.phoneDisplay}.`,
+};
 
-export default function Contact() {
+export default function ContactPage() {
   return (
-    <main className="pt-32 pb-24 px-6 md:px-12 bg-background min-h-screen">
-      <div className="max-w-3xl mx-auto">
+    <main>
+      <header className="mx-auto flex max-w-[1360px] flex-wrap items-end justify-between gap-10 px-4 pb-18 pt-36 md:px-6 md:pt-44">
         <div>
-          {/* Contact Information */}
-          <div className="flex flex-col items-center text-center space-y-16">
-            <div className="space-y-4 flex flex-col items-center">
-              <span className="text-primary-container font-headline font-bold uppercase tracking-[0.3em] text-sm">
-                Get in Touch
-              </span>
-              <h1 className="text-6xl md:text-8xl font-headline font-black text-on-surface dark:text-white leading-[0.9] tracking-tighter uppercase italic">
-                CONTACT
-                <br />
-                <span className="text-primary-container">US.</span>
-              </h1>
-              <p className="text-on-surface-variant max-w-lg text-lg leading-relaxed pt-4 font-light">
-                Have a project in mind or need a custom printing solution? Reach
-                out to our studio and let&apos;s create something exceptional
-                together.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full max-w-2xl text-left pt-8">
-              <div className="flex items-start gap-6 group">
-                <div className="bg-surface-container-high p-4 group-hover:bg-primary-container transition-colors duration-500 shrink-0">
-                  <MapPin className="text-primary-container group-hover:text-on-primary-container transition-colors" />
-                </div>
-                <div>
-                <a 
-                  href="https://maps.app.goo.gl/KA781unxzKKvwnMh6" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="hover:opacity-80 transition-opacity"
-                >
-                  <h3 className="text-on-surface dark:text-white font-headline font-bold text-xl uppercase tracking-widest">
-                    Location
-                  </h3>
-                  <p className="text-on-surface-variant mt-1">
-                    Silay City, Negros Occidental
-                  </p>
-                  <p className="text-on-surface-variant text-sm mt-1 opacity-60">
-                    Philippines, 6116
-                  </p>
-                </a>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-6 group">
-                <div className="bg-surface-container-high p-4 group-hover:bg-primary-container transition-colors duration-500 shrink-0">
-                  <Phone className="text-primary-container group-hover:text-on-primary-container transition-colors" />
-                </div>
-                <div>
-                  <h3 className="text-on-surface dark:text-white font-headline font-bold text-xl uppercase tracking-widest">
-                    Phone
-                  </h3>
-                  <p className="text-on-surface-variant mt-1">0968 329 2779</p>
-                  <p className="text-on-surface-variant text-sm mt-1 opacity-60">
-                    Direct Line / WhatsApp
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-6 group">
-                <div className="bg-surface-container-high p-4 group-hover:bg-primary-container transition-colors duration-500 shrink-0">
-                  <Mail className="text-primary-container group-hover:text-on-primary-container transition-colors" />
-                </div>
-                <div>
-                  <h3 className="text-on-surface dark:text-white font-headline font-bold text-xl uppercase tracking-widest">
-                    Email
-                  </h3>
-                  <p className="text-on-surface-variant mt-1">
-                    artinme03@gmail.com
-                  </p>
-                  <p className="text-on-surface-variant text-sm mt-1 opacity-60">
-                    General Inquiries
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-6 group">
-                <div className="bg-surface-container-high p-4 group-hover:bg-primary-container transition-colors duration-500 shrink-0">
-                  <MessageSquare className="text-primary-container group-hover:text-on-primary-container transition-colors" />
-                </div>
-                <div>
-                  <h3 className="text-on-surface dark:text-white font-headline font-bold text-xl uppercase tracking-widest">
-                    Messenger
-                  </h3>
-                  <a 
-                    href="https://www.facebook.com/ArtnMeOfficial" 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="text-on-surface-variant mt-1 hover:text-primary-container transition-colors block"
-                  >
-                    Art &apos;n Me Digital Printing Services and Studios
-                  </a>
-                  <p className="text-on-surface-variant text-sm mt-1 opacity-60">
-                    Official Facebook Page
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="w-full relative pt-12 overflow-hidden group">
-              <div className="absolute inset-0 bg-primary-container/10 -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
-              <img
-                className="w-full contrast-125 opacity-40 hover:opacity-100 transition-all duration-700 pointer-events-none"
-                alt="Studio Detail"
-                src={`${process.env.NEXT_PUBLIC_CLOUDINARY_URL}/SPJ_ccdj1e`}
-              />
-            </div>
-          </div>
-
+          <Reveal immediate y={12}>
+            <p className="spec mb-6 text-accent-ink">Get in touch</p>
+          </Reveal>
+          <LineReveal
+            className="font-headline text-[clamp(4rem,10vw,10.5rem)] font-bold uppercase leading-[0.84] tracking-[-0.06em]"
+            lines={[{ text: "Say" }, { text: "hello.", className: "text-brand", misregister: true }]}
+          />
         </div>
-      </div>
+        <Reveal immediate delay={0.4} className="max-w-sm">
+          <p className="mb-5 text-lg font-light leading-relaxed text-on-surface-variant">
+            Walk in, call, or message. Bring your file on a flash drive or send it
+            ahead.
+          </p>
+          <OpenBadge />
+        </Reveal>
+      </header>
 
-      <a 
-        href="https://maps.app.goo.gl/KA781unxzKKvwnMh6" 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="mt-32 w-full h-[500px] contrast-125 opacity-50 hover:opacity-100 transition-opacity relative overflow-hidden block"
-      >
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background z-10 pointer-events-none"></div>
-        <img
-          className="w-full h-full object-cover"
-          alt="Map of Silay City"
-          src={`${process.env.NEXT_PUBLIC_CLOUDINARY_URL}/TAYCO_REUNION_qv6bqr`}
-        />
-        <div className="absolute inset-0 flex items-center justify-center z-20">
-          <div className="bg-primary-container text-on-primary-container px-12 py-6 font-headline font-black uppercase italic text-3xl shadow-2xl skew-x-[-12deg] group-hover:scale-105 transition-transform">
-            VISIT THE STUDIO
+      <section aria-label="Ways to reach us" className="mx-auto max-w-[1360px] px-4 md:px-6">
+        <ContactRows />
+      </section>
+
+      <section className="mx-auto flex max-w-[1360px] flex-wrap gap-12 px-4 py-32 md:px-6">
+        <Reveal className="min-w-0 flex-[1_1_320px]">
+          <p className="spec mb-4 text-accent-ink">Press hours</p>
+          <h2 className="mb-8 font-headline text-5xl font-bold uppercase leading-[0.95] tracking-[-0.04em]">
+            When the
+            <br />
+            ink&apos;s wet.
+          </h2>
+          <table className="w-full border-collapse">
+            <tbody>
+              <tr className="border-b border-outline-variant/40">
+                <th scope="row" className="py-4 text-left font-semibold">Monday – Saturday</th>
+                <td className="py-4 text-right font-mono">9:00 – 18:00</td>
+              </tr>
+              <tr className="border-b border-outline-variant/40 text-on-surface-variant">
+                <th scope="row" className="py-4 text-left font-semibold">Sunday</th>
+                <td className="py-4 text-right font-mono">Closed</td>
+              </tr>
+            </tbody>
+          </table>
+          <p className="mt-6 text-sm leading-relaxed text-on-surface-variant">
+            Look for us at {SITE.landmark}.
+          </p>
+        </Reveal>
+
+        <Reveal delay={0.15} className="relative min-h-[520px] min-w-0 flex-[2_1_560px] overflow-hidden bg-surface-container-high">
+          <iframe
+            title="Map showing Art 'n Me in Silay City"
+            src={SITE.mapEmbedSrc}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            className="absolute inset-0 h-full w-full border-0 grayscale-[0.35] dark:hue-rotate-180 dark:invert-[0.92]"
+          />
+          <div className="pointer-events-none absolute left-4 top-4 max-w-80 bg-background/95 p-5 backdrop-blur-sm">
+            <p className="mb-1.5 font-headline text-lg font-bold uppercase">Art &apos;n Me Studio</p>
+            <p className="mb-2.5 text-sm leading-relaxed text-on-surface-variant">
+              {SITE.addressLine1}, {SITE.addressLine2}
+            </p>
+            <p className="spec text-[11px] text-on-surface-variant">
+              {SITE.coords.lat.toFixed(5)}° N · {SITE.coords.lng.toFixed(5)}° E
+            </p>
           </div>
-        </div>
-      </a>
+          <a
+            href={SITE.directionsHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute bottom-6 right-6 inline-flex min-h-16 -skew-x-10 items-center gap-3 bg-brand px-7 font-headline text-lg font-bold uppercase italic text-white shadow-[8px_8px_0_#131313] transition-transform duration-400 ease-[var(--ease-press)] hover:-skew-x-10 hover:scale-105 md:text-xl"
+          >
+            Get directions ↗
+          </a>
+        </Reveal>
+      </section>
     </main>
   );
 }
