@@ -54,8 +54,8 @@ export function TopCustomers({ customers }: { customers: TopCustomer[] }) {
               </div>
               <div className="mt-1.5 h-1.5 w-full bg-surface-container-high overflow-hidden">
                 <div
-                  className="h-full bg-primary-container dark:bg-primary transition-all"
-                  style={{ width: `${pct}%` }}
+                  className="animate-grow-x h-full origin-left bg-brand"
+                  style={{ width: `${pct}%`, animationDelay: `${idx * 90}ms` }}
                 />
               </div>
             </div>

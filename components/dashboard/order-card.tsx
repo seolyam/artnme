@@ -1,9 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +9,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Calendar, User, ChevronRight, AlertTriangle } from "lucide-react";
 import { ORDER_STATUSES, type OrderStatus } from "@/db/schema";
+import { isWebQuote } from "@/lib/order-status";
+import { cn } from "@/lib/utils";
 
 interface OrderCardOrder {
   id: string;
@@ -23,17 +22,6 @@ interface OrderCardOrder {
   dueDate: Date | null;
   customer: { name: string };
   items: { productType: string; quantity: number }[];
-}
-
-function OrderBadge({ orderNumber }: { orderNumber: number }) {
-  return (
-    <span
-      className="text-[10px] font-bold tabular-nums text-muted-foreground bg-muted/60 px-1.5 py-0.5 align-top"
-      title="Order number"
-    >
-      #{orderNumber}
-    </span>
-  );
 }
 
 interface OrderCardProps {
@@ -55,103 +43,94 @@ function isOverdue(order: OrderCardOrder): boolean {
   return new Date(order.dueDate) < new Date();
 }
 
+const chip = "spec px-1.5 py-0.5 text-[10px] tracking-[0.08em]";
+
 export function OrderCard({ order, onStatusChange }: OrderCardProps) {
-  const balance =
-    parseFloat(order.totalAmount) - parseFloat(order.depositAmount);
+  const total = parseFloat(order.totalAmount);
+  const balance = total - parseFloat(order.depositAmount);
   const nextStatus = getNextStatus(order.status);
   const overdue = isOverdue(order);
+  const web = isWebQuote(order.title);
 
   return (
-    <Card className={`shadow-sm transition-shadow hover:shadow-md ${overdue ? "border-destructive/60 bg-destructive/5" : ""}`}>
-      <CardHeader className="p-3 pb-1">
-        <div className="flex items-start justify-between gap-1">
-          <Link
-            href={`/dashboard/orders/${order.orderNumber}`}
-            className="text-sm font-medium leading-tight truncate hover:underline"
-          >
-            {order.title}
-          </Link>
-          <OrderBadge orderNumber={order.orderNumber} />
+    <article
+      className={cn(
+        "group flex flex-col gap-2.5 border bg-surface-container-lowest p-3.5 transition-[border-color,transform] duration-300 hover:-translate-y-0.5",
+        overdue ? "border-brand/60" : "border-outline-variant/40 hover:border-outline-variant",
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <Link
+          href={`/dashboard/orders/${order.orderNumber}`}
+          className="min-w-0 text-sm font-bold leading-snug hover:text-accent-ink"
+        >
+          {order.title}
+        </Link>
+        <div className="flex shrink-0 items-center gap-1">
+          <span className="spec text-[10px] text-on-surface-variant" title="Order number">
+            #{String(order.orderNumber).padStart(4, "0")}
+          </span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 shrink-0 p-0"
+              <button
+                type="button"
+                aria-label={`More actions for order ${order.orderNumber}`}
+                className="flex h-7 w-7 items-center justify-center text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
               >
-                <MoreHorizontal className="h-3.5 w-3.5" />
-              </Button>
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {ORDER_STATUSES.filter((s) => s !== order.status).map(
-                (status) => (
-                  <DropdownMenuItem
-                    key={status}
-                    onClick={() => onStatusChange(order.id, status)}
-                  >
-                    Move to {status}
-                  </DropdownMenuItem>
-                ),
-              )}
+              {ORDER_STATUSES.filter((s) => s !== order.status).map((status) => (
+                <DropdownMenuItem key={status} onClick={() => onStatusChange(order.id, status)}>
+                  Move to {status}
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-2 p-3 pt-1">
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <User className="h-3 w-3" />
-          <span className="truncate">{order.customer.name}</span>
-        </div>
+      </div>
 
-        <div className="flex flex-wrap gap-1">
-          {order.items.map((item, i) => (
-            <Badge key={i} variant="outline" className="text-[10px] px-1.5">
-              {item.quantity}x {item.productType}
-            </Badge>
-          ))}
-        </div>
+      <div className="flex items-center gap-1.5 text-xs text-on-surface-variant">
+        <User className="h-3 w-3" />
+        <span className="truncate">{order.customer.name}</span>
+      </div>
 
-        {order.dueDate && (
-          <div className={`flex items-center gap-1 text-xs ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
-            {overdue ? <AlertTriangle className="h-3 w-3" /> : <Calendar className="h-3 w-3" />}
-            {new Date(order.dueDate).toLocaleDateString("en-PH", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
-            {overdue && (
-              <Badge variant="destructive" className="text-[10px] ml-1">
-                Overdue
-              </Badge>
-            )}
-          </div>
-        )}
-
-        <div className="flex items-center justify-between border-t pt-2">
-          <span className="text-xs text-muted-foreground">
-            {"\u20B1"}
-            {parseFloat(order.totalAmount).toLocaleString()}
+      <div className="flex flex-wrap gap-1">
+        {order.items.map((item, i) => (
+          <span key={i} className={cn(chip, "border border-outline-variant/50 text-on-surface-variant")}>
+            {item.quantity}× {item.productType}
           </span>
-          {balance > 0 && (
-            <Badge variant="destructive" className="text-[10px]">
-              Bal: {"\u20B1"}
-              {balance.toLocaleString()}
-            </Badge>
-          )}
-        </div>
+        ))}
+        {web && <span className={cn(chip, "border border-brand/60 text-accent-ink")}>Web quote</span>}
+        {overdue && <span className={cn(chip, "bg-brand text-white")}>Overdue</span>}
+      </div>
 
-        {nextStatus && (
-          <Button
-            size="sm"
-            variant="default"
-            className="w-full"
-            onClick={() => onStatusChange(order.id, nextStatus)}
-          >
-            Advance to {nextStatus}
-            <ChevronRight className="ml-1 h-3.5 w-3.5" />
-          </Button>
+      <div className="flex items-center justify-between border-t border-outline-variant/30 pt-2.5 font-mono text-xs">
+        {order.dueDate ? (
+          <span className={cn("flex items-center gap-1", overdue ? "text-accent-ink" : "text-on-surface-variant")}>
+            {overdue ? <AlertTriangle className="h-3 w-3" /> : <Calendar className="h-3 w-3" />}
+            {new Date(order.dueDate).toLocaleDateString("en-PH", { month: "short", day: "numeric" })}
+          </span>
+        ) : (
+          <span className="text-on-surface-variant">No due date</span>
         )}
-      </CardContent>
-    </Card>
+        <span className="tabular-nums">
+          {total > 0 ? `₱${total.toLocaleString()}` : "To quote"}
+          {balance > 0 && <span className="ml-1.5 text-accent-ink">· ₱{balance.toLocaleString()}</span>}
+        </span>
+      </div>
+
+      {nextStatus && (
+        <button
+          type="button"
+          onClick={() => onStatusChange(order.id, nextStatus)}
+          className="group/adv flex min-h-9 items-center justify-center gap-1.5 border border-outline-variant/50 font-headline text-[11px] font-bold uppercase tracking-[0.1em] transition-colors hover:border-brand hover:bg-brand hover:text-white"
+        >
+          Move to {nextStatus}
+          <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover/adv:translate-x-0.5" />
+        </button>
+      )}
+    </article>
   );
 }
