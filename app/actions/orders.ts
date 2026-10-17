@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { orders, orderItems, profiles } from "@/db/schema";
-import { eq, isNull, sql, and, desc } from "drizzle-orm";
+import { eq, isNull, sql, and, desc, like } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireAuth, requireAdmin, getSessionProfile } from "@/lib/auth";
 import {
@@ -10,6 +10,7 @@ import {
   updateOrderStatusSchema,
   type OrderFormValues,
   type UpdateOrderStatusValues,
+  WEB_QUOTE_PREFIX,
 } from "@/lib/validators";
 import { z } from "zod/v4";
 
@@ -100,6 +101,22 @@ export async function getOrderStats() {
     pendingRevenue: Number(r.pendingRevenue) || 0,
     totalOrders: Number(r.totalOrders) || 0,
   };
+}
+
+/** Web quotes still waiting in Pending — surfaced as a badge for staff. */
+export async function getWebQuoteCount() {
+  await requireAuth();
+  const [row] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(orders)
+    .where(
+      and(
+        isNull(orders.deletedAt),
+        eq(orders.status, "Pending"),
+        like(orders.title, `${WEB_QUOTE_PREFIX}%`),
+      ),
+    );
+  return Number(row?.n) || 0;
 }
 
 export async function getRecentOrders(limit = 5) {

@@ -79,3 +79,48 @@ export const updateOrderStatusSchema = z.object({
 });
 
 export type UpdateOrderStatusValues = z.infer<typeof updateOrderStatusSchema>;
+
+// ─── Public quote request ───────────────────────────────────────────────────
+
+/** Title prefix that marks orders created from the public quote form. */
+export const WEB_QUOTE_PREFIX = "Web quote";
+
+export const QUOTE_PRODUCTS = [
+  { value: "T-Shirt", label: "T-shirt", productType: "T-Shirt" },
+  { value: "Jersey", label: "Jersey", productType: "Other" },
+  { value: "Mug", label: "Mug", productType: "Mug" },
+  { value: "Tarpaulin", label: "Tarpaulin", productType: "Tarpaulin" },
+  { value: "Other", label: "Other", productType: "Other" },
+] as const;
+
+export type QuoteProduct = (typeof QUOTE_PRODUCTS)[number]["value"];
+
+export const quoteRequestSchema = z.object({
+  name: z.string().trim().min(2, "Tell us who to address the quote to.").max(80),
+  contact: z
+    .string()
+    .trim()
+    .min(5, "We need a phone number or email to send your proof.")
+    .max(120)
+    .refine(
+      (v) => /@/.test(v) || v.replace(/\D/g, "").length >= 7,
+      "Enter a valid phone number or email.",
+    ),
+  product: z.enum(["T-Shirt", "Jersey", "Mug", "Tarpaulin", "Other"]),
+  quantity: z.coerce
+    .number()
+    .int("Quantity must be a whole number.")
+    .min(1, "Quantity must be at least 1.")
+    .max(10000, "For runs over 10,000 pieces, message us directly."),
+  neededBy: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || !Number.isNaN(Date.parse(v)),
+      "Pick a valid date.",
+    ),
+  details: z.string().trim().max(2000, "Keep details under 2,000 characters.").optional(),
+  source: z.string().max(40).optional(),
+});
+
+export type QuoteRequestValues = z.infer<typeof quoteRequestSchema>;
