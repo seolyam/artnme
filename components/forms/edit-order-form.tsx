@@ -1,44 +1,36 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useFieldArray, useWatch } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { AlertTriangle, Loader2 } from "lucide-react";
+import { z } from "zod/v4";
 
 import { orderFormSchema, type OrderFormSchemaValues } from "@/lib/validators";
-import type { OrderFormValues } from "@/lib/validators";
 import { updateOrder } from "@/app/actions/orders";
-import { PRODUCT_TYPES } from "@/db/schema";
+import { ORDER_STATUSES } from "@/db/schema";
 import { toShopInputValue } from "@/lib/time";
-
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { peso, roundMoney, toNumber } from "@/lib/money";
+import { statusStyle } from "@/lib/order-status";
+import { cn } from "@/lib/utils";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import type { CustomerOption } from "@/components/forms/customer-combobox";
+import { useCustomerPicker } from "@/components/forms/customer-picker";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+  BalanceLine,
+  DueDateField,
+  FormSection,
+  ItemsEditor,
+  TotalField,
+  applyFieldErrors,
+  fieldClass,
+  suggestTitle,
+} from "@/components/forms/order-form-parts";
+
+const editFormSchema = orderFormSchema.extend({ title: z.string().trim().max(200) });
 
 interface OrderData {
   id: string;
@@ -62,21 +54,29 @@ interface OrderData {
 
 interface EditOrderFormProps {
   order: OrderData;
+  customers: CustomerOption[];
+  renderItemExtras?: (index: number) => React.ReactNode;
 }
 
-export function EditOrderForm({ order }: EditOrderFormProps) {
+export function EditOrderForm({ order, customers, renderItemExtras }: EditOrderFormProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const [correctingPaid, setCorrectingPaid] = useState(false);
+  const picker = useCustomerPicker({ customers, initialId: order.customerId });
+
+  const itemsTotalAtLoad = roundMoney(
+    order.items.reduce((sum, it) => sum + it.quantity * toNumber(it.unitPrice), 0),
+  );
+  const paidAtLoad = toNumber(order.depositAmount);
 
   const form = useForm<OrderFormSchemaValues>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Zod v4.3 minor version struct mismatch with @hookform/resolvers types
-    resolver: zodResolver(orderFormSchema as any),
+    resolver: zodResolver(editFormSchema as never),
     defaultValues: {
       customerId: order.customerId,
       title: order.title,
       status: order.status as OrderFormSchemaValues["status"],
-      totalAmount: parseFloat(order.totalAmount),
-      depositAmount: parseFloat(order.depositAmount),
+      totalAmount: toNumber(order.totalAmount),
+      depositAmount: paidAtLoad,
       // toISOString() would show UTC and shift the due date 8h on every save.
       dueDate: toShopInputValue(order.dueDate),
       items: order.items.map((item) => ({
@@ -85,65 +85,34 @@ export function EditOrderForm({ order }: EditOrderFormProps) {
         description: item.description || "",
         quantity: item.quantity,
         dimensions: item.dimensions || "",
-        unitPrice: parseFloat(item.unitPrice),
+        unitPrice: toNumber(item.unitPrice),
       })),
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "items",
-  });
-
-  // Auto-calculate total from items. useWatch + a numeric dependency: the
-  // array from form.watch() is mutated in place, so an effect keyed on it
-  // never re-ran and the total stayed at 0.
-  const watchedItems = useWatch({ control: form.control, name: "items" });
-  const itemsTotal = (watchedItems ?? []).reduce(
-    (sum, item) =>
-      sum + (Number(item?.quantity) || 0) * (Number(item?.unitPrice) || 0),
-    0,
-  );
-  useEffect(() => {
-    form.setValue("totalAmount", Math.round(itemsTotal * 100) / 100);
-  }, [itemsTotal, form]);
+  const items = useWatch({ control: form.control, name: "items" });
+  const total = Number(useWatch({ control: form.control, name: "totalAmount" })) || 0;
+  const paid = Number(useWatch({ control: form.control, name: "depositAmount" })) || 0;
 
   async function onSubmit(values: OrderFormSchemaValues) {
     setSubmitting(true);
     try {
-      const orderData: OrderFormValues = {
-        ...values,
-        customerId: order.customerId,
-      };
+      const customerId = await picker.resolve();
+      if (!customerId) return;
 
-      const result = await updateOrder(order.id, orderData);
+      const result = await updateOrder(order.id, {
+        ...values,
+        customerId,
+        title: values.title.trim() || suggestTitle(items) || order.title,
+      });
 
       if (result.error) {
-        if (result.fieldErrors && Array.isArray(result.fieldErrors)) {
-          for (const fe of result.fieldErrors) {
-            if (!fe.path) {
-              toast.error(fe.message);
-              continue;
-            }
-            const segments = fe.path.split(".");
-            form.setError(segments.join(".") as never, {
-              message: fe.message,
-            });
-          }
-          if (result.fieldErrors.length === 0) {
-            toast.error(result.error);
-          } else {
-            toast.error(result.error, {
-              description: "Please fix the highlighted fields.",
-            });
-          }
-        } else {
-          toast.error(result.error);
-        }
-      } else {
-        toast.success("Order updated successfully!");
-        router.push(`/dashboard/orders/${order.orderNumber}`);
+        applyFieldErrors(form.setError as never, result.fieldErrors);
+        toast.error(result.error, result.fieldErrors?.length ? { description: "Fix the fields marked in red." } : undefined);
+        return;
       }
+      toast.success(`Order #${order.orderNumber} saved`);
+      router.push(`/dashboard/orders/${order.orderNumber}`);
     } finally {
       setSubmitting(false);
     }
@@ -151,227 +120,87 @@ export function EditOrderForm({ order }: EditOrderFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Customer (read-only) */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Customer</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Customer:</span>
-              <span className="font-medium">{order.customer.name}</span>
-            </div>
-          </CardContent>
-        </Card>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pb-4">
+        <FormSection title="Customer">{picker.section}</FormSection>
 
-        {/* Order Details */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Order Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <FormSection title="Items">
+          <div className="space-y-4">
+            <ItemsEditor renderExtras={renderItemExtras} />
             <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Order Title</FormLabel>
+                  <FormLabel>Order name</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder='e.g. "Birthday Tarpaulin Set"'
-                      {...field}
-                    />
+                    <Input className={fieldClass} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="dueDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Due Date</FormLabel>
-                    <FormControl>
-                      <Input type="datetime-local" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="Designing">Designing</SelectItem>
-                        <SelectItem value="Printing">Printing</SelectItem>
-                        <SelectItem value="Ready for Pickup">
-                          Ready for Pickup
-                        </SelectItem>
-                        <SelectItem value="Completed">Completed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </FormSection>
 
-        {/* Order Items */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">
-                Items{" "}
-                <Badge variant="secondary" className="ml-2">
-                  {fields.length}
-                </Badge>
-              </CardTitle>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  append({
-                    productType: "Tarpaulin",
-                    description: "",
-                    quantity: 1,
-                    dimensions: "",
-                    unitPrice: 0,
-                  })
-                }
-              >
-                <Plus className="mr-1 h-4 w-4" /> Add Item
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {fields.map((field, index) => (
-              <div
-                key={field.id}
-                className="rounded-lg border bg-muted/20 p-4 space-y-3"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    Item {index + 1}
-                  </span>
-                  {fields.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-destructive hover:text-destructive"
-                      onClick={() => remove(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+        <FormSection title="Due date & status">
+          <div className="space-y-5">
+            <FormField
+              control={form.control}
+              name="dueDate"
+              render={({ field }) => <DueDateField value={field.value} onChange={field.onChange} />}
+            />
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Status">
+                    {ORDER_STATUSES.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        role="radio"
+                        aria-checked={field.value === s}
+                        onClick={() => field.onChange(s)}
+                        className={cn(
+                          "inline-flex min-h-10 items-center gap-2 border px-3.5 text-sm font-semibold transition-colors",
+                          field.value === s
+                            ? "border-on-surface bg-on-surface text-surface"
+                            : "border-outline-variant/60 hover:border-on-surface-variant",
+                        )}
+                      >
+                        <span className={cn("h-2 w-2", statusStyle(s).dot)} />
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </FormItem>
+              )}
+            />
+          </div>
+        </FormSection>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.productType`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Type</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="w-full">
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {PRODUCT_TYPES.map((type) => (
-                              <SelectItem key={type} value={type}>
-                                {type}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+        <FormSection title="Money">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <TotalField startManual={Math.abs(itemsTotalAtLoad - toNumber(order.totalAmount)) > 0.009} />
 
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.quantity`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Qty</FormLabel>
-                        <FormControl>
-                          <Input type="number" min={1} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.dimensions`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Dimensions</FormLabel>
-                        <FormControl>
-                          <Input placeholder="3ft x 5ft" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.unitPrice`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Unit Price</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={0}
-                            step="0.01"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Amount paid so far</p>
+              {correctingPaid ? (
                 <FormField
                   control={form.control}
-                  name={`items.${index}.description`}
+                  name="depositAmount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description / Notes</FormLabel>
                       <FormControl>
-                        <Textarea
-                          rows={2}
-                          placeholder="Design details, special instructions..."
+                        <Input
+                          type="number"
+                          inputMode="decimal"
+                          min={0}
+                          step="0.01"
+                          aria-label="Amount paid so far"
+                          className={cn(fieldClass, "font-mono")}
                           {...field}
                         />
                       </FormControl>
@@ -379,85 +208,47 @@ export function EditOrderForm({ order }: EditOrderFormProps) {
                     </FormItem>
                   )}
                 />
-              </div>
-            ))}
-            {form.formState.errors.items?.message && (
-              <p className="text-sm text-destructive">
-                {form.formState.errors.items.message}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Pricing */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Pricing</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="totalAmount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Total Amount (auto-calculated)</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={0} step="0.01" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="depositAmount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Amount Paid</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={0} step="0.01" {...field} />
-                    </FormControl>
-                    <p className="text-xs text-muted-foreground">
-                      For new payments use “Record Payment” on the order page. Changes here are logged as adjustments.
-                    </p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              ) : (
+                <p className="flex h-11 items-center border border-outline-variant/40 bg-surface-container px-3 font-mono font-semibold">
+                  {peso(paidAtLoad)}
+                </p>
+              )}
+              {correctingPaid ? (
+                <p className="flex gap-2 text-xs text-amber-700 dark:text-[#f2b33d]">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  Only fix mistakes here. The change is saved in the payment log as an adjustment. Money the
+                  customer just handed over goes through “Record payment” on the order page.
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setCorrectingPaid(true)}
+                  className="text-xs text-on-surface-variant underline-offset-2 hover:text-on-surface hover:underline"
+                >
+                  Correct a mistake in the amount paid
+                </button>
+              )}
             </div>
+          </div>
+          <BalanceLine total={total} paid={paid} paidLabel="Paid" />
+        </FormSection>
 
-            <Separator />
-
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Balance remaining</span>
-              <span className="text-lg font-bold">
-                {"\u20B1"}
-                {Math.max(
-                  0,
-                  (Number(form.watch("totalAmount")) || 0) -
-                    (Number(form.watch("depositAmount")) || 0),
-                ).toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                })}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Submit */}
-        <div className="flex justify-end gap-3">
-          <Button
+        <div className="sticky bottom-0 z-10 flex flex-wrap items-center justify-end gap-3 border-t border-outline-variant/40 bg-background/95 py-3 backdrop-blur">
+          <button
             type="button"
-            variant="outline"
             onClick={() => router.back()}
+            className="min-h-12 px-4 text-sm font-semibold text-on-surface-variant hover:text-on-surface"
           >
             Cancel
-          </Button>
-          <Button type="submit" disabled={submitting}>
-            {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Update Order
-          </Button>
+          </button>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="ink-fill inline-flex min-h-12 items-center gap-2 bg-brand px-6 font-headline text-xs font-bold uppercase tracking-[0.14em] text-white disabled:opacity-60"
+          >
+            {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+            Save changes
+          </button>
         </div>
       </form>
     </Form>

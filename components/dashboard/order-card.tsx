@@ -10,6 +10,8 @@ import {
 import { MoreHorizontal, Calendar, User, ChevronRight, AlertTriangle } from "lucide-react";
 import { ORDER_STATUSES, type OrderStatus } from "@/db/schema";
 import { initials, isWebQuote, nextStatus } from "@/lib/order-status";
+import { balanceOf, peso, toNumber } from "@/lib/money";
+import { formatShopDate } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
 interface OrderCardOrder {
@@ -40,8 +42,8 @@ function isOverdue(order: OrderCardOrder): boolean {
 const chip = "spec px-1.5 py-0.5 text-[10px] tracking-[0.08em]";
 
 export function OrderCard({ order, onStatusChange, assigneeName = null, isMine = false }: OrderCardProps) {
-  const total = parseFloat(order.totalAmount);
-  const balance = total - parseFloat(order.depositAmount);
+  const total = toNumber(order.totalAmount);
+  const balance = balanceOf(order);
   const next = nextStatus(order.status);
   const overdue = isOverdue(order);
   const web = isWebQuote(order.title);
@@ -69,14 +71,17 @@ export function OrderCard({ order, onStatusChange, assigneeName = null, isMine =
               <button
                 type="button"
                 aria-label={`More actions for order ${order.orderNumber}`}
-                className="flex h-7 w-7 items-center justify-center text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
+                className="flex h-9 w-9 items-center justify-center text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
               >
                 <MoreHorizontal className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild className="min-h-9 rounded-none">
+                <Link href={`/dashboard/orders/${order.orderNumber}`}>Open order</Link>
+              </DropdownMenuItem>
               {ORDER_STATUSES.filter((s) => s !== order.status).map((status) => (
-                <DropdownMenuItem key={status} onClick={() => onStatusChange(order.id, status)}>
+                <DropdownMenuItem key={status} className="min-h-9 rounded-none" onClick={() => onStatusChange(order.id, status)}>
                   Move to {status}
                 </DropdownMenuItem>
               ))}
@@ -117,14 +122,18 @@ export function OrderCard({ order, onStatusChange, assigneeName = null, isMine =
         {order.dueDate ? (
           <span className={cn("flex items-center gap-1", overdue ? "text-accent-ink" : "text-on-surface-variant")}>
             {overdue ? <AlertTriangle className="h-3 w-3" /> : <Calendar className="h-3 w-3" />}
-            {new Date(order.dueDate).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric" })}
+            {formatShopDate(order.dueDate)}
           </span>
         ) : (
           <span className="text-on-surface-variant">No due date</span>
         )}
         <span className="tabular-nums">
-          {total > 0 ? `₱${total.toLocaleString()}` : "To quote"}
-          {balance > 0 && <span className="ml-1.5 text-accent-ink">· ₱{balance.toLocaleString()}</span>}
+          {total > 0 ? peso(total, false) : "To quote"}
+          {balance > 0.009 && (
+            <span className="ml-1.5 text-accent-ink" title="Still to collect">
+              · {peso(balance, false)} due
+            </span>
+          )}
         </span>
       </div>
 
@@ -132,7 +141,7 @@ export function OrderCard({ order, onStatusChange, assigneeName = null, isMine =
         <button
           type="button"
           onClick={() => onStatusChange(order.id, next)}
-          className="group/adv flex min-h-9 items-center justify-center gap-1.5 border border-outline-variant/50 font-headline text-[11px] font-bold uppercase tracking-[0.1em] transition-colors hover:border-brand hover:bg-brand hover:text-white"
+          className="group/adv flex min-h-10 items-center justify-center gap-1.5 border border-outline-variant/50 font-headline text-[11px] font-bold uppercase tracking-[0.1em] transition-colors hover:border-brand hover:bg-brand hover:text-white"
         >
           Move to {next}
           <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover/adv:translate-x-0.5" />

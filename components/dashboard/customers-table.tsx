@@ -1,30 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import {
-  updateCustomer,
-  deleteCustomer,
-} from "@/app/actions/customers";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Users, Search, Pencil, Trash2, ChevronRight } from "lucide-react";
-import { toast } from "sonner";
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import { ChevronRight, Pencil, Search } from "lucide-react";
+import { CustomerDialog } from "@/components/dashboard/customer-dialog";
+import { peso } from "@/lib/money";
+import { formatContact, normalizeContact } from "@/lib/phone";
+import { formatShopDate } from "@/lib/time";
+import { cn } from "@/lib/utils";
 
 interface CustomerRow {
   id: string;
@@ -33,275 +16,157 @@ interface CustomerRow {
   fbMessengerLink: string | null;
   createdAt: Date;
   orderCount: number;
+  activeCount: number;
   totalRevenue: number;
+  balance: number;
+  lastOrderAt: Date | null;
 }
 
-export function CustomersTable({
-  customers,
-}: {
-  customers: CustomerRow[];
-}) {
+type Filter = "all" | "owes" | "active";
+
+export function CustomersTable({ customers, isAdmin }: { customers: CustomerRow[]; isAdmin: boolean }) {
   const [search, setSearch] = useState("");
-  const [editCustomer, setEditCustomer] = useState<CustomerRow | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<CustomerRow | null>(null);
-  const [isPending, startTransition] = useTransition();
-
-  // Edit form state
-  const [editName, setEditName] = useState("");
-  const [editContact, setEditContact] = useState("");
-  const [editMessenger, setEditMessenger] = useState("");
-
-  function openEdit(customer: CustomerRow) {
-    setEditName(customer.name);
-    setEditContact(customer.contactNumber || "");
-    setEditMessenger(customer.fbMessengerLink || "");
-    setEditCustomer(customer);
-  }
-
-  function handleSave() {
-    if (!editCustomer) return;
-    startTransition(async () => {
-      const result = await updateCustomer(editCustomer.id, {
-        name: editName,
-        contactNumber: editContact || undefined,
-        fbMessengerLink: editMessenger || undefined,
-      });
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success("Customer updated");
-        setEditCustomer(null);
-      }
-    });
-  }
-
-  function handleDelete() {
-    if (!deleteTarget) return;
-    startTransition(async () => {
-      const result = await deleteCustomer(deleteTarget.id);
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success("Customer deleted");
-        setDeleteTarget(null);
-      }
-    });
-  }
-
-  const filtered = customers.filter(
-    (c) =>
-      search === "" ||
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      (c.contactNumber &&
-        c.contactNumber.toLowerCase().includes(search.toLowerCase())),
+  const [filter, setFilter] = useState<Filter>("all");
+  const options = useMemo(
+    () => customers.map((c) => ({ id: c.id, name: c.name, contactNumber: c.contactNumber })),
+    [customers],
   );
 
+  const q = search.trim().toLowerCase();
+  const qDigits = q.replace(/\D/g, "");
+  const filtered = customers.filter((c) => {
+    const matchesSearch =
+      q === "" ||
+      c.name.toLowerCase().includes(q) ||
+      (qDigits.length >= 3 && normalizeContact(c.contactNumber).replace(/\D/g, "").includes(normalizeContact(qDigits).replace(/\D/g, ""))) ||
+      (c.contactNumber ?? "").toLowerCase().includes(q);
+    const matchesFilter =
+      filter === "all" || (filter === "owes" ? c.balance > 0.009 : c.activeCount > 0);
+    return matchesSearch && matchesFilter;
+  });
+
+  const owesCount = customers.filter((c) => c.balance > 0.009).length;
+  const activeCount = customers.filter((c) => c.activeCount > 0).length;
+
   return (
-    <>
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search customers..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
-        />
+    <div className="space-y-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-on-surface-variant" />
+          <input
+            type="search"
+            placeholder="Search by name or phone…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Search customers"
+            className="h-10 w-full border border-outline-variant/60 bg-surface-container-lowest pl-9 pr-3 text-sm outline-none focus:border-on-surface-variant"
+          />
+        </div>
+        <div className="flex gap-0.5 bg-surface-container-high p-0.5" role="group" aria-label="Show">
+          {(
+            [
+              ["all", `All · ${customers.length}`],
+              ["owes", `Owes money · ${owesCount}`],
+              ["active", `Active jobs · ${activeCount}`],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={filter === value}
+              onClick={() => setFilter(value)}
+              className={cn(
+                "spec min-h-10 flex-1 px-3 text-[10px] tracking-[0.08em] transition-colors sm:flex-none",
+                filter === value ? "bg-surface-container-lowest text-on-surface" : "text-on-surface-variant hover:text-on-surface",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Users className="h-4 w-4" />
-            {filtered.length} customer{filtered.length !== 1 ? "s" : ""}
-            {search && ` matching "${search}"`}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {filtered.length === 0 ? (
-            <p className="p-6 text-center text-sm text-muted-foreground">
-              {search
-                ? "No customers match your search."
-                : "No customers yet. They will appear here when you create orders."}
-            </p>
-          ) : (
-            <div className="grid gap-2">
-              {filtered.map((c) => (
-                <Link
-                  key={c.id}
-                  href={`/dashboard/customers/${c.id}`}
-                  prefetch={true}
-                  className="relative grid grid-cols-1 md:grid-cols-12 gap-4 p-5 items-start md:items-center bg-[color:var(--color-surface-container-low)] hover:bg-[color:var(--color-surface-container-highest)] transition-colors border-l-2 border-l-transparent hover:border-l-primary group cursor-pointer"
+      {filtered.length === 0 ? (
+        <div className="halftone flex items-center justify-center bg-surface-container-low py-16 [--dot:var(--surface-high)]">
+          <p className="bg-background px-4 py-2 text-center text-sm text-on-surface-variant">
+            {customers.length === 0
+              ? "No customers yet. They're added when you take an order, or with “Add customer”."
+              : search
+                ? `No customer matches “${search}”.`
+                : "Nobody here right now."}
+          </p>
+        </div>
+      ) : (
+        <div className="border border-outline-variant/30">
+          <div className="spec hidden grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)_5rem_8rem_8rem_5.5rem] gap-4 border-b border-outline-variant/30 bg-surface-container-low px-4 py-2 text-[10px] text-on-surface-variant md:grid">
+            <span>Customer</span>
+            <span>Contact</span>
+            <span className="text-right">Orders</span>
+            <span className="text-right">Owes</span>
+            <span className="text-right">Lifetime</span>
+            <span />
+          </div>
+          <ul className="divide-y divide-outline-variant/30">
+            {filtered.map((c) => (
+              <li
+                key={c.id}
+                className="group relative grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 bg-surface-container-lowest px-4 py-3.5 transition-colors hover:bg-surface-container md:grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)_5rem_8rem_8rem_5.5rem]"
+              >
+                <div className="min-w-0">
+                  {/* Stretched link: the whole row opens the customer. */}
+                  <Link
+                    href={`/dashboard/customers/${c.id}`}
+                    prefetch={false}
+                    className="block truncate font-semibold after:absolute after:inset-0 group-hover:text-accent-ink"
+                  >
+                    {c.name}
+                  </Link>
+                  <p className="truncate text-xs text-on-surface-variant md:hidden">
+                    {c.contactNumber ? formatContact(c.contactNumber) : "No contact"} · {c.orderCount} order
+                    {c.orderCount === 1 ? "" : "s"}
+                  </p>
+                  {c.lastOrderAt && (
+                    <p className="hidden text-xs text-on-surface-variant md:block">
+                      Last order {formatShopDate(c.lastOrderAt, { month: "short", day: "numeric", year: "numeric" })}
+                      {c.activeCount > 0 && ` · ${c.activeCount} active`}
+                    </p>
+                  )}
+                </div>
+                <span className="hidden truncate font-mono text-sm md:block">
+                  {c.contactNumber ? formatContact(c.contactNumber) : <span className="text-on-surface-variant">—</span>}
+                </span>
+                <span className="hidden text-right font-mono text-sm tabular-nums md:block">{c.orderCount}</span>
+                <span
+                  className={cn(
+                    "text-right font-mono text-sm font-semibold tabular-nums",
+                    c.balance > 0.009 ? "text-accent-ink" : "text-on-surface-variant",
+                  )}
                 >
-                  <div className="md:col-span-4">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Client Name</p>
-                    <p className="font-bold text-lg leading-none text-foreground">{c.name}</p>
-                  </div>
-                  <div className="md:col-span-3">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Contact</p>
-                    <p className="text-sm font-medium">{c.contactNumber || "\u2014"}</p>
-                  </div>
-                  <div className="md:col-span-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Network</p>
-                    {c.fbMessengerLink ? (
+                  {c.balance > 0.009 ? peso(c.balance) : "—"}
+                </span>
+                <span className="hidden text-right font-mono text-sm tabular-nums md:block">{peso(c.totalRevenue, false)}</span>
+                <div className="relative z-10 hidden items-center justify-end gap-1 md:flex">
+                  <CustomerDialog
+                    customer={c}
+                    others={options}
+                    isAdmin={isAdmin}
+                    trigger={
                       <button
                         type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          window.open(
-                            c.fbMessengerLink!,
-                            "_blank",
-                            "noopener,noreferrer",
-                          );
-                        }}
-                        className="text-primary text-sm font-semibold hover:underline text-left"
+                        aria-label={`Edit ${c.name}`}
+                        className="flex h-9 w-9 items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
                       >
-                        Messenger
+                        <Pencil className="h-4 w-4" />
                       </button>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">\u2014</span>
-                    )}
-                  </div>
-                  <div className="md:col-span-1 text-right">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Orders</p>
-                    <p className="text-base font-bold text-foreground">{c.orderCount}</p>
-                  </div>
-                  <div className="md:col-span-2 text-right">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Lifetime Value</p>
-                    <p className="font-bold text-primary text-lg leading-none">
-                      {"\u20B1"}{c.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                  <div
-                    className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-end gap-1 bg-[color:var(--color-surface-container-highest)] pl-4"
-                    onClick={(e) => e.preventDefault()}
-                  >
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        openEdit(c);
-                      }}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setDeleteTarget(c);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Edit Dialog */}
-      <Dialog
-        open={!!editCustomer}
-        onOpenChange={(open) => !open && setEditCustomer(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Customer</DialogTitle>
-            <DialogDescription>
-              Update customer details.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="edit-name">Name</Label>
-              <Input
-                id="edit-name"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-contact">Contact Number</Label>
-              <Input
-                id="edit-contact"
-                value={editContact}
-                onChange={(e) => setEditContact(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-messenger">Messenger Link</Label>
-              <Input
-                id="edit-messenger"
-                value={editMessenger}
-                onChange={(e) => setEditMessenger(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setEditCustomer(null)}
-              disabled={isPending}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={isPending || !editName.trim()}>
-              {isPending ? "Saving..." : "Save Changes"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={!!deleteTarget}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Customer</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="font-medium text-foreground">
-                {deleteTarget?.name}
-              </span>
-              ? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          {deleteTarget && deleteTarget.orderCount > 0 && (
-            <p className="text-sm text-destructive">
-              This customer has {deleteTarget.orderCount} order
-              {deleteTarget.orderCount !== 1 ? "s" : ""}. You must delete
-              their orders first.
-            </p>
-          )}
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteTarget(null)}
-              disabled={isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isPending}
-            >
-              {isPending ? "Deleting..." : "Delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+                    }
+                  />
+                  <ChevronRight className="h-4 w-4 text-on-surface-variant" />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }

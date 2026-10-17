@@ -1,36 +1,30 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getCustomerById } from "@/app/actions/customers";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import {
-  ArrowLeft,
-  Phone,
-  MessageCircle,
-  Calendar,
-  ShoppingCart,
-  Banknote,
-  TrendingUp,
-  Clock,
   AlertTriangle,
+  Banknote,
+  ChevronRight,
+  History,
+  MessageCircle,
+  MessageSquareText,
+  Pencil,
+  Phone,
   Plus,
+  StickyNote,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-
-const STATUS_COLORS: Record<string, string> = {
-  Pending: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 border-yellow-500/30",
-  Designing: "bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30",
-  Printing: "bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/30",
-  "Ready for Pickup": "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30",
-  Completed: "bg-gray-500/15 text-gray-600 dark:text-gray-400 border-gray-500/30",
-};
+import { getCustomerById, getCustomerNotes } from "@/app/actions/customers";
+import { getMe } from "@/app/actions/staff";
+import { PageHeader, PrimaryLink } from "@/components/dashboard/page-header";
+import { Panel } from "@/components/dashboard/panel";
+import { StatusChip } from "@/components/dashboard/status-chip";
+import { CustomerDialog } from "@/components/dashboard/customer-dialog";
+import { CopyButton } from "@/components/dashboard/copy-button";
+import { RecordDepositDialog } from "@/components/dashboard/record-deposit-dialog";
+import { CustomerMessagePanel } from "@/components/dashboard/customer-message-panel";
+import { balanceOf, peso, roundMoney, toNumber } from "@/lib/money";
+import { dialable, formatContact, isPhMobile } from "@/lib/phone";
+import { formatShopDate, formatShopTime, timeAgo } from "@/lib/time";
+import { cn } from "@/lib/utils";
 
 export default async function CustomerDetailPage({
   params,
@@ -38,387 +32,258 @@ export default async function CustomerDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const customer = await getCustomerById(id);
+  const [customer, notes, me] = await Promise.all([getCustomerById(id), getCustomerNotes(id), getMe()]);
 
   if (!customer) {
     notFound();
   }
 
   const allOrders = customer.orders;
-  const totalSpent = allOrders.reduce(
-    (sum, o) => sum + parseFloat(o.totalAmount),
-    0,
-  );
-  const totalDeposited = allOrders.reduce(
-    (sum, o) => sum + parseFloat(o.depositAmount),
-    0,
-  );
-  const outstandingBalance = allOrders.reduce(
-    (sum, o) =>
-      sum +
-      (parseFloat(o.totalAmount) - parseFloat(o.depositAmount)),
-    0,
-  );
+  const now = new Date();
+  const totalSpent = roundMoney(allOrders.reduce((sum, o) => sum + toNumber(o.totalAmount), 0));
+  const totalPaid = roundMoney(allOrders.reduce((sum, o) => sum + toNumber(o.depositAmount), 0));
+  const outstanding = roundMoney(allOrders.reduce((sum, o) => sum + Math.max(0, balanceOf(o)), 0));
   const activeOrders = allOrders.filter((o) => o.status !== "Completed");
-  const completedOrders = allOrders.filter((o) => o.status === "Completed");
-  const overdueOrders = allOrders.filter(
-    (o) =>
-      o.dueDate &&
-      new Date(o.dueDate) < new Date() &&
-      o.status !== "Completed",
-  );
-  const itemCount = allOrders.reduce(
-    (sum, o) => sum + o.items.length,
-    0,
-  );
+  const pastOrders = allOrders.filter((o) => o.status === "Completed");
+  const overdueCount = activeOrders.filter((o) => o.dueDate && new Date(o.dueDate) < now).length;
+  const first = customer.name.split(/\s+/)[0];
+  const contact = customer.contactNumber;
+  const isEmail = !!contact && contact.includes("@");
 
-  const initials = customer.name
-    .split(" ")
-    .map((n) => n[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+  // Message templates default to the order most likely to need a message:
+  // open jobs first, then anything with money still owed.
+  const messageable = [...activeOrders, ...pastOrders.filter((o) => balanceOf(o) > 0.009), ...pastOrders]
+    .filter((o, i, list) => list.findIndex((x) => x.id === o.id) === i)
+    .slice(0, 12)
+    .map((o) => ({
+      orderNumber: o.orderNumber,
+      title: o.title,
+      status: o.status,
+      total: toNumber(o.totalAmount),
+      balance: Math.max(0, balanceOf(o)),
+      dueLabel: o.dueDate
+        ? `${formatShopDate(o.dueDate, { weekday: "short", month: "short", day: "numeric" })}, ${formatShopTime(o.dueDate)}`
+        : null,
+    }));
+
+  const action =
+    "inline-flex min-h-11 items-center gap-2 border border-outline-variant/60 bg-surface-container-lowest px-4 text-sm font-semibold transition-colors hover:border-on-surface-variant";
 
   return (
-    <div className="space-y-6 max-w-5xl">
-      {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div className="flex items-start gap-4">
-          <Button variant="ghost" size="sm" asChild className="h-7 w-7 p-0 mt-1">
-            <Link href="/dashboard/customers">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-container/15 dark:bg-primary/15 text-primary-container dark:text-primary text-lg font-bold">
-              {initials || "?"}
-            </div>
-            <div className="space-y-1">
-              <h1
-                className="text-3xl font-bold tracking-tighter uppercase leading-none"
-                style={{ fontFamily: "var(--font-headline)" }}
-              >
-                {customer.name}
-              </h1>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                Client since{" "}
-                {new Date(customer.createdAt).toLocaleDateString("en-PH", { timeZone: "Asia/Manila",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </p>
-            </div>
-          </div>
-        </div>
+    <div className="max-w-6xl space-y-6">
+      <PageHeader
+        back={{ href: "/dashboard/customers", label: "Customers" }}
+        eyebrow={`Customer since ${formatShopDate(customer.createdAt, { month: "long", year: "numeric" })}`}
+        title={customer.name}
+        actions={
+          <>
+            <CustomerDialog
+              customer={{ ...customer, orderCount: allOrders.length }}
+              isAdmin={me.role === "admin"}
+              trigger={
+                <button type="button" className={cn(action, "min-h-12")}>
+                  <Pencil className="h-4 w-4" />
+                  Edit
+                </button>
+              }
+            />
+            <PrimaryLink href={`/dashboard/orders/new?customer=${customer.id}`}>
+              <Plus className="h-4 w-4" />
+              New order for {first}
+            </PrimaryLink>
+          </>
+        }
+      />
 
-        <Button asChild>
-          <Link
-            href={`/dashboard/orders/new?customer=${customer.id}`}
-            prefetch={true}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            New Order for {customer.name.split(" ")[0]}
-          </Link>
-        </Button>
-      </div>
-
-      {/* Contact Quick Actions */}
-      <div className="grid gap-3 sm:grid-cols-2">
-        {customer.contactNumber && (
-          <a
-            href={`tel:${customer.contactNumber.replace(/\s+/g, "")}`}
-            className="group flex items-center gap-3 p-4 bg-surface-container-low hover:bg-surface-container transition-colors"
-          >
-            <div className="flex h-10 w-10 items-center justify-center bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+      {/* Contact */}
+      <div className="flex flex-wrap gap-2">
+        {contact && !isEmail && (
+          <>
+            <a href={`tel:${dialable(contact)}`} className={action}>
               <Phone className="h-4 w-4" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                Call Customer
-              </p>
-              <p className="text-sm font-medium truncate">
-                {customer.contactNumber}
-              </p>
-            </div>
+              Call {formatContact(contact)}
+            </a>
+            {isPhMobile(contact) && (
+              <a href={`sms:${dialable(contact)}`} className={action}>
+                <MessageSquareText className="h-4 w-4" />
+                Text
+              </a>
+            )}
+            <CopyButton value={formatContact(contact)} label="Copy number" toastMessage="Number copied" className={action} />
+          </>
+        )}
+        {contact && isEmail && (
+          <a href={`mailto:${contact}`} className={action}>
+            <MessageSquareText className="h-4 w-4" />
+            Email {contact}
           </a>
         )}
         {customer.fbMessengerLink && (
-          <a
-            href={customer.fbMessengerLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group flex items-center gap-3 p-4 bg-surface-container-low hover:bg-surface-container transition-colors"
-          >
-            <div className="flex h-10 w-10 items-center justify-center bg-blue-500/15 text-blue-600 dark:text-blue-400">
-              <MessageCircle className="h-4 w-4" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                Message on Facebook
-              </p>
-              <p className="text-sm font-medium truncate">Open Messenger</p>
-            </div>
+          <a href={customer.fbMessengerLink} target="_blank" rel="noopener noreferrer" className={action}>
+            <MessageCircle className="h-4 w-4" />
+            Messenger
           </a>
         )}
-        {!customer.contactNumber && !customer.fbMessengerLink && (
-          <div className="sm:col-span-2 p-4 bg-surface-container-low text-sm text-muted-foreground flex items-center gap-2">
+        {!contact && !customer.fbMessengerLink && (
+          <p className="flex items-center gap-2 bg-surface-container-low px-4 py-3 text-sm text-on-surface-variant">
             <AlertTriangle className="h-4 w-4" />
-            No contact info on file. Edit this customer to add a phone number or Messenger link.
-          </div>
+            No phone or Messenger on file. Press Edit to add one.
+          </p>
         )}
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-        <StatTile
-          label="Total Orders"
-          value={allOrders.length}
-          icon={ShoppingCart}
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-0.5 border-2 border-surface-container-high bg-surface-container-high lg:grid-cols-4">
+        <Stat label="Orders" value={String(allOrders.length)} sub={`${pastOrders.length} completed`} />
+        <Stat
+          label="Active jobs"
+          value={String(activeOrders.length)}
+          sub={overdueCount > 0 ? `${overdueCount} overdue` : "On schedule"}
+          alert={overdueCount > 0}
         />
-        <StatTile
-          label="Active Jobs"
-          value={activeOrders.length}
-          icon={Clock}
-          highlight={activeOrders.length > 0}
-        />
-        <StatTile
-          label="Total Spent"
-          value={`₱${totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          icon={TrendingUp}
-        />
-        <StatTile
-          label="Outstanding"
-          value={`₱${outstandingBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          icon={Banknote}
-          variant={outstandingBalance > 0 ? "destructive" : "default"}
+        <Stat label="Total ordered" value={peso(totalSpent, false)} sub={`${peso(totalPaid, false)} paid`} />
+        <Stat
+          label="Still owes"
+          value={outstanding > 0.009 ? peso(outstanding) : "Nothing"}
+          sub={outstanding > 0.009 ? "Across all orders" : "All paid up"}
+          alert={outstanding > 0.009}
         />
       </div>
 
-      {/* Order History */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Calendar className="h-4 w-4" />
-              Order History
-              <Badge variant="secondary" className="ml-1">
-                {allOrders.length}
-              </Badge>
-            </CardTitle>
-            {allOrders.length > 0 && (
-              <span className="text-xs text-muted-foreground">
-                {itemCount} item{itemCount !== 1 ? "s" : ""} ·{" "}
-                {completedOrders.length} completed
-              </span>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {allOrders.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-              <ShoppingCart className="h-8 w-8 text-muted-foreground/40 mb-3" />
-              <p className="text-sm text-muted-foreground mb-4">
-                No orders yet for this customer.
-              </p>
-              <Button asChild size="sm">
-                <Link href={`/dashboard/orders/new?customer=${customer.id}`}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create First Order
+      <div className="grid items-start gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          <Panel icon={Banknote} title={`Active orders · ${activeOrders.length}`}>
+            {activeOrders.length === 0 ? (
+              <div className="flex flex-wrap items-center justify-between gap-3 border border-dashed border-outline-variant/50 px-4 py-6">
+                <p className="text-sm text-on-surface-variant">Nothing in progress for {first}.</p>
+                <Link
+                  href={`/dashboard/orders/new?customer=${customer.id}`}
+                  className="text-sm font-semibold text-accent-ink underline-offset-2 hover:underline"
+                >
+                  Take a new order →
                 </Link>
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-col">
-              {allOrders.map((order, idx) => {
-                const balance =
-                  parseFloat(order.totalAmount) - parseFloat(order.depositAmount);
-                const isOverdue =
-                  order.dueDate &&
-                  new Date(order.dueDate) < new Date() &&
-                  order.status !== "Completed";
-
-                return (
-                  <Link
-                    key={order.id}
-                    href={`/dashboard/orders/${order.orderNumber}`}
-                    prefetch={true}
-                    className={`group relative flex items-center justify-between px-4 py-4 transition-all duration-150 hover:bg-surface-container ${
-                      idx !== allOrders.length - 1
-                        ? "border-b border-surface-container-high"
-                        : ""
-                    } ${isOverdue ? "bg-surface-container-low" : ""}`}
-                  >
-                    {isOverdue && (
-                      <span className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary-container dark:bg-primary" />
-                    )}
-
-                    <div className="flex flex-col gap-1 min-w-0 flex-1">
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        <span
-                          className="text-[10px] font-bold tabular-nums text-muted-foreground bg-muted/60 px-1.5 py-0.5 shrink-0"
-                          style={{ fontFamily: "var(--font-label)" }}
-                          title={`Order #${order.orderNumber}`}
-                        >
-                          #{order.orderNumber}
-                        </span>
-                        <span className="text-sm font-semibold truncate">
-                          {order.title}
-                        </span>
-                        <span
-                          className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border ${STATUS_COLORS[order.status] ?? "bg-muted text-muted-foreground border-border"}`}
-                        >
-                          {order.status}
-                        </span>
-                        {isOverdue && (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-destructive/15 text-destructive dark:bg-destructive/20 dark:text-destructive">
-                            <AlertTriangle className="h-2.5 w-2.5" />
-                            Overdue
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span>
-                          {new Date(order.createdAt).toLocaleDateString("en-PH", { timeZone: "Asia/Manila",
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                        </span>
-                        {order.dueDate && (
-                          <span>
-                            Due{" "}
-                            {new Date(order.dueDate).toLocaleDateString("en-PH", { timeZone: "Asia/Manila",
-                              month: "short",
-                              day: "numeric",
-                            })}
-                          </span>
-                        )}
-                        <span>
-                          {order.items.length} item
-                          {order.items.length !== 1 ? "s" : ""}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="text-right shrink-0 ml-4">
-                      <div className="text-sm font-bold tabular-nums">
-                        ₱{parseFloat(order.totalAmount).toLocaleString()}
-                      </div>
-                      {balance > 0 && (
-                        <div className="text-xs text-destructive font-medium tabular-nums">
-                          Bal: ₱{balance.toLocaleString()}
-                        </div>
-                      )}
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Lifetime Summary */}
-      {allOrders.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Lifetime Summary</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Total Order Value</span>
-              <span className="font-medium tabular-nums">
-                ₱{totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Total Deposits Received</span>
-              <span className="font-medium tabular-nums">
-                ₱{totalDeposited.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-              </span>
-            </div>
-            <Separator />
-            <div className="flex justify-between text-sm">
-              <span className="font-medium">Outstanding Balance</span>
-              <span
-                className={`font-bold tabular-nums ${
-                  outstandingBalance > 0 ? "text-destructive" : "text-emerald-600"
-                }`}
-              >
-                ₱{outstandingBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-              </span>
-            </div>
-            {overdueOrders.length > 0 && (
-              <div className="flex items-center gap-2 text-xs text-destructive bg-destructive/10 p-3 mt-2">
-                <AlertTriangle className="h-3.5 w-3.5" />
-                {overdueOrders.length} order{overdueOrders.length !== 1 ? "s" : ""} overdue
               </div>
+            ) : (
+              <ul className="divide-y divide-outline-variant/30 border border-outline-variant/30">
+                {activeOrders.map((o) => (
+                  <OrderRow key={o.id} order={o} now={now} showPayment />
+                ))}
+              </ul>
             )}
-          </CardContent>
-        </Card>
-      )}
+          </Panel>
+
+          <Panel icon={History} title={`Past orders · ${pastOrders.length}`}>
+            {pastOrders.length === 0 ? (
+              <p className="text-sm text-on-surface-variant">No completed orders yet.</p>
+            ) : (
+              <ul className="divide-y divide-outline-variant/30 border border-outline-variant/30">
+                {pastOrders.map((o) => (
+                  <OrderRow key={o.id} order={o} now={now} showPayment />
+                ))}
+              </ul>
+            )}
+          </Panel>
+        </div>
+
+        <div className="space-y-6">
+          <Panel icon={MessageSquareText} title={`Message ${first}`}>
+            <CustomerMessagePanel
+              customerName={customer.name}
+              contact={customer.contactNumber}
+              messengerLink={customer.fbMessengerLink}
+              orders={messageable}
+            />
+          </Panel>
+
+          <Panel icon={StickyNote} title="Latest notes">
+            {notes.length === 0 ? (
+              <p className="text-sm text-on-surface-variant">
+                No notes yet. Notes added on any of {first}&apos;s orders show up here.
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {notes.map((n) => (
+                  <li key={n.id} className="border-l-2 border-[#f2b33d] bg-surface-container-lowest px-3 py-2">
+                    <p className="whitespace-pre-wrap text-sm">{n.message}</p>
+                    <p className="mt-1 text-xs text-on-surface-variant" suppressHydrationWarning>
+                      <Link href={`/dashboard/orders/${n.orderNumber}`} className="font-semibold hover:text-on-surface">
+                        #{String(n.orderNumber).padStart(4, "0")}
+                      </Link>{" "}
+                      · {n.actorName ?? "Staff"} · {timeAgo(n.createdAt)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
+        </div>
+      </div>
     </div>
   );
 }
 
-function StatTile({
-  label,
-  value,
-  icon: Icon,
-  highlight = false,
-  variant = "default",
-}: {
-  label: string;
-  value: string | number;
-  icon: LucideIcon;
-  highlight?: boolean;
-  variant?: "default" | "destructive";
-}) {
-  const isDestructive = variant === "destructive";
+type CustomerOrder = NonNullable<Awaited<ReturnType<typeof getCustomerById>>>["orders"][number];
+
+function OrderRow({ order, now, showPayment }: { order: CustomerOrder; now: Date; showPayment?: boolean }) {
+  const balance = balanceOf(order);
+  const overdue = !!order.dueDate && new Date(order.dueDate) < now && order.status !== "Completed";
 
   return (
-    <div
-      className={`relative flex flex-col gap-2 p-4 bg-surface-container-low ${
-        isDestructive ? "ring-1 ring-destructive/20" : ""
-      }`}
-    >
-      {isDestructive && (
-        <span className="absolute top-0 left-0 right-0 h-[2px] bg-destructive" />
-      )}
-      <div className="flex items-center justify-between">
-        <p
-          className={`text-[10px] uppercase tracking-wider font-semibold ${
-            isDestructive ? "text-destructive" : "text-muted-foreground"
-          }`}
-          style={{ fontFamily: "var(--font-label)" }}
-        >
-          {label}
-        </p>
-        <Icon
-          className={`h-3.5 w-3.5 ${
-            isDestructive
-              ? "text-destructive"
-              : highlight
-                ? "text-primary-container dark:text-primary"
-                : "text-muted-foreground/50"
-          }`}
-          strokeWidth={2}
-        />
+    <li className="relative flex flex-wrap items-center gap-x-4 gap-y-2 bg-surface-container-lowest px-4 py-3">
+      {overdue && <span className="absolute bottom-0 left-0 top-0 w-[3px] bg-brand" />}
+      <Link href={`/dashboard/orders/${order.orderNumber}`} className="group min-w-0 flex-1">
+        <span className="flex flex-wrap items-center gap-2">
+          <span className="spec text-[11px] text-on-surface-variant">#{String(order.orderNumber).padStart(4, "0")}</span>
+          <span className="truncate text-sm font-semibold group-hover:text-accent-ink">{order.title}</span>
+          <StatusChip status={order.status} />
+          {overdue && (
+            <span className="spec bg-brand px-1.5 py-0.5 text-[10px] tracking-[0.08em] text-white">Overdue</span>
+          )}
+        </span>
+        <span className="mt-1 block text-xs text-on-surface-variant">
+          Ordered {formatShopDate(order.createdAt, { month: "short", day: "numeric", year: "numeric" })}
+          {order.dueDate && ` · Due ${formatShopDate(order.dueDate)}`}
+          {` · ${order.items.length} item${order.items.length === 1 ? "" : "s"}`}
+        </span>
+      </Link>
+      <div className="flex items-center gap-3">
+        <div className="text-right font-mono text-sm tabular-nums">
+          <div className="font-semibold">{toNumber(order.totalAmount) > 0 ? peso(order.totalAmount) : "To quote"}</div>
+          {balance > 0.009 && <div className="text-xs text-accent-ink">{peso(balance)} owed</div>}
+        </div>
+        {showPayment && balance > 0.009 && (
+          <RecordDepositDialog
+            orderId={order.id}
+            orderNumber={order.orderNumber}
+            currentDeposit={order.depositAmount}
+            totalAmount={order.totalAmount}
+            orderTitle={order.title}
+            trigger={
+              <button
+                type="button"
+                className="inline-flex min-h-10 items-center gap-1.5 bg-on-surface px-3 text-xs font-semibold text-surface"
+              >
+                <Banknote className="h-3.5 w-3.5" />
+                Record payment
+              </button>
+            }
+          />
+        )}
+        <ChevronRight className="hidden h-4 w-4 text-on-surface-variant sm:block" />
       </div>
-      <div
-        className={`text-xl md:text-2xl font-bold tracking-tight leading-none tabular-nums ${
-          isDestructive
-            ? "text-destructive"
-            : highlight
-              ? "text-primary-container dark:text-primary"
-              : "text-foreground"
-        }`}
-        style={{ fontFamily: "var(--font-headline)" }}
-      >
+    </li>
+  );
+}
+
+function Stat({ label, value, sub, alert }: { label: string; value: string; sub: string; alert?: boolean }) {
+  return (
+    <div className="relative flex flex-col gap-2 bg-surface-container-low p-4 md:p-5">
+      {alert && <span className="absolute left-0 right-0 top-0 h-[3px] bg-brand" />}
+      <p className={cn("spec text-[11px]", alert ? "text-accent-ink" : "text-on-surface-variant")}>{label}</p>
+      <p className={cn("font-headline text-2xl font-bold leading-none tracking-[-0.04em] md:text-3xl", alert && "text-accent-ink")}>
         {value}
-      </div>
+      </p>
+      <p className="text-xs text-on-surface-variant">{sub}</p>
     </div>
   );
 }

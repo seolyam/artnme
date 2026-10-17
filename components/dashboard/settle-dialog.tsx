@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { HandCoins, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { settleAndComplete } from "@/app/actions/orders";
-import { PAYMENT_METHODS, type PaymentMethod } from "@/db/schema";
 import {
   Dialog,
   DialogContent,
@@ -16,27 +15,44 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
+import { PaymentMethodPicker, type ReceivedMethod } from "@/components/dashboard/payment-method-picker";
+import { peso } from "@/lib/money";
 
-/** Pickup counter flow: collect what's owed and close the job in one go. */
+/**
+ * Pickup counter flow: collect what's owed and close the job in one go.
+ *
+ * Renders its own button by default. Pass `open`/`onOpenChange` (and
+ * `hideTrigger`) to open it from elsewhere, e.g. when someone moves an unpaid
+ * job to Completed; `onSkip` then adds a "complete without collecting" exit.
+ */
 export function SettleDialog({
   orderId,
   orderNumber,
   balance,
+  open: openProp,
+  onOpenChange,
+  hideTrigger = false,
+  onSkip,
+  onDone,
 }: {
   orderId: string;
   orderNumber: number;
   balance: number;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+  onSkip?: () => void;
+  onDone?: () => void;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [method, setMethod] = useState<Exclude<PaymentMethod, "Adjustment">>("Cash");
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = onOpenChange ?? setOpenState;
+  const [method, setMethod] = useState<ReceivedMethod>("Cash");
   const [reference, setReference] = useState("");
   const [pending, startTransition] = useTransition();
   const owes = balance > 0.009;
-  const amount = `₱${balance.toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
+  const amount = peso(balance);
 
   function confirm() {
     startTransition(async () => {
@@ -52,74 +68,68 @@ export function SettleDialog({
         description: owes ? `${amount} collected via ${method}` : "Already fully paid",
       });
       setOpen(false);
+      setReference("");
+      onDone?.();
       router.refresh();
     });
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" className="rounded-none bg-success text-white hover:bg-success/90">
-          <HandCoins className="mr-2 h-4 w-4" />
-          {owes ? "Collect & release" : "Release to customer"}
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button className="min-h-10 rounded-none bg-success text-white hover:bg-success/90">
+            <HandCoins className="h-4 w-4" />
+            {owes ? "Collect & release" : "Release to customer"}
+          </Button>
+        </DialogTrigger>
+      )}
+      <DialogContent className="rounded-none">
         <DialogHeader>
-          <DialogTitle>Release order #{orderNumber}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="font-headline text-lg font-bold uppercase tracking-[-0.02em]">
+            Release order #{orderNumber}
+          </DialogTitle>
+          <DialogDescription className="text-on-surface-variant">
             {owes
-              ? `Collect the remaining ${amount}, then the order is marked Completed.`
+              ? `The customer still owes ${amount}. Collect it now and the order is marked Completed.`
               : "This order is fully paid. Releasing marks it Completed."}
           </DialogDescription>
         </DialogHeader>
 
         {owes && (
-          <div className="space-y-3 py-2">
+          <div className="space-y-4 py-1">
             <div className="bg-surface-container-low p-4">
               <p className="spec text-[10px] text-on-surface-variant">Collect now</p>
               <p className="font-headline text-3xl font-bold tabular-nums">{amount}</p>
             </div>
-            <div className="space-y-2">
-              <Label>Method</Label>
-              <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Payment method">
-                {PAYMENT_METHODS.map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    role="radio"
-                    aria-checked={method === m}
-                    onClick={() => setMethod(m)}
-                    className={cn(
-                      "min-h-9 border px-3 text-xs font-semibold transition-colors",
-                      method === m
-                        ? "border-brand bg-brand text-white"
-                        : "border-outline-variant/60 hover:border-on-surface-variant",
-                    )}
-                  >
-                    {m}
-                  </button>
-                ))}
-              </div>
-              {method !== "Cash" && (
-                <Input
-                  aria-label="Reference number"
-                  placeholder="Reference / transaction no."
-                  value={reference}
-                  onChange={(e) => setReference(e.target.value)}
-                  maxLength={80}
-                />
-              )}
-            </div>
+            <PaymentMethodPicker
+              method={method}
+              onMethodChange={setMethod}
+              reference={reference}
+              onReferenceChange={setReference}
+            />
           </div>
         )}
 
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={pending}>
+        <DialogFooter className="gap-2 sm:items-center">
+          {onSkip && owes && (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => {
+                setOpen(false);
+                onSkip();
+              }}
+              className="mr-auto min-h-10 text-left text-xs text-on-surface-variant underline-offset-2 hover:text-on-surface hover:underline disabled:opacity-50"
+            >
+              Complete without collecting
+            </button>
+          )}
+          <Button type="button" variant="outline" className="min-h-10 rounded-none" onClick={() => setOpen(false)} disabled={pending}>
             Cancel
           </Button>
-          <Button type="button" onClick={confirm} disabled={pending}>
-            {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button type="button" className="min-h-10 rounded-none" onClick={confirm} disabled={pending}>
+            {pending && <Loader2 className="h-4 w-4 animate-spin" />}
             {owes ? `Collect ${amount} & complete` : "Mark completed"}
           </Button>
         </DialogFooter>

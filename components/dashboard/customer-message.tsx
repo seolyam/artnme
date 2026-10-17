@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, Copy, Mail, MessageCircle, MessageSquareText } from "lucide-react";
+import { Check, Copy, Link2, Mail, MessageCircle, MessageSquareText } from "lucide-react";
 import { toast } from "sonner";
 import { SITE } from "@/lib/site";
+import { dialable, isPhMobile } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -16,6 +17,8 @@ type Props = {
   total: number;
   balance: number;
   dueLabel: string | null;
+  /** Public status page for this order, when one exists. */
+  trackingUrl?: string | null;
 };
 
 function money(n: number) {
@@ -61,13 +64,22 @@ export function CustomerMessage(props: Props) {
         label: "Balance",
         body: `Hi ${first}! Friendly reminder that order ${ref} has a remaining balance of ${money(props.balance)}. You can pay via GCash (${SITE.phoneDisplay}) or at the studio. Thank you!`,
       },
+      ...(props.trackingUrl
+        ? [
+            {
+              key: "track",
+              label: "Tracking",
+              body: `Hi ${first}! You can check the progress of order ${ref} anytime here: ${props.trackingUrl} — ${SITE.name}`,
+            },
+          ]
+        : []),
       {
         key: "thanks",
         label: "Thanks",
         body: `Thank you for choosing ${SITE.name}, ${first}! We hope you love order ${ref}. Tag us on Facebook — we'd love to see it in action.`,
       },
     ],
-    [first, ref, props.total, props.balance, props.dueLabel],
+    [first, ref, props.total, props.balance, props.dueLabel, props.trackingUrl],
   );
 
   const defaultKey =
@@ -88,7 +100,7 @@ export function CustomerMessage(props: Props) {
   const text = draft[current.key] ?? current.body;
 
   const isEmail = !!props.contact && props.contact.includes("@");
-  const phone = !isEmail && props.contact ? props.contact.replace(/[^\d+]/g, "") : null;
+  const phone = !isEmail && isPhMobile(props.contact) ? dialable(props.contact) : null;
 
   async function copy() {
     try {
@@ -98,6 +110,15 @@ export function CustomerMessage(props: Props) {
       setTimeout(() => setCopied(false), 1600);
     } catch {
       toast.error("Couldn't copy — select the text and copy it manually");
+    }
+  }
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(props.trackingUrl!);
+      toast.success("Tracking link copied");
+    } catch {
+      toast.error("Couldn't copy — select the link and copy it manually");
     }
   }
 
@@ -155,6 +176,12 @@ export function CustomerMessage(props: Props) {
             <MessageSquareText className="h-3.5 w-3.5" />
             Send SMS
           </a>
+        )}
+        {props.trackingUrl && (
+          <button type="button" onClick={copyLink} className={action}>
+            <Link2 className="h-3.5 w-3.5" />
+            Copy tracking link
+          </button>
         )}
         {isEmail && (
           <a

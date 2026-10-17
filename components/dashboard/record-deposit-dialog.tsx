@@ -3,8 +3,6 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { recordDeposit } from "@/app/actions/orders";
-import { PAYMENT_METHODS, type PaymentMethod } from "@/db/schema";
-import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -15,8 +13,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PaymentMethodPicker, type ReceivedMethod } from "@/components/dashboard/payment-method-picker";
+import { peso, roundMoney, toNumber } from "@/lib/money";
+import { cn } from "@/lib/utils";
 import { Banknote, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -25,6 +25,7 @@ interface RecordDepositDialogProps {
   currentDeposit: string;
   totalAmount: string;
   orderTitle: string;
+  orderNumber?: number;
   trigger?: React.ReactNode;
 }
 
@@ -33,21 +34,22 @@ export function RecordDepositDialog({
   currentDeposit,
   totalAmount,
   orderTitle,
+  orderNumber,
   trigger,
 }: RecordDepositDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [amount, setAmount] = useState("");
-  const [method, setMethod] = useState<Exclude<PaymentMethod, "Adjustment">>("Cash");
+  const [method, setMethod] = useState<ReceivedMethod>("Cash");
   const [reference, setReference] = useState("");
 
-  const currentDep = parseFloat(currentDeposit) || 0;
-  const total = parseFloat(totalAmount) || 0;
-  const balance = Math.max(0, total - currentDep);
+  const paid = toNumber(currentDeposit);
+  const total = toNumber(totalAmount);
+  const balance = Math.max(0, roundMoney(total - paid));
 
   const parsedAmount = parseFloat(amount) || 0;
-  const wouldExceed = parsedAmount > balance + 0.01;
+  const wouldExceed = parsedAmount > balance + 0.009;
   const isValid = parsedAmount > 0 && !wouldExceed;
 
   function handleSubmit(e: React.FormEvent) {
@@ -61,12 +63,10 @@ export function RecordDepositDialog({
       if ("error" in result) {
         toast.error(result.error);
       } else {
-        toast.success(
-          `₱${parsedAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} recorded`,
-          {
-            description: `New balance: ₱${Math.max(0, total - result.newDeposit).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
-          },
-        );
+        const left = Math.max(0, total - result.newDeposit);
+        toast.success(`${peso(parsedAmount)} recorded`, {
+          description: left > 0.009 ? `${peso(left)} still to pay` : "Fully paid",
+        });
         setAmount("");
         setReference("");
         setOpen(false);
@@ -75,162 +75,124 @@ export function RecordDepositDialog({
     });
   }
 
-  function quickFill(value: number) {
-    setAmount(value.toFixed(2));
+  const quick = [balance, ...[500, 1000, 2000, 5000].filter((v) => v < balance)];
+  if (balance > 0 && !quick.includes(roundMoney(balance / 2)) && balance >= 200) {
+    quick.splice(1, 0, roundMoney(balance / 2));
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger ?? (
-          <Button variant="default" size="sm" className="rounded-none">
-            <Banknote className="mr-2 h-4 w-4" />
-            Record Payment
+          <Button className="min-h-10 rounded-none">
+            <Banknote className="h-4 w-4" />
+            Record payment
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="rounded-none">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 font-headline text-lg font-bold uppercase tracking-[-0.02em]">
             <Banknote className="h-5 w-5" />
-            Record Payment
+            Record payment
           </DialogTitle>
-          <DialogDescription>
-            Add a deposit payment to{" "}
-            <span className="font-medium text-foreground">{orderTitle}</span>.
+          <DialogDescription className="text-on-surface-variant">
+            Money received for{" "}
+            <span className="font-medium text-on-surface">
+              {orderNumber ? `#${orderNumber} · ` : ""}
+              {orderTitle}
+            </span>
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-2">
-          {/* Summary */}
-          <div className="grid grid-cols-3 gap-2 text-sm">
-            <div className="bg-muted/40 p-3">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                Total
-              </p>
-              <p className="font-bold tabular-nums">
-                ₱{total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div className="bg-muted/40 p-3">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                Paid
-              </p>
-              <p className="font-bold tabular-nums text-emerald-600">
-                ₱{currentDep.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div className="bg-destructive/10 p-3">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                Balance
-              </p>
-              <p className="font-bold tabular-nums text-destructive">
-                ₱{balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-              </p>
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-3 gap-0.5 bg-surface-container-high text-sm">
+            <Figure label="Total" value={peso(total)} />
+            <Figure label="Paid" value={peso(paid)} className="text-success" />
+            <Figure label="Still owed" value={peso(balance)} className="text-accent-ink" />
           </div>
 
-          {/* Amount input */}
           <div className="space-y-2">
-            <Label htmlFor="deposit-amount">Payment Amount</Label>
-            <Input
-              id="deposit-amount"
-              type="number"
-              min={0}
-              step="0.01"
-              max={balance}
-              placeholder="0.00"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              autoFocus
-              className={wouldExceed ? "border-destructive" : ""}
-            />
-            {wouldExceed && (
-              <p className="text-xs text-destructive">
-                Payment exceeds remaining balance of ₱
-                {balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-              </p>
-            )}
-          </div>
-
-          {/* Method */}
-          <div className="space-y-2">
-            <Label>Method</Label>
-            <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Payment method">
-              {PAYMENT_METHODS.map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  role="radio"
-                  aria-checked={method === m}
-                  onClick={() => setMethod(m)}
-                  className={cn(
-                    "min-h-9 border px-3 text-xs font-semibold transition-colors",
-                    method === m
-                      ? "border-brand bg-brand text-white"
-                      : "border-outline-variant/60 hover:border-on-surface-variant",
-                  )}
-                >
-                  {m}
-                </button>
-              ))}
-            </div>
-            {method !== "Cash" && (
-              <Input
-                aria-label="Reference number"
-                placeholder={method === "GCash" || method === "Maya" ? "Reference no. (from the receipt SMS)" : "Reference / transaction no."}
-                value={reference}
-                onChange={(e) => setReference(e.target.value)}
-                maxLength={80}
+            <Label htmlFor="deposit-amount" className="text-sm">
+              Amount received
+            </Label>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-headline text-lg text-on-surface-variant">
+                ₱
+              </span>
+              <input
+                id="deposit-amount"
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="0.01"
+                max={balance}
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                autoFocus
+                aria-invalid={wouldExceed}
+                className={cn(
+                  "h-14 w-full border bg-surface-container-lowest pl-8 pr-3 font-headline text-2xl font-bold tabular-nums outline-none focus:border-on-surface-variant",
+                  wouldExceed ? "border-brand" : "border-outline-variant/60",
+                )}
               />
+            </div>
+            {wouldExceed && (
+              <p className="text-xs font-medium text-accent-ink">
+                That&apos;s more than the {peso(balance)} still owed.
+              </p>
+            )}
+            {balance > 0 && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {quick.map((v, i) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setAmount(v.toFixed(2))}
+                    disabled={isPending}
+                    className="min-h-9 border border-outline-variant/60 px-3 text-xs font-semibold transition-colors hover:border-on-surface-variant"
+                  >
+                    {i === 0 ? `Full ${peso(v)}` : v === roundMoney(balance / 2) ? `Half ${peso(v)}` : peso(v, false)}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
 
-          {/* Quick fill buttons */}
-          {balance > 0 && (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => quickFill(balance)}
-                disabled={isPending}
-              >
-                Full Balance (₱{balance.toLocaleString(undefined, { minimumFractionDigits: 2 })})
-              </Button>
-              {[500, 1000, 2000, 5000].map((amt) =>
-                amt <= balance ? (
-                  <Button
-                    key={amt}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => quickFill(amt)}
-                    disabled={isPending}
-                  >
-                    ₱{amt.toLocaleString()}
-                  </Button>
-                ) : null,
-              )}
-            </div>
-          )}
+          <PaymentMethodPicker
+            method={method}
+            onMethodChange={setMethod}
+            reference={reference}
+            onReferenceChange={setReference}
+          />
 
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button
               type="button"
               variant="outline"
+              className="min-h-10 rounded-none"
               onClick={() => setOpen(false)}
               disabled={isPending}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending || !isValid}>
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Record Payment
+            <Button type="submit" className="min-h-10 rounded-none" disabled={isPending || !isValid}>
+              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              {parsedAmount > 0 && !wouldExceed ? `Record ${peso(parsedAmount)}` : "Record payment"}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function Figure({ label, value, className }: { label: string; value: string; className?: string }) {
+  return (
+    <div className="bg-surface-container-low p-3">
+      <p className="spec text-[10px] text-on-surface-variant">{label}</p>
+      <p className={cn("font-mono font-bold tabular-nums", className)}>{value}</p>
+    </div>
   );
 }

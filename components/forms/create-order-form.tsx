@@ -1,174 +1,106 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useFieldArray, useWatch } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { z } from "zod/v4";
 
 import { orderFormSchema, type OrderFormSchemaValues } from "@/lib/validators";
-import type { OrderFormValues } from "@/lib/validators";
 import { createOrder } from "@/app/actions/orders";
-import { createCustomer } from "@/app/actions/customers";
-import { PAYMENT_METHODS, PRODUCT_TYPES } from "@/db/schema";
-
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { ORDER_STATUSES } from "@/db/schema";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { PaymentMethodPicker } from "@/components/dashboard/payment-method-picker";
+import type { CustomerOption } from "@/components/forms/customer-combobox";
+import { useCustomerPicker } from "@/components/forms/customer-picker";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+  BalanceLine,
+  DueDateField,
+  EMPTY_ITEM,
+  FormSection,
+  ItemsEditor,
+  TotalField,
+  applyFieldErrors,
+  fieldClass,
+  suggestTitle,
+} from "@/components/forms/order-form-parts";
+import { peso, roundMoney } from "@/lib/money";
+import { statusStyle } from "@/lib/order-status";
+import { cn } from "@/lib/utils";
 
-interface Customer {
-  id: string;
-  name: string;
-}
+// The title may be left blank here; it's filled from the items on submit.
+const createFormSchema = orderFormSchema.extend({ title: z.string().trim().max(200) });
+
+export type CreateOrderDefaults = Partial<Pick<OrderFormSchemaValues, "title" | "items" | "dueDate">>;
 
 interface CreateOrderFormProps {
-  customers: Customer[];
+  customers: CustomerOption[];
   preselectCustomerId?: string;
+  /** Prefill from an earlier order ("Order again"). */
+  defaults?: CreateOrderDefaults;
+  /** Shown above the form when prefilled, e.g. "Copied from #0012". */
+  notice?: React.ReactNode;
+  renderItemExtras?: (index: number) => React.ReactNode;
 }
 
 export function CreateOrderForm({
   customers,
   preselectCustomerId,
+  defaults,
+  notice,
+  renderItemExtras,
 }: CreateOrderFormProps) {
   const router = useRouter();
-  const [isNewCustomer, setIsNewCustomer] = useState(false);
-  const [newCustomerName, setNewCustomerName] = useState("");
-  const [newCustomerContact, setNewCustomerContact] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const validPreselect =
-    preselectCustomerId && customers.some((c) => c.id === preselectCustomerId)
-      ? preselectCustomerId
-      : "";
+    preselectCustomerId && customers.some((c) => c.id === preselectCustomerId) ? preselectCustomerId : "";
+  const picker = useCustomerPicker({ customers, initialId: validPreselect });
 
   const form = useForm<OrderFormSchemaValues>({
-    resolver: zodResolver(orderFormSchema as never),
+    resolver: zodResolver(createFormSchema as never),
     defaultValues: {
       customerId: validPreselect,
-      title: "",
+      title: defaults?.title ?? "",
       status: "Pending",
       totalAmount: 0,
       depositAmount: 0,
-      dueDate: "",
+      dueDate: defaults?.dueDate ?? "",
       depositMethod: "Cash",
-      items: [
-        {
-          productType: "Tarpaulin",
-          description: "",
-          quantity: 1,
-          dimensions: "",
-          unitPrice: 0,
-        },
-      ],
+      items: defaults?.items?.length ? defaults.items : [{ ...EMPTY_ITEM }],
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "items",
-  });
-
-  // Auto-calculate total from items. useWatch + a numeric dependency: the
-  // array from form.watch() is mutated in place, so an effect keyed on it
-  // never re-ran and the total stayed at 0.
-  const watchedItems = useWatch({ control: form.control, name: "items" });
-  const itemsTotal = (watchedItems ?? []).reduce(
-    (sum, item) =>
-      sum + (Number(item?.quantity) || 0) * (Number(item?.unitPrice) || 0),
-    0,
-  );
-  useEffect(() => {
-    form.setValue("totalAmount", Math.round(itemsTotal * 100) / 100);
-  }, [itemsTotal, form]);
+  const items = useWatch({ control: form.control, name: "items" });
+  const total = Number(useWatch({ control: form.control, name: "totalAmount" })) || 0;
+  const deposit = Number(useWatch({ control: form.control, name: "depositAmount" })) || 0;
+  const titleSuggestion = suggestTitle(items);
 
   async function onSubmit(values: OrderFormSchemaValues) {
     setSubmitting(true);
     try {
-      let customerId = values.customerId;
-
-      // Handle new customer creation
-      if (isNewCustomer) {
-        if (!newCustomerName.trim()) {
-          toast.error("Customer name is required");
-          setSubmitting(false);
-          return;
-        }
-        const res = await createCustomer({
-          name: newCustomerName,
-          contactNumber: newCustomerContact || undefined,
-        });
-        if (res.error || !res.data) {
-          toast.error(res.error ?? "Failed to create customer");
-          setSubmitting(false);
-          return;
-        }
-        customerId = res.data.id;
-      }
-
+      const customerId = await picker.resolve();
       if (!customerId) {
-        form.setError("customerId", { message: "Please select a customer" });
-        setSubmitting(false);
+        document.getElementById("customer-step")?.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
 
-      const orderData: OrderFormValues = {
+      const result = await createOrder({
         ...values,
         customerId,
-      };
-
-      const result = await createOrder(orderData);
+        title: values.title.trim() || titleSuggestion || "Order",
+      });
 
       if (result.error) {
-        if (result.fieldErrors && Array.isArray(result.fieldErrors)) {
-          for (const fe of result.fieldErrors) {
-            if (!fe.path) {
-              toast.error(fe.message);
-              continue;
-            }
-            // Map "items.0.quantity" -> ["items", "0", "quantity"]
-            const segments = fe.path.split(".");
-            form.setError(segments.join(".") as never, {
-              message: fe.message,
-            });
-          }
-          if (result.fieldErrors.length === 0) {
-            toast.error(result.error);
-          } else {
-            toast.error(result.error, {
-              description: "Please fix the highlighted fields.",
-            });
-          }
-        } else {
-          toast.error(result.error);
-        }
-      } else {
-        toast.success(`Order #${result.data!.orderNumber} created`);
-        router.push(`/dashboard/orders/${result.data!.orderNumber}`);
+        applyFieldErrors(form.setError as never, result.fieldErrors);
+        toast.error(result.error, result.fieldErrors?.length ? { description: "Fix the fields marked in red." } : undefined);
+        return;
       }
+      toast.success(`Order #${result.data!.orderNumber} created`);
+      router.push(`/dashboard/orders/${result.data!.orderNumber}`);
     } finally {
       setSubmitting(false);
     }
@@ -176,392 +108,157 @@ export function CreateOrderForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* ── Customer Section ─────────────────────────────────── */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Customer</CardTitle>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setIsNewCustomer(!isNewCustomer);
-                  if (!isNewCustomer) form.setValue("customerId", "");
-                }}
-              >
-                {isNewCustomer ? "Select Existing" : "New Customer"}
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isNewCustomer ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Name *</label>
-                  <Input
-                    placeholder="Customer name"
-                    value={newCustomerName}
-                    onChange={(e) => setNewCustomerName(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    Contact Number
-                  </label>
-                  <Input
-                    placeholder="09XX XXX XXXX"
-                    value={newCustomerContact}
-                    onChange={(e) => setNewCustomerContact(e.target.value)}
-                  />
-                </div>
-              </div>
-            ) : (
-              <FormField
-                control={form.control}
-                name="customerId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Select Customer</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Choose a customer..." />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {customers.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>
-                            {c.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-          </CardContent>
-        </Card>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pb-4">
+        {notice}
 
-        {/* ── Order Details ────────────────────────────────────── */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Order Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div id="customer-step">
+          <FormSection step={1} title="Who is it for?" hint="Search for the customer, or add a new one.">
+            {picker.section}
+          </FormSection>
+        </div>
+
+        <FormSection step={2} title="What are we making?" hint="One row per product. Prices can be added later.">
+          <div className="space-y-4">
+            <ItemsEditor renderExtras={renderItemExtras} />
             <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Order Title</FormLabel>
+                  <FormLabel>
+                    Order name <span className="font-normal text-on-surface-variant">(optional)</span>
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder='e.g. "Birthday Tarpaulin Set"' {...field} />
+                    <Input
+                      placeholder={titleSuggestion ? `Leave blank to use “${titleSuggestion}”` : "e.g. Birthday tarpaulin"}
+                      className={fieldClass}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="dueDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Due Date</FormLabel>
-                    <FormControl>
-                      <Input type="datetime-local" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="Designing">Designing</SelectItem>
-                        <SelectItem value="Printing">Printing</SelectItem>
-                        <SelectItem value="Ready for Pickup">
-                          Ready for Pickup
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </FormSection>
 
-        {/* ── Order Items ──────────────────────────────────────── */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">
-                Items{" "}
-                <Badge variant="secondary" className="ml-2">
-                  {fields.length}
-                </Badge>
-              </CardTitle>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  append({
-                    productType: "Tarpaulin",
-                    description: "",
-                    quantity: 1,
-                    dimensions: "",
-                    unitPrice: 0,
-                  })
-                }
-              >
-                <Plus className="mr-1 h-4 w-4" /> Add Item
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {fields.map((field, index) => (
-              <div
-                key={field.id}
-                className="rounded-lg border bg-muted/20 p-4 space-y-3"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    Item {index + 1}
-                  </span>
-                  {fields.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-destructive hover:text-destructive"
-                      onClick={() => remove(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+        <FormSection step={3} title="When is it due?">
+          <div className="space-y-5">
+            <FormField
+              control={form.control}
+              name="dueDate"
+              render={({ field }) => <DueDateField value={field.value} onChange={field.onChange} />}
+            />
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Where is the job now?</FormLabel>
+                  <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Starting status">
+                    {ORDER_STATUSES.filter((s) => s !== "Completed").map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        role="radio"
+                        aria-checked={field.value === s}
+                        onClick={() => field.onChange(s)}
+                        className={cn(
+                          "inline-flex min-h-10 items-center gap-2 border px-3.5 text-sm font-semibold transition-colors",
+                          field.value === s
+                            ? "border-on-surface bg-on-surface text-surface"
+                            : "border-outline-variant/60 hover:border-on-surface-variant",
+                        )}
+                      >
+                        <span className={cn("h-2 w-2", statusStyle(s).dot)} />
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-on-surface-variant">Most new orders start in Pending.</p>
+                </FormItem>
+              )}
+            />
+          </div>
+        </FormSection>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.productType`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Type</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
+        <FormSection step={4} title="Money" hint="Record the downpayment if the customer paid today.">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <TotalField />
+            <FormField
+              control={form.control}
+              name="depositAmount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Downpayment received today (₱)</FormLabel>
+                  <FormControl>
+                    <Input type="number" inputMode="decimal" min={0} step="0.01" className={cn(fieldClass, "font-mono")} {...field} />
+                  </FormControl>
+                  {total > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        ["Half", roundMoney(total / 2)],
+                        ["Full", total],
+                        ["None", 0],
+                      ].map(([label, v]) => (
+                        <button
+                          key={label}
+                          type="button"
+                          onClick={() => form.setValue("depositAmount", Number(v), { shouldValidate: true })}
+                          className="min-h-9 border border-outline-variant/60 px-3 text-xs font-semibold hover:border-on-surface-variant"
                         >
-                          <FormControl>
-                            <SelectTrigger className="w-full">
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {PRODUCT_TYPES.map((type) => (
-                              <SelectItem key={type} value={type}>
-                                {type}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.quantity`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Qty</FormLabel>
-                        <FormControl>
-                          <Input type="number" min={1} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.dimensions`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Dimensions</FormLabel>
-                        <FormControl>
-                          <Input placeholder='3ft x 5ft' {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.unitPrice`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Unit Price</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={0}
-                            step="0.01"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name={`items.${index}.description`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description / Notes</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          rows={2}
-                          placeholder="Design details, special instructions..."
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                          {label}
+                          {Number(v) > 0 ? ` ${peso(Number(v), false)}` : ""}
+                        </button>
+                      ))}
+                    </div>
                   )}
-                />
-              </div>
-            ))}
-            {form.formState.errors.items?.message && (
-              <p className="text-sm text-destructive">
-                {form.formState.errors.items.message}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+                  {deposit > total + 0.009 && (
+                    <p className="text-xs font-medium text-accent-ink">The downpayment is more than the total.</p>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
-        {/* ── Pricing ──────────────────────────────────────────── */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Pricing</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="totalAmount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Total Amount (auto-calculated)</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={0} step="0.01" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="depositAmount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Deposit Amount</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={0} step="0.01" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {(Number(form.watch("depositAmount")) || 0) > 0 && (
+          {deposit > 0 && (
+            <div className="mt-4">
               <FormField
                 control={form.control}
                 name="depositMethod"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Deposit paid via</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="w-full sm:w-1/2">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {PAYMENT_METHODS.map((m) => (
-                          <SelectItem key={m} value={m}>
-                            {m}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+                  <PaymentMethodPicker
+                    method={field.value ?? "Cash"}
+                    onMethodChange={field.onChange}
+                    reference=""
+                    onReferenceChange={() => {}}
+                    hideReference
+                  />
                 )}
               />
-            )}
-
-            <Separator />
-
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Balance remaining</span>
-              <span className="text-lg font-bold">
-                {"\u20B1"}
-                {Math.max(
-                  0,
-                  (Number(form.watch("totalAmount")) || 0) -
-                    (Number(form.watch("depositAmount")) || 0),
-                ).toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                })}
-              </span>
             </div>
-          </CardContent>
-        </Card>
+          )}
 
-        {/* ── Submit ───────────────────────────────────────────── */}
-        <div className="flex justify-end gap-3">
-          <Button
+          <BalanceLine total={total} paid={deposit} paidLabel="Paid today" />
+        </FormSection>
+
+        <div className="sticky bottom-0 z-10 flex flex-wrap items-center justify-end gap-3 border-t border-outline-variant/40 bg-background/95 py-3 backdrop-blur">
+          <button
             type="button"
-            variant="outline"
             onClick={() => router.back()}
+            className="min-h-12 px-4 text-sm font-semibold text-on-surface-variant hover:text-on-surface"
           >
             Cancel
-          </Button>
-          <Button type="submit" disabled={submitting}>
-            {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create Order
-          </Button>
+          </button>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="ink-fill inline-flex min-h-12 items-center gap-2 bg-brand px-6 font-headline text-xs font-bold uppercase tracking-[0.14em] text-white disabled:opacity-60"
+          >
+            {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+            Create order
+          </button>
         </div>
       </form>
     </Form>

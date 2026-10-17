@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getOrder } from "@/app/actions/orders";
+import { getCustomers } from "@/app/actions/customers";
 import { EditOrderForm } from "@/components/forms/edit-order-form";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export default async function EditOrderPage({
   params,
@@ -11,27 +10,25 @@ export default async function EditOrderPage({
   params: Promise<{ orderNumber: string }>;
 }) {
   const { orderNumber } = await params;
-  const order = await getOrder(orderNumber);
+  const [order, customers] = await Promise.all([getOrder(orderNumber), getCustomers()]);
 
   if (!order) {
     notFound();
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" asChild className="h-7 w-7 p-0">
-          <Link href={`/dashboard/orders/${order.orderNumber}`}>
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Edit Order</h1>
-          <p className="text-sm text-muted-foreground">{order.title}</p>
-        </div>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <PageHeader
+        back={{ href: `/dashboard/orders/${order.orderNumber}`, label: `Order #${String(order.orderNumber).padStart(4, "0")}` }}
+        eyebrow={`Editing #${String(order.orderNumber).padStart(4, "0")}`}
+        title="Edit order"
+        description={order.title}
+      />
 
-      <EditOrderForm order={order} />
+      <EditOrderForm
+        order={order}
+        customers={customers.map((c) => ({ id: c.id, name: c.name, contactNumber: c.contactNumber }))}
+      />
     </div>
   );
 }

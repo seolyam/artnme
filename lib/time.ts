@@ -7,6 +7,9 @@
 export const SHOP_TZ = "Asia/Manila";
 const SHOP_OFFSET = "+08:00"; // the Philippines has no daylight saving
 
+/** When staff pick only a date, the job is due at closing-ish time. */
+export const DEFAULT_DUE_TIME = "17:00";
+
 /**
  * Parse a `datetime-local` / `date` input value as Manila time.
  * Values that already carry an offset or "Z" are left alone.
@@ -16,7 +19,7 @@ export function parseShopDateTime(value: string | null | undefined): Date | null
   const v = value.trim();
   if (!v) return null;
   const hasZone = /([zZ]|[+-]\d{2}:?\d{2})$/.test(v);
-  const withTime = /^\d{4}-\d{2}-\d{2}$/.test(v) ? `${v}T17:00` : v;
+  const withTime = /^\d{4}-\d{2}-\d{2}$/.test(v) ? `${v}T${DEFAULT_DUE_TIME}` : v;
   const d = new Date(hasZone ? withTime : `${withTime}${SHOP_OFFSET}`);
   return Number.isNaN(d.getTime()) ? null : d;
 }
@@ -48,6 +51,13 @@ export function shopToday(now = new Date()): string {
 export function shopDayRange(day: string): { start: Date; end: Date } {
   const start = new Date(`${day}T00:00:00${SHOP_OFFSET}`);
   return { start, end: new Date(start.getTime() + 86_400_000) };
+}
+
+/** Shift a shop day (YYYY-MM-DD) by whole days. */
+export function addShopDays(day: string, days: number): string {
+  const { start } = shopDayRange(day);
+  // Land at midday so the result can't slip across a day boundary.
+  return shopToday(new Date(start.getTime() + days * 86_400_000 + 12 * 3_600_000));
 }
 
 export function formatShopDate(

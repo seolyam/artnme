@@ -14,8 +14,9 @@ import {
   UserRound,
   Users,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { OrderActions } from "@/components/dashboard/order-actions";
+import { Panel } from "@/components/dashboard/panel";
+import { dialable, formatContact } from "@/lib/phone";
 import { RecordDepositDialog } from "@/components/dashboard/record-deposit-dialog";
 import { SettleDialog } from "@/components/dashboard/settle-dialog";
 import { AssigneeSelect } from "@/components/dashboard/assignee-select";
@@ -114,6 +115,7 @@ export default async function OrderDetailPage({
                 currentDeposit={order.depositAmount}
                 totalAmount={order.totalAmount}
                 orderTitle={order.title}
+                orderNumber={order.orderNumber}
               />
             )}
             {order.status === "Ready for Pickup" && (
@@ -210,12 +212,12 @@ export default async function OrderDetailPage({
                       href={
                         order.customer.contactNumber.includes("@")
                           ? `mailto:${order.customer.contactNumber}`
-                          : `tel:${order.customer.contactNumber.replace(/[^\d+]/g, "")}`
+                          : `tel:${dialable(order.customer.contactNumber)}`
                       }
                       className="mt-1 flex items-center gap-1.5 text-on-surface-variant hover:text-on-surface"
                     >
                       <Phone className="h-3.5 w-3.5" />
-                      {order.customer.contactNumber}
+                      {formatContact(order.customer.contactNumber)}
                     </a>
                   )}
                 </dd>
@@ -375,26 +377,6 @@ function StatusPipeline({ status }: { status: string }) {
         );
       })}
     </ol>
-  );
-}
-
-function Panel({
-  icon: Icon,
-  title,
-  children,
-}: {
-  icon: LucideIcon;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="bg-surface-container-low p-5">
-      <h2 className="mb-4 flex items-center gap-2 font-headline text-sm font-bold uppercase tracking-[0.04em]">
-        <Icon className="h-4 w-4 text-on-surface-variant" />
-        {title}
-      </h2>
-      {children}
-    </section>
   );
 }
 
