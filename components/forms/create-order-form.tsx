@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 
@@ -10,7 +10,7 @@ import { orderFormSchema, type OrderFormSchemaValues } from "@/lib/validators";
 import type { OrderFormValues } from "@/lib/validators";
 import { createOrder } from "@/app/actions/orders";
 import { createCustomer } from "@/app/actions/customers";
-import { PRODUCT_TYPES } from "@/db/schema";
+import { PAYMENT_METHODS, PRODUCT_TYPES } from "@/db/schema";
 
 import {
   Form,
@@ -74,6 +74,7 @@ export function CreateOrderForm({
       totalAmount: 0,
       depositAmount: 0,
       dueDate: "",
+      depositMethod: "Cash",
       items: [
         {
           productType: "Tarpaulin",
@@ -91,16 +92,18 @@ export function CreateOrderForm({
     name: "items",
   });
 
-  // Auto-calculate total from items
-  const watchedItems = form.watch("items");
+  // Auto-calculate total from items. useWatch + a numeric dependency: the
+  // array from form.watch() is mutated in place, so an effect keyed on it
+  // never re-ran and the total stayed at 0.
+  const watchedItems = useWatch({ control: form.control, name: "items" });
+  const itemsTotal = (watchedItems ?? []).reduce(
+    (sum, item) =>
+      sum + (Number(item?.quantity) || 0) * (Number(item?.unitPrice) || 0),
+    0,
+  );
   useEffect(() => {
-    const total = watchedItems.reduce(
-      (sum, item) =>
-        sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0),
-      0,
-    );
-    form.setValue("totalAmount", total);
-  }, [watchedItems, form]);
+    form.setValue("totalAmount", Math.round(itemsTotal * 100) / 100);
+  }, [itemsTotal, form]);
 
   async function onSubmit(values: OrderFormSchemaValues) {
     setSubmitting(true);
@@ -163,8 +166,8 @@ export function CreateOrderForm({
           toast.error(result.error);
         }
       } else {
-        toast.success("Order created successfully!");
-        router.push("/dashboard/orders");
+        toast.success(`Order #${result.data!.orderNumber} created`);
+        router.push(`/dashboard/orders/${result.data!.orderNumber}`);
       }
     } finally {
       setSubmitting(false);
@@ -500,6 +503,33 @@ export function CreateOrderForm({
                 )}
               />
             </div>
+
+            {(Number(form.watch("depositAmount")) || 0) > 0 && (
+              <FormField
+                control={form.control}
+                name="depositMethod"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Deposit paid via</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="w-full sm:w-1/2">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {PAYMENT_METHODS.map((m) => (
+                          <SelectItem key={m} value={m}>
+                            {m}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <Separator />
 

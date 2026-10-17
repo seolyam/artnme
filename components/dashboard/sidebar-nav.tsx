@@ -14,6 +14,8 @@ import {
   Menu,
   X,
   ExternalLink,
+  FileText,
+  Search,
 } from "lucide-react";
 import {
   Sheet,
@@ -24,12 +26,17 @@ import {
 } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { logout } from "@/app/actions/auth";
+import { OPEN_PALETTE_EVENT } from "@/components/dashboard/command-palette";
+import { initials } from "@/lib/order-status";
+
+export type SidebarUser = { fullName: string; role: string };
 
 const navItems = [
   { label: "Command center", href: "/dashboard", icon: LayoutDashboard },
   { label: "Orders board", href: "/dashboard/orders", icon: KanbanSquare, badge: true },
   { label: "Customers", href: "/dashboard/customers", icon: Users },
-  { label: "Trash", href: "/dashboard/orders/trash", icon: Trash2 },
+  { label: "Daily report", href: "/dashboard/reports", icon: FileText },
+  { label: "Trash", href: "/dashboard/orders/trash", icon: Trash2, adminOnly: true },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -44,16 +51,30 @@ function NavLinks({
   onNavigate,
   webQuotes,
   layoutGroup,
+  isAdmin,
 }: {
   onNavigate?: () => void;
   webQuotes: number;
   layoutGroup: string;
+  isAdmin: boolean;
 }) {
   const pathname = usePathname();
 
   return (
     <nav aria-label="Dashboard" className="flex-1 space-y-0.5 px-3 py-4">
-      {navItems.map((item) => {
+      <button
+        type="button"
+        onClick={() => {
+          onNavigate?.();
+          window.dispatchEvent(new Event(OPEN_PALETTE_EVENT));
+        }}
+        className="mb-3 flex min-h-10 w-full items-center gap-3 border border-outline-variant/50 px-3.5 text-sm text-on-surface-variant transition-colors hover:border-on-surface-variant hover:text-on-surface"
+      >
+        <Search className="h-4 w-4" />
+        Search
+        <kbd className="spec ml-auto text-[10px]">Ctrl K</kbd>
+      </button>
+      {navItems.filter((item) => !item.adminOnly || isAdmin).map((item) => {
         const active = isActive(pathname, item.href);
 
         return (
@@ -110,6 +131,26 @@ function SignOut() {
   );
 }
 
+function Account({ user, onNavigate }: { user: SidebarUser; onNavigate?: () => void }) {
+  const pathname = usePathname();
+  return (
+    <Link
+      href="/dashboard/account"
+      onClick={onNavigate}
+      aria-current={pathname === "/dashboard/account" ? "page" : undefined}
+      className="flex min-h-12 items-center gap-3 px-3.5 transition-colors hover:bg-surface-container-high"
+    >
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center bg-on-surface font-headline text-[11px] font-bold text-surface">
+        {initials(user.fullName)}
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-semibold">{user.fullName}</span>
+        <span className="spec block text-[10px] text-on-surface-variant">{user.role}</span>
+      </span>
+    </Link>
+  );
+}
+
 function Brand() {
   return (
     <div className="flex items-center gap-3 border-b border-outline-variant/30 px-5 py-5">
@@ -124,12 +165,13 @@ function Brand() {
   );
 }
 
-function DesktopSidebar({ webQuotes }: { webQuotes: number }) {
+function DesktopSidebar({ webQuotes, user }: { webQuotes: number; user: SidebarUser }) {
   return (
-    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-outline-variant/30 bg-surface-container-lowest md:flex">
+    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-outline-variant/30 bg-surface-container-lowest md:flex print:hidden">
       <Brand />
-      <NavLinks webQuotes={webQuotes} layoutGroup="desktop" />
+      <NavLinks webQuotes={webQuotes} layoutGroup="desktop" isAdmin={user.role === "admin"} />
       <div className="space-y-1 border-t border-outline-variant/30 px-3 py-4">
+        <Account user={user} />
         <Link
           href="/"
           className="flex min-h-11 items-center gap-3 px-3.5 text-sm text-on-surface-variant transition-colors hover:text-on-surface"
@@ -147,12 +189,12 @@ function DesktopSidebar({ webQuotes }: { webQuotes: number }) {
   );
 }
 
-function MobileHeader({ webQuotes }: { webQuotes: number }) {
+function MobileHeader({ webQuotes, user }: { webQuotes: number; user: SidebarUser }) {
   const [open, setOpen] = useState(false);
   const closeSheet = useCallback(() => setOpen(false), []);
 
   return (
-    <header className="sticky top-0 z-40 flex items-center justify-between border-b border-outline-variant/30 bg-surface-container-lowest px-4 py-2.5 md:hidden">
+    <header className="sticky top-0 z-40 flex items-center justify-between border-b border-outline-variant/30 bg-surface-container-lowest px-4 py-2.5 md:hidden print:hidden">
       <div className="flex items-center gap-2.5">
         <img src="/images/art-n-me-logo.jpg" alt="" className="h-8 w-8 object-cover" />
         <span className="font-headline text-base font-bold uppercase tracking-tight">
@@ -161,6 +203,14 @@ function MobileHeader({ webQuotes }: { webQuotes: number }) {
       </div>
 
       <div className="flex items-center gap-1">
+        <button
+          type="button"
+          aria-label="Search"
+          onClick={() => window.dispatchEvent(new Event(OPEN_PALETTE_EVENT))}
+          className="flex h-11 w-11 items-center justify-center"
+        >
+          <Search className="h-5 w-5" />
+        </button>
         <ThemeToggle />
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
@@ -183,8 +233,14 @@ function MobileHeader({ webQuotes }: { webQuotes: number }) {
               </SheetTitle>
             </SheetHeader>
             <div className="flex flex-1 flex-col">
-              <NavLinks onNavigate={closeSheet} webQuotes={webQuotes} layoutGroup="mobile" />
+              <NavLinks
+                onNavigate={closeSheet}
+                webQuotes={webQuotes}
+                layoutGroup="mobile"
+                isAdmin={user.role === "admin"}
+              />
               <div className="border-t border-outline-variant/30 px-3 py-4">
+                <Account user={user} onNavigate={closeSheet} />
                 <SignOut />
               </div>
             </div>
@@ -195,11 +251,11 @@ function MobileHeader({ webQuotes }: { webQuotes: number }) {
   );
 }
 
-export function SidebarNav({ webQuotes = 0 }: { webQuotes?: number }) {
+export function SidebarNav({ webQuotes = 0, user }: { webQuotes?: number; user: SidebarUser }) {
   return (
     <>
-      <DesktopSidebar webQuotes={webQuotes} />
-      <MobileHeader webQuotes={webQuotes} />
+      <DesktopSidebar webQuotes={webQuotes} user={user} />
+      <MobileHeader webQuotes={webQuotes} user={user} />
     </>
   );
 }

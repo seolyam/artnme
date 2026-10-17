@@ -8,6 +8,8 @@ import { db } from "@/db";
 import { customers, orderItems, orders } from "@/db/schema";
 import { uploadQuoteAttachment } from "@/lib/cloudinary";
 import { QUOTE_PRODUCTS, WEB_QUOTE_PREFIX, quoteRequestSchema } from "@/lib/validators";
+import { logOrderEvent } from "@/lib/order-events";
+import { parseShopDateTime } from "@/lib/time";
 
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = /^(image\/(png|jpe?g|webp|gif|svg\+xml)|application\/pdf)$/;
@@ -117,7 +119,7 @@ export async function submitQuote(
 
   const data = parsed.data;
   const product = QUOTE_PRODUCTS.find((p) => p.value === data.product)!;
-  const neededBy = data.neededBy ? new Date(data.neededBy) : null;
+  const neededBy = parseShopDateTime(data.neededBy);
 
   const description = [
     data.product === "Jersey" ? "Jersey (sublimation)" : null,
@@ -161,6 +163,12 @@ export async function submitQuote(
         productType: product.productType,
         description,
         quantity: data.quantity,
+      });
+
+      await logOrderEvent(tx, {
+        orderId: created.id,
+        type: "created",
+        message: `Quote request received from the website${existing ? " (returning customer)" : ""}`,
       });
 
       return created;

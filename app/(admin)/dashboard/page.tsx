@@ -1,8 +1,13 @@
 import {
+  getCollections,
   getOrderStats,
   getRecentOrders,
   getWebQuoteCount,
+  getWorkQueue,
 } from "@/app/actions/orders";
+import { getMe } from "@/app/actions/staff";
+import { ActionQueue } from "@/components/dashboard/action-queue";
+import { peso } from "@/lib/money";
 import {
   getRevenueOverTime,
   getTopCustomers,
@@ -18,6 +23,9 @@ import {
   TrendingUp,
   Crown,
   Plus,
+  ListChecks,
+  Wallet,
+  UserRound,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
@@ -28,13 +36,18 @@ import { isWebQuote, statusStyle } from "@/lib/order-status";
 import { cn } from "@/lib/utils";
 
 export default async function DashboardPage() {
-  const [stats, recentOrders, revenueData, topCustomers, webQuotes] = await Promise.all([
-    getOrderStats(),
-    getRecentOrders(7),
-    getRevenueOverTime(),
-    getTopCustomers(5),
-    getWebQuoteCount(),
-  ]);
+  const [stats, recentOrders, revenueData, topCustomers, webQuotes, queue, collections, me] =
+    await Promise.all([
+      getOrderStats(),
+      getRecentOrders(7),
+      getRevenueOverTime(),
+      getTopCustomers(5),
+      getWebQuoteCount(),
+      getWorkQueue(),
+      getCollections(),
+      getMe(),
+    ]);
+  const firstName = me.fullName.split(/\s+/)[0];
 
   return (
     <div className="max-w-6xl space-y-6">
@@ -53,6 +66,25 @@ export default async function DashboardPage() {
           <h1 className="font-headline text-4xl font-bold uppercase leading-none tracking-[-0.045em] md:text-5xl">
             Command center
           </h1>
+          <p className="mt-2 text-sm text-on-surface-variant">
+            Hi {firstName} —{" "}
+            {queue.mine > 0 ? (
+              <Link href="/dashboard/orders?who=me" className="font-semibold text-on-surface underline-offset-2 hover:underline">
+                {queue.mine} active job{queue.mine === 1 ? " is" : "s are"} on you
+              </Link>
+            ) : (
+              "nothing is assigned to you right now"
+            )}
+            {queue.unassigned > 0 && (
+              <>
+                {" · "}
+                <Link href="/dashboard/orders?who=none" className="underline-offset-2 hover:underline">
+                  {queue.unassigned} unassigned
+                </Link>
+              </>
+            )}
+            .
+          </p>
         </div>
         <Link
           href="/dashboard/orders/new"
@@ -117,6 +149,56 @@ export default async function DashboardPage() {
           highlight={stats.readyForPickup > 0}
         />
       </Stagger>
+
+      {/* ═══════════════════ ACTION QUEUE + DRAWER ═══════════════════ */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Reveal delay={0.06} className="lg:col-span-2">
+          <div className="mb-3 flex items-center gap-2">
+            <ListChecks className="h-4 w-4 text-on-surface-variant" />
+            <h2 className="font-headline text-sm font-bold uppercase tracking-[0.04em]">Needs attention</h2>
+          </div>
+          <ActionQueue queue={queue} />
+        </Reveal>
+
+        <Reveal delay={0.1} className="flex flex-col bg-surface-container-low p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Wallet className="h-4 w-4 text-on-surface-variant" />
+              <h2 className="font-headline text-sm font-bold uppercase tracking-[0.04em]">Today&apos;s drawer</h2>
+            </div>
+            <Link
+              href="/dashboard/reports"
+              className="spec text-[10px] text-on-surface-variant transition-colors hover:text-on-surface"
+            >
+              Report →
+            </Link>
+          </div>
+          <p className="font-headline text-4xl font-bold leading-none tracking-[-0.04em]">
+            {peso(collections.total)}
+          </p>
+          <p className="mt-1 text-xs text-on-surface-variant">
+            {collections.count} payment{collections.count === 1 ? "" : "s"} collected today
+          </p>
+          {collections.byMethod.length > 0 && (
+            <ul className="mt-4 space-y-1.5 border-t border-outline-variant/30 pt-3 text-sm">
+              {collections.byMethod.map((m) => (
+                <li key={m.method} className="flex justify-between">
+                  <span className="text-on-surface-variant">{m.method}</span>
+                  <span className="font-mono font-semibold tabular-nums">{peso(m.amount)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <Link
+            href="/dashboard/orders?who=me"
+            className="mt-auto flex items-center gap-2 border-t border-outline-variant/30 pt-3 text-sm text-on-surface-variant transition-colors hover:text-on-surface"
+          >
+            <UserRound className="h-4 w-4" />
+            My jobs
+            <span className="spec ml-auto bg-surface-container-high px-1.5 py-0.5 text-[10px]">{queue.mine}</span>
+          </Link>
+        </Reveal>
+      </div>
 
       {/* ═══════════════════ ANALYTICS ROW ═══════════════════ */}
       <div className="grid gap-6 lg:grid-cols-3">
@@ -241,7 +323,7 @@ export default async function DashboardPage() {
                         {order.dueDate && (
                           <span>
                             Due{" "}
-                            {new Date(order.dueDate).toLocaleDateString("en-PH", {
+                            {new Date(order.dueDate).toLocaleDateString("en-PH", { timeZone: "Asia/Manila",
                               month: "short",
                               day: "numeric",
                             })}

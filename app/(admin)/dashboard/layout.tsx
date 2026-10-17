@@ -2,6 +2,8 @@ import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 import { Toaster } from "@/components/ui/sonner";
 import { requireAuth } from "@/lib/auth";
 import { getWebQuoteCount } from "@/app/actions/orders";
+import { getMe } from "@/app/actions/staff";
+import { CommandPalette } from "@/components/dashboard/command-palette";
 
 export default async function DashboardLayout({
   children,
@@ -12,12 +14,13 @@ export default async function DashboardLayout({
   // users, but this ensures that even cached/route-handler paths still
   // enforce a session before any dashboard UI is rendered.
   await requireAuth();
-  const webQuotes = await getWebQuoteCount();
+  const [webQuotes, me] = await Promise.all([getWebQuoteCount(), getMe()]);
 
   return (
-    <div className="flex h-screen flex-col bg-background md:flex-row">
-      <SidebarNav webQuotes={webQuotes} />
-      <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10">{children}</main>
+    <div className="flex h-screen flex-col bg-background md:flex-row print:block print:h-auto">
+      <SidebarNav webQuotes={webQuotes} user={{ fullName: me.fullName, role: me.role }} />
+      <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 print:overflow-visible print:p-0">{children}</main>
+      <CommandPalette />
       <Toaster richColors position="bottom-right" />
     </div>
   );

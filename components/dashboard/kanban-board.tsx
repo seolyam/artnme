@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useMemo } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ORDER_STATUSES, PRODUCT_TYPES, type OrderStatus } from "@/db/schema";
 import { updateOrderStatus } from "@/app/actions/orders";
 import { OrderCard } from "@/components/dashboard/order-card";
@@ -16,6 +17,8 @@ import { Search, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { statusStyle } from "@/lib/order-status";
+import { balanceOf } from "@/lib/money";
+import { shopDayRange, shopToday } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
 interface OrderWithRelations {
@@ -27,13 +30,48 @@ interface OrderWithRelations {
   depositAmount: string;
   dueDate: Date | null;
   createdAt: Date;
+  assignedTo: string | null;
   customer: { id: string; name: string };
   items: { id: string; productType: string; quantity: number }[];
 }
 
-export function KanbanBoard({ orders }: { orders: OrderWithRelations[] }) {
-  const [search, setSearch] = useState("");
+type Who = "all" | "me" | "none";
+type Due = "all" | "overdue" | "today" | "week";
+
+const segBtn = "spec min-h-9 px-3 text-[10px] tracking-[0.08em] transition-colors";
+
+export function KanbanBoard({
+  orders,
+  staff,
+  meId,
+  archiveDays,
+}: {
+  orders: OrderWithRelations[];
+  staff: { id: string; fullName: string }[];
+  meId: string;
+  archiveDays: number;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const [search, setSearch] = useState(params.get("q") ?? "");
   const [productFilter, setProductFilter] = useState<string>("all");
+  const [who, setWho] = useState<Who>(() => {
+    const w = params.get("who");
+    return w === "me" || w === "none" ? w : "all";
+  });
+  const [due, setDue] = useState<Due>("all");
+  const staffNames = useMemo(() => new Map(staff.map((s) => [s.id, s.fullName])), [staff]);
+
+  // Mirror the "who" filter into the URL so "My jobs" links and reloads stick.
+  function changeWho(next: Who) {
+    setWho(next);
+    const sp = new URLSearchParams(params.toString());
+    if (next === "all") sp.delete("who");
+    else sp.set("who", next);
+    const qs = sp.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }
   // Local mirror used for optimistic status transitions.
   const [localOrders, setLocalOrders] = useState(orders);
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -46,8 +84,18 @@ export function KanbanBoard({ orders }: { orders: OrderWithRelations[] }) {
   }, [orders]);
 
   async function handleStatusChange(orderId: string, newStatus: OrderStatus) {
-    const previousStatus =
-      localOrders.find((o) => o.id === orderId)?.status ?? newStatus;
+    const target = localOrders.find((o) => o.id === orderId);
+    const previousStatus = target?.status ?? newStatus;
+    const owed = target ? balanceOf(target) : 0;
+    if (
+      newStatus === "Completed" &&
+      owed > 0.009 &&
+      !confirm(
+        `Order #${target!.orderNumber} still has ₱${owed.toLocaleString("en-PH", { minimumFractionDigits: 2 })} unpaid. Complete it anyway?\n\nTip: open the order and use “Collect & release”.`,
+      )
+    ) {
+      return;
+    }
 
     // Optimistic update — move the card immediately.
     setLocalOrders((prev) =>
@@ -82,18 +130,42 @@ export function KanbanBoard({ orders }: { orders: OrderWithRelations[] }) {
     });
   }
 
+  const now = new Date();
+  const { end: todayEnd } = shopDayRange(shopToday(now));
+  const weekEnd = new Date(todayEnd.getTime() + 6 * 86_400_000);
+  const q = search.trim().toLowerCase().replace(/^#/, "");
+
   const filteredOrders = localOrders.filter((order) => {
     const matchesSearch =
-      search === "" ||
-      order.title.toLowerCase().includes(search.toLowerCase()) ||
-      order.customer.name.toLowerCase().includes(search.toLowerCase());
+      q === "" ||
+      String(order.orderNumber).includes(q) ||
+      order.title.toLowerCase().includes(q) ||
+      order.customer.name.toLowerCase().includes(q);
 
     const matchesProduct =
       productFilter === "all" ||
       order.items.some((item) => item.productType === productFilter);
 
-    return matchesSearch && matchesProduct;
+    const matchesWho =
+      who === "all" ||
+      (who === "me" ? order.assignedTo === meId : !order.assignedTo);
+
+    const dueAt = order.dueDate ? new Date(order.dueDate) : null;
+    const open = order.status !== "Completed";
+    const matchesDue =
+      due === "all" ||
+      (open &&
+        !!dueAt &&
+        (due === "overdue"
+          ? dueAt < now
+          : due === "today"
+            ? dueAt < todayEnd
+            : dueAt < weekEnd));
+
+    return matchesSearch && matchesProduct && matchesWho && matchesDue;
   });
+
+  const filtersActive = q !== "" || productFilter !== "all" || who !== "all" || due !== "all";
 
   return (
     <div className="space-y-4">
@@ -102,7 +174,7 @@ export function KanbanBoard({ orders }: { orders: OrderWithRelations[] }) {
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search orders or customers..."
+            placeholder="Search #, title or customer…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -121,6 +193,68 @@ export function KanbanBoard({ orders }: { orders: OrderWithRelations[] }) {
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex gap-0.5 bg-surface-container-high p-0.5" role="group" aria-label="Assigned to">
+          {(
+            [
+              ["all", "Everyone"],
+              ["me", "My jobs"],
+              ["none", "Unassigned"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={who === value}
+              onClick={() => changeWho(value)}
+              className={cn(
+                segBtn,
+                who === value ? "bg-surface-container-lowest text-on-surface" : "text-on-surface-variant hover:text-on-surface",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-0.5 bg-surface-container-high p-0.5" role="group" aria-label="Due">
+          {(
+            [
+              ["all", "Any date"],
+              ["overdue", "Overdue"],
+              ["today", "Due today"],
+              ["week", "This week"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={due === value}
+              onClick={() => setDue(value)}
+              className={cn(
+                segBtn,
+                due === value ? "bg-surface-container-lowest text-on-surface" : "text-on-surface-variant hover:text-on-surface",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {filtersActive && (
+          <button
+            type="button"
+            onClick={() => {
+              setSearch("");
+              setProductFilter("all");
+              setDue("all");
+              changeWho("all");
+            }}
+            className="spec text-[10px] text-on-surface-variant underline-offset-2 hover:text-on-surface hover:underline"
+          >
+            Clear filters · {filteredOrders.length} shown
+          </button>
+        )}
       </div>
 
       {/* Board — cards share a layoutId, so a status change glides across columns */}
@@ -169,13 +303,23 @@ export function KanbanBoard({ orders }: { orders: OrderWithRelations[] }) {
                             <Loader2 className="h-4 w-4 animate-spin text-on-surface-variant" />
                           </div>
                         )}
-                        <OrderCard order={order} onStatusChange={handleStatusChange} />
+                        <OrderCard
+                          order={order}
+                          onStatusChange={handleStatusChange}
+                          assigneeName={order.assignedTo ? staffNames.get(order.assignedTo) ?? null : null}
+                          isMine={order.assignedTo === meId}
+                        />
                       </motion.div>
                     ))}
                   </AnimatePresence>
                   {statusOrders.length === 0 && (
                     <p className="spec border border-dashed border-outline-variant/50 px-2 py-8 text-center text-[10px] text-on-surface-variant">
                       No jobs here
+                    </p>
+                  )}
+                  {status === "Completed" && (
+                    <p className="mt-auto px-1 pt-2 text-[11px] text-on-surface-variant">
+                      Showing the last {archiveDays} days. Older jobs live on each customer&apos;s page.
                     </p>
                   )}
                 </div>
