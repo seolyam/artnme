@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Space_Grotesk, Manrope, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { MotionProvider } from "@/components/motion/motion-provider";
+import { AuthHashRedirect } from "@/components/auth-hash-redirect";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -57,6 +58,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <MotionProvider>{children}</MotionProvider>
+          <AuthHashRedirect />
         </ThemeProvider>
       </body>
     </html>

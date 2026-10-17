@@ -31,6 +31,11 @@ const getProfile = cache(async (userId: string) => {
 export async function requireAuth() {
   const user = await getSessionUser();
   if (!user) redirect("/login");
+  // Deactivated staff are also banned in Supabase Auth, but an access token
+  // stays valid until it expires; this closes that window. The route signs
+  // them out properly (a page can't clear cookies).
+  const profile = await getProfile(user.id);
+  if (profile?.deactivatedAt) redirect("/auth/signout?reason=deactivated");
   return user;
 }
 

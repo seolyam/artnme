@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getOrder } from "@/app/actions/orders";
 import { getCustomers } from "@/app/actions/customers";
+import { getPricePresets } from "@/app/actions/prices";
 import { EditOrderForm } from "@/components/forms/edit-order-form";
 import { PageHeader } from "@/components/dashboard/page-header";
 
@@ -10,7 +11,7 @@ export default async function EditOrderPage({
   params: Promise<{ orderNumber: string }>;
 }) {
   const { orderNumber } = await params;
-  const [order, customers] = await Promise.all([getOrder(orderNumber), getCustomers()]);
+  const [order, customers, presets] = await Promise.all([getOrder(orderNumber), getCustomers(), getPricePresets()]);
 
   if (!order) {
     notFound();
@@ -28,6 +29,7 @@ export default async function EditOrderPage({
       <EditOrderForm
         order={order}
         customers={customers.map((c) => ({ id: c.id, name: c.name, contactNumber: c.contactNumber }))}
+        presets={presets}
       />
     </div>
   );

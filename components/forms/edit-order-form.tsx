@@ -19,6 +19,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import type { CustomerOption } from "@/components/forms/customer-combobox";
 import { useCustomerPicker } from "@/components/forms/customer-picker";
+import { ItemPricingTools } from "@/components/forms/item-pricing-tools";
+import type { PricePresetView } from "@/app/actions/prices";
 import {
   BalanceLine,
   DueDateField,
@@ -55,10 +57,10 @@ interface OrderData {
 interface EditOrderFormProps {
   order: OrderData;
   customers: CustomerOption[];
-  renderItemExtras?: (index: number) => React.ReactNode;
+  presets?: PricePresetView[];
 }
 
-export function EditOrderForm({ order, customers, renderItemExtras }: EditOrderFormProps) {
+export function EditOrderForm({ order, customers, presets = [] }: EditOrderFormProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [correctingPaid, setCorrectingPaid] = useState(false);
@@ -125,7 +127,7 @@ export function EditOrderForm({ order, customers, renderItemExtras }: EditOrderF
 
         <FormSection title="Items">
           <div className="space-y-4">
-            <ItemsEditor renderExtras={renderItemExtras} />
+            <ItemsEditor renderExtras={(i) => <ItemPricingTools index={i} presets={presets} />} />
             <FormField
               control={form.control}
               name="title"

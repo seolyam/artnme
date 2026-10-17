@@ -6,6 +6,7 @@ import { eq, isNull, sql, and, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireAuth, requireAdmin } from "@/lib/auth";
 import { customerSchema, type CustomerFormValues } from "@/lib/validators";
+import { normalizeContact } from "@/lib/phone";
 import { z } from "zod/v4";
 
 export async function getCustomers() {
@@ -61,8 +62,8 @@ export async function createCustomer(data: CustomerFormValues) {
   const [customer] = await db
     .insert(customers)
     .values({
-      name: parsed.data.name,
-      contactNumber: parsed.data.contactNumber || null,
+      name: parsed.data.name.trim(),
+      contactNumber: normalizeContact(parsed.data.contactNumber) || null,
       fbMessengerLink: parsed.data.fbMessengerLink || null,
     })
     .returning();
@@ -90,8 +91,8 @@ export async function updateCustomer(
   await db
     .update(customers)
     .set({
-      name: parsed.data.name,
-      contactNumber: parsed.data.contactNumber || null,
+      name: parsed.data.name.trim(),
+      contactNumber: normalizeContact(parsed.data.contactNumber) || null,
       fbMessengerLink: parsed.data.fbMessengerLink || null,
     })
     .where(eq(customers.id, idParsed.data));

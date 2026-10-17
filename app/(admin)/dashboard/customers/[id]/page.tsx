@@ -25,6 +25,7 @@ import { balanceOf, peso, roundMoney, toNumber } from "@/lib/money";
 import { dialable, formatContact, isPhMobile } from "@/lib/phone";
 import { formatShopDate, formatShopTime, timeAgo } from "@/lib/time";
 import { cn } from "@/lib/utils";
+import { siteOrigin } from "@/lib/site-url";
 
 export default async function CustomerDetailPage({
   params,
@@ -32,7 +33,12 @@ export default async function CustomerDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [customer, notes, me] = await Promise.all([getCustomerById(id), getCustomerNotes(id), getMe()]);
+  const [customer, notes, me, origin] = await Promise.all([
+    getCustomerById(id),
+    getCustomerNotes(id),
+    getMe(),
+    siteOrigin(),
+  ]);
 
   if (!customer) {
     notFound();
@@ -64,6 +70,7 @@ export default async function CustomerDetailPage({
       dueLabel: o.dueDate
         ? `${formatShopDate(o.dueDate, { weekday: "short", month: "short", day: "numeric" })}, ${formatShopTime(o.dueDate)}`
         : null,
+      trackingUrl: `${origin}/track/${o.trackingToken}`,
     }));
 
   const action =

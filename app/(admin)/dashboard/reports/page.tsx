@@ -2,14 +2,12 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getCollections, getDayActivity } from "@/app/actions/orders";
 import { PrintButton } from "@/components/dashboard/print-button";
+import { ReportTabs } from "@/components/dashboard/report-tabs";
 import { peso, toNumber } from "@/lib/money";
-import { formatShopDate, formatShopTime, shopDayRange, shopToday } from "@/lib/time";
+import { addShopDays, formatShopDate, formatShopTime, shopDayRange, shopToday } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
-function shiftDay(day: string, by: number) {
-  const { start } = shopDayRange(day);
-  return shopToday(new Date(start.getTime() + by * 86_400_000 + 12 * 3_600_000));
-}
+const shiftDay = addShopDays;
 
 export default async function DailyReportPage({
   searchParams,
@@ -31,6 +29,7 @@ export default async function DailyReportPage({
 
   return (
     <div className="max-w-5xl space-y-6">
+      <ReportTabs current="daily" />
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="spec mb-2 text-[11px] text-on-surface-variant">Daily report</p>

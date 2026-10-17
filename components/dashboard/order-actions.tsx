@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Trash2, Pencil, Printer, ChevronRight, Loader2 } from "lucide-react";
+import { MoreHorizontal, Trash2, Pencil, Printer, ChevronRight, Loader2, Copy } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { TRASH_RETENTION_DAYS, nextStatus, statusStyle } from "@/lib/order-status";
@@ -27,15 +27,15 @@ export function OrderActions({
   currentStatus,
   balance = 0,
   isAdmin = false,
-  extraMenuItems,
+  orderAgainHref,
 }: {
   orderId: string;
   orderNumber: number;
   currentStatus: string;
   balance?: number;
   isAdmin?: boolean;
-  /** Extra entries for the ⋯ menu (e.g. "Duplicate order"). */
-  extraMenuItems?: React.ReactNode;
+  /** "Order again" starts a new order prefilled from this one. */
+  orderAgainHref?: string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -136,10 +136,15 @@ export function OrderActions({
               Move to {status}
             </DropdownMenuItem>
           ))}
-          {extraMenuItems && (
+          {orderAgainHref && (
             <>
               <DropdownMenuSeparator />
-              {extraMenuItems}
+              <DropdownMenuItem asChild className="min-h-9 rounded-none">
+                <Link href={orderAgainHref}>
+                  <Copy className="h-4 w-4" />
+                  Order again (copy items)
+                </Link>
+              </DropdownMenuItem>
             </>
           )}
           {isAdmin && (

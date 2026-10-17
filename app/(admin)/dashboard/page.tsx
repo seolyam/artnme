@@ -8,10 +8,8 @@ import {
 import { getMe } from "@/app/actions/staff";
 import { ActionQueue } from "@/components/dashboard/action-queue";
 import { peso } from "@/lib/money";
-import {
-  getRevenueOverTime,
-  getTopCustomers,
-} from "@/app/actions/analytics";
+import { getTopCustomers } from "@/app/actions/analytics";
+import { getDailyMoney } from "@/app/actions/reports";
 import Link from "next/link";
 import {
   ClipboardList,
@@ -41,7 +39,7 @@ export default async function DashboardPage() {
     await Promise.all([
       getOrderStats(),
       getRecentOrders(7),
-      getRevenueOverTime(),
+      getDailyMoney(),
       getTopCustomers(5),
       getWebQuoteCount(),
       getWorkQueue(),
@@ -135,11 +133,11 @@ export default async function DashboardPage() {
         />
         <StatCard
           title="Still to collect"
-          subtitle="Open jobs, unpaid part"
+          subtitle="All unpaid balances"
           value={stats.pendingRevenue}
           peso
           icon={Banknote}
-          href="/dashboard/customers"
+          href="/dashboard/reports/receivables"
         />
         <StatCard
           title="Ready for pickup"
@@ -206,8 +204,14 @@ export default async function DashboardPage() {
           <div className="mb-4 flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-on-surface-variant" />
             <h2 className="font-headline text-sm font-bold uppercase tracking-[0.04em]">
-              Revenue pulse
+              Money · last 30 days
             </h2>
+            <Link
+              href="/dashboard/reports/range"
+              className="spec ml-auto text-[10px] text-on-surface-variant transition-colors hover:text-on-surface"
+            >
+              Sales report →
+            </Link>
           </div>
           <RevenueChart data={revenueData} />
         </Reveal>

@@ -14,8 +14,10 @@ import {
   Menu,
   X,
   ExternalLink,
-  FileText,
+  BarChart3,
   Search,
+  Tags,
+  UserCog,
 } from "lucide-react";
 import {
   Sheet,
@@ -28,6 +30,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { logout } from "@/app/actions/auth";
 import { OPEN_PALETTE_EVENT } from "@/components/dashboard/command-palette";
 import { initials } from "@/lib/order-status";
+import { AlertsToggle } from "@/components/dashboard/live-updates";
 
 export type SidebarUser = { fullName: string; role: string };
 
@@ -35,7 +38,9 @@ const navItems = [
   { label: "Command center", href: "/dashboard", icon: LayoutDashboard },
   { label: "Orders board", href: "/dashboard/orders", icon: KanbanSquare, badge: true },
   { label: "Customers", href: "/dashboard/customers", icon: Users },
-  { label: "Daily report", href: "/dashboard/reports", icon: FileText },
+  { label: "Reports", href: "/dashboard/reports", icon: BarChart3 },
+  { label: "Price list", href: "/dashboard/prices", icon: Tags },
+  { label: "Staff", href: "/dashboard/staff", icon: UserCog, adminOnly: true },
   { label: "Trash", href: "/dashboard/orders/trash", icon: Trash2, adminOnly: true },
 ];
 
@@ -172,6 +177,7 @@ function DesktopSidebar({ webQuotes, user }: { webQuotes: number; user: SidebarU
       <NavLinks webQuotes={webQuotes} layoutGroup="desktop" isAdmin={user.role === "admin"} />
       <div className="space-y-1 border-t border-outline-variant/30 px-3 py-4">
         <Account user={user} />
+        <AlertsToggle />
         <Link
           href="/"
           className="flex min-h-11 items-center gap-3 px-3.5 text-sm text-on-surface-variant transition-colors hover:text-on-surface"
@@ -241,6 +247,7 @@ function MobileHeader({ webQuotes, user }: { webQuotes: number; user: SidebarUse
               />
               <div className="border-t border-outline-variant/30 px-3 py-4">
                 <Account user={user} onNavigate={closeSheet} />
+                <AlertsToggle />
                 <SignOut />
               </div>
             </div>

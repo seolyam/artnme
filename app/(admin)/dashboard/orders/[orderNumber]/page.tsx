@@ -1,12 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getOrder, getOrderActivity } from "@/app/actions/orders";
+import { getOrderFiles } from "@/app/actions/files";
 import { getMe, getStaff } from "@/app/actions/staff";
 import {
   AlertTriangle,
   ArrowLeft,
   CalendarClock,
+  ExternalLink,
   History,
+  Link2,
+  Paperclip,
+  RotateCcw,
   MessageSquareText,
   Package,
   Phone,
@@ -16,6 +21,10 @@ import {
 } from "lucide-react";
 import { OrderActions } from "@/components/dashboard/order-actions";
 import { Panel } from "@/components/dashboard/panel";
+import { PaymentLedger } from "@/components/dashboard/payment-ledger";
+import { OrderFiles } from "@/components/dashboard/order-files";
+import { CopyButton } from "@/components/dashboard/copy-button";
+import { siteOrigin } from "@/lib/site-url";
 import { dialable, formatContact } from "@/lib/phone";
 import { RecordDepositDialog } from "@/components/dashboard/record-deposit-dialog";
 import { SettleDialog } from "@/components/dashboard/settle-dialog";
@@ -39,11 +48,15 @@ export default async function OrderDetailPage({
     notFound();
   }
 
-  const [activity, staff, me] = await Promise.all([
+  const [activity, staff, me, files, origin] = await Promise.all([
     getOrderActivity(order.id),
     getStaff(),
     getMe(),
+    getOrderFiles(order.id),
+    siteOrigin(),
   ]);
+  const trackingUrl = `${origin}/track/${order.trackingToken}`;
+  const fileUrls = new Set(files.map((f) => f.url));
 
   const total = toNumber(order.totalAmount);
   const paid = toNumber(order.depositAmount);
@@ -121,7 +134,17 @@ export default async function OrderDetailPage({
             {order.status === "Ready for Pickup" && (
               <SettleDialog orderId={order.id} orderNumber={order.orderNumber} balance={balance} />
             )}
+            {done && (
+              <Link
+                href={`/dashboard/orders/new?from=${order.orderNumber}`}
+                className="inline-flex min-h-10 items-center gap-2 bg-on-surface px-4 text-sm font-semibold text-surface"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Order again
+              </Link>
+            )}
             <OrderActions
+              orderAgainHref={`/dashboard/orders/new?from=${order.orderNumber}`}
               orderId={order.id}
               orderNumber={order.orderNumber}
               currentStatus={order.status}
@@ -173,7 +196,7 @@ export default async function OrderDetailPage({
                           )}
                         </div>
                         {item.description && (
-                          <Description text={item.description} />
+                          <Description text={item.description} hideUrls={fileUrls} />
                         )}
                       </div>
                       <div className="shrink-0 text-right font-mono text-sm tabular-nums">
@@ -192,6 +215,9 @@ export default async function OrderDetailPage({
                 Items add up to {peso(itemsTotal)} but the order total is {peso(total)}.
               </p>
             )}
+          </Panel>
+          <Panel icon={Paperclip} title={`Files & proofs · ${files.length}`} className="mt-6">
+            <OrderFiles orderId={order.id} files={files} />
           </Panel>
         </div>
 
@@ -267,6 +293,30 @@ export default async function OrderDetailPage({
                   {formatShopDate(order.createdAt, { month: "long", day: "numeric", year: "numeric" })}
                 </dd>
               </div>
+              <div>
+                <dt className="spec mb-1.5 flex items-center gap-1.5 text-[10px] text-on-surface-variant">
+                  <Link2 className="h-3 w-3" />
+                  Customer tracking page
+                </dt>
+                <dd className="flex flex-wrap items-center gap-2">
+                  <CopyButton
+                    value={trackingUrl}
+                    label="Copy link"
+                    toastMessage="Tracking link copied. Send it to the customer."
+                    className="min-h-9 border border-outline-variant/60 px-3 text-xs font-semibold hover:border-on-surface-variant [&_svg]:h-3.5 [&_svg]:w-3.5"
+                  />
+                  <a
+                    href={trackingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-9 items-center gap-1.5 text-xs text-on-surface-variant hover:text-on-surface"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Preview
+                  </a>
+                </dd>
+                <p className="mt-1 text-xs text-on-surface-variant">Shows status, due date and balance only.</p>
+              </div>
             </dl>
           </Panel>
 
@@ -292,38 +342,7 @@ export default async function OrderDetailPage({
 
             <div className="mt-4 border-t border-outline-variant/30 pt-3">
               <p className="spec mb-2 text-[10px] text-on-surface-variant">Ledger</p>
-              {activity.payments.length === 0 ? (
-                <p className="text-xs text-on-surface-variant">No payments recorded yet.</p>
-              ) : (
-                <ul className="space-y-2.5">
-                  {activity.payments.map((p) => (
-                    <li key={p.id} className="flex items-start justify-between gap-3 text-xs">
-                      <div className="min-w-0">
-                        <p className="font-semibold">
-                          {p.method}
-                          {p.reference && (
-                            <span className="ml-1 font-mono font-normal text-on-surface-variant">#{p.reference}</span>
-                          )}
-                        </p>
-                        <p className="text-on-surface-variant">
-                          {formatShopDate(p.createdAt)} {formatShopTime(p.createdAt)}
-                          {p.receivedByName ? ` · ${p.receivedByName}` : ""}
-                        </p>
-                        {p.note && <p className="text-on-surface-variant/80">{p.note}</p>}
-                      </div>
-                      <span
-                        className={cn(
-                          "shrink-0 font-mono font-semibold tabular-nums",
-                          toNumber(p.amount) < 0 && "text-accent-ink",
-                        )}
-                      >
-                        {toNumber(p.amount) < 0 ? "−" : ""}
-                        {peso(Math.abs(toNumber(p.amount)))}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <PaymentLedger entries={activity.payments} isAdmin={me.role === "admin"} />
             </div>
           </Panel>
 
@@ -339,6 +358,7 @@ export default async function OrderDetailPage({
               total={total}
               balance={Math.max(0, balance)}
               dueLabel={dueLabel}
+              trackingUrl={trackingUrl}
             />
           </Panel>
         </div>
@@ -390,11 +410,13 @@ function Row({ label, value }: { label: string; value: string }) {
 }
 
 /** Web-quote descriptions embed "Attachment: <url>" lines — make them clickable. */
-function Description({ text }: { text: string }) {
+function Description({ text, hideUrls }: { text: string; hideUrls: Set<string> }) {
   return (
     <div className="space-y-0.5 text-sm text-on-surface-variant">
       {text.split("\n").map((line, i) => {
         const m = line.match(/^Attachment:\s*(https?:\/\/\S+)$/);
+        // Already shown in the Files panel.
+        if (m && hideUrls.has(m[1])) return null;
         if (m) {
           return (
             <p key={i}>

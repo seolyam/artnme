@@ -16,6 +16,8 @@ import { Input } from "@/components/ui/input";
 import { PaymentMethodPicker } from "@/components/dashboard/payment-method-picker";
 import type { CustomerOption } from "@/components/forms/customer-combobox";
 import { useCustomerPicker } from "@/components/forms/customer-picker";
+import { ItemPricingTools } from "@/components/forms/item-pricing-tools";
+import type { PricePresetView } from "@/app/actions/prices";
 import {
   BalanceLine,
   DueDateField,
@@ -43,7 +45,7 @@ interface CreateOrderFormProps {
   defaults?: CreateOrderDefaults;
   /** Shown above the form when prefilled, e.g. "Copied from #0012". */
   notice?: React.ReactNode;
-  renderItemExtras?: (index: number) => React.ReactNode;
+  presets?: PricePresetView[];
 }
 
 export function CreateOrderForm({
@@ -51,7 +53,7 @@ export function CreateOrderForm({
   preselectCustomerId,
   defaults,
   notice,
-  renderItemExtras,
+  presets = [],
 }: CreateOrderFormProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
@@ -119,7 +121,7 @@ export function CreateOrderForm({
 
         <FormSection step={2} title="What are we making?" hint="One row per product. Prices can be added later.">
           <div className="space-y-4">
-            <ItemsEditor renderExtras={renderItemExtras} />
+            <ItemsEditor renderExtras={(i) => <ItemPricingTools index={i} presets={presets} />} />
             <FormField
               control={form.control}
               name="title"

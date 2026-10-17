@@ -2,14 +2,15 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { customers, orderItems, orders } from "@/db/schema";
+import { customers, orderFiles, orderItems, orders } from "@/db/schema";
 import { uploadQuoteAttachment } from "@/lib/cloudinary";
 import { QUOTE_PRODUCTS, WEB_QUOTE_PREFIX, quoteRequestSchema } from "@/lib/validators";
 import { logOrderEvent } from "@/lib/order-events";
 import { parseShopDateTime } from "@/lib/time";
+import { normalizeContact } from "@/lib/phone";
+import { findCustomerByContact } from "@/lib/customer-match";
 
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = /^(image\/(png|jpe?g|webp|gif|svg\+xml)|application\/pdf)$/;
@@ -90,6 +91,7 @@ export async function submitQuote(
 
   const file = formData.get("attachment");
   let attachmentUrl: string | null = null;
+  let attachmentName: string | null = null;
   if (file instanceof File && file.size > 0) {
     if (file.size > MAX_FILE_BYTES) {
       return {
@@ -107,6 +109,7 @@ export async function submitQuote(
     }
     try {
       attachmentUrl = await uploadQuoteAttachment(file);
+      attachmentName = file.name || null;
     } catch (error) {
       console.error("Quote attachment upload failed", error);
       return {
@@ -126,7 +129,6 @@ export async function submitQuote(
     data.details,
     `Contact: ${data.contact}`,
     neededBy ? `Needed by: ${neededBy.toDateString()}` : null,
-    attachmentUrl ? `Attachment: ${attachmentUrl}` : null,
     data.source === "studio" ? "Source: 3D Studio mockup" : null,
   ]
     .filter(Boolean)
@@ -134,17 +136,16 @@ export async function submitQuote(
 
   try {
     const order = await db.transaction(async (tx) => {
-      // Reuse the customer record when the same contact asks again.
-      const existing = await tx.query.customers.findFirst({
-        where: eq(customers.contactNumber, data.contact),
-      });
+      // Reuse the customer record when the same contact asks again, however
+      // the number was typed this time (0917… vs +63917…).
+      const existing = await findCustomerByContact(tx, data.contact);
 
       const customer =
         existing ??
         (
           await tx
             .insert(customers)
-            .values({ name: data.name, contactNumber: data.contact })
+            .values({ name: data.name, contactNumber: normalizeContact(data.contact) })
             .returning()
         )[0];
 
@@ -164,6 +165,17 @@ export async function submitQuote(
         description,
         quantity: data.quantity,
       });
+
+      if (attachmentUrl) {
+        await tx.insert(orderFiles).values({
+          orderId: created.id,
+          kind: "attachment",
+          url: attachmentUrl,
+          fileName: attachmentName,
+          mimeType: file instanceof File ? file.type || null : null,
+          bytes: file instanceof File ? file.size : null,
+        });
+      }
 
       await logOrderEvent(tx, {
         orderId: created.id,
