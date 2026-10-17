@@ -1,15 +1,21 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Manrope } from "next/font/google";
+import { Space_Grotesk, Manrope, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { MotionProvider } from "@/components/motion/motion-provider";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
-  variable: "--font-headline",
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
 });
 
 const manrope = Manrope({
-  variable: "--font-body",
+  variable: "--font-manrope",
+  subsets: ["latin"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
 });
 
@@ -32,23 +38,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${spaceGrotesk.variable} ${manrope.variable} ${jetbrainsMono.variable}`}
+    >
       <head>
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
         />
       </head>
-      <body
-        className={`${spaceGrotesk.variable} ${manrope.variable} antialiased bg-background text-foreground min-h-screen flex flex-col overflow-x-hidden`}
-      >
+      <body className="antialiased bg-background text-foreground min-h-screen flex flex-col">
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
           enableSystem={false}
           disableTransitionOnChange
         >
-          {children}
+          <MotionProvider>{children}</MotionProvider>
         </ThemeProvider>
       </body>
     </html>
