@@ -31,6 +31,7 @@ import { logout } from "@/app/actions/auth";
 import { OPEN_PALETTE_EVENT } from "@/components/dashboard/command-palette";
 import { initials } from "@/lib/order-status";
 import { AlertsToggle } from "@/components/dashboard/live-updates";
+import { StaffGuideButton } from "@/components/dashboard/staff-guide";
 
 export type SidebarUser = { fullName: string; role: string };
 
@@ -179,6 +180,7 @@ function DesktopSidebar({ webQuotes, user }: { webQuotes: number; user: SidebarU
       <div className="space-y-1 border-t border-outline-variant/30 px-3 py-4">
         <Account user={user} />
         <AlertsToggle />
+        <StaffGuideButton />
         <Link
           href="/"
           className="flex min-h-11 items-center gap-3 px-3.5 text-sm text-on-surface-variant transition-colors hover:text-on-surface"
@@ -249,6 +251,7 @@ function MobileHeader({ webQuotes, user }: { webQuotes: number; user: SidebarUse
               <div className="border-t border-outline-variant/30 px-3 py-4">
                 <Account user={user} onNavigate={closeSheet} />
                 <AlertsToggle />
+                <StaffGuideButton onNavigate={closeSheet} />
                 <SignOut />
               </div>
             </div>
