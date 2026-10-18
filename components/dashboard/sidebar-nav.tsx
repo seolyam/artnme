@@ -40,7 +40,8 @@ const navItems = [
   { label: "Customers", href: "/dashboard/customers", icon: Users },
   { label: "Reports", href: "/dashboard/reports", icon: BarChart3 },
   { label: "Price list", href: "/dashboard/prices", icon: Tags },
-  { label: "Staff", href: "/dashboard/staff", icon: UserCog, adminOnly: true },
+  // Not prefetched: the page calls the Supabase admin API, so only load it on a real visit.
+  { label: "Staff", href: "/dashboard/staff", icon: UserCog, adminOnly: true, prefetch: false },
   { label: "Trash", href: "/dashboard/orders/trash", icon: Trash2, adminOnly: true },
 ];
 
@@ -86,7 +87,7 @@ function NavLinks({
           <Link
             key={item.href}
             href={item.href}
-            prefetch={true}
+            prefetch={"prefetch" in item ? item.prefetch : true}
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
             className={cn(
