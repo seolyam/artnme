@@ -55,3 +55,4 @@ screenshot_*.html
 
 # IDEs
 .idea/
+/scripts/demo-video/out/
