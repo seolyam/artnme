@@ -33,7 +33,12 @@ export async function login(
   });
 
   if (error) {
-    return { error: error.message, redirect: redirectTo ?? undefined };
+    const message = /banned/i.test(error.message)
+      ? "This account has been turned off. Ask the shop admin."
+      : /invalid login credentials/i.test(error.message)
+        ? "Wrong email or password."
+        : error.message;
+    return { error: message, redirect: redirectTo ?? undefined };
   }
 
   revalidatePath("/", "layout");

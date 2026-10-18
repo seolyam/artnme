@@ -1,41 +1,40 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { Plus, Trash2 } from "lucide-react";
 import { getOrders } from "@/app/actions/orders";
 import { getMe, getStaff } from "@/app/actions/staff";
 import { BOARD_ARCHIVE_DAYS } from "@/lib/order-status";
 import { KanbanBoard } from "@/components/dashboard/kanban-board";
-import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import { PageHeader, PrimaryLink } from "@/components/dashboard/page-header";
 
 export default async function OrdersPage() {
   const [orders, staff, me] = await Promise.all([getOrders(), getStaff(), getMe()]);
+  const active = orders.filter((o) => o.status !== "Completed").length;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col items-start gap-1 pb-4">
-          <h1 className="text-4xl font-bold tracking-tighter uppercase" style={{ fontFamily: "var(--font-headline)" }}>Orders</h1>
-          <p className="text-muted-foreground/80 font-medium tracking-wide">
-            TRACK AND MANAGE ALL PRINTING ORDERS
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {me.role === "admin" && (
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/dashboard/orders/trash" prefetch={true}>
-                <Trash2 className="mr-2 h-4 w-4" />
+      <PageHeader
+        eyebrow={`Board · ${active} active job${active === 1 ? "" : "s"}`}
+        title="Orders"
+        description="Every job from first quote to pickup. Press “Move to …” on a card when the work moves on."
+        actions={
+          <>
+            {me.role === "admin" && (
+              <Link
+                href="/dashboard/orders/trash"
+                className="inline-flex min-h-12 items-center gap-2 border border-outline-variant/60 px-4 text-sm font-semibold text-on-surface-variant transition-colors hover:border-on-surface-variant hover:text-on-surface"
+              >
+                <Trash2 className="h-4 w-4" />
                 Trash
               </Link>
-            </Button>
-          )}
-          <Button asChild className="rounded-none">
-            <Link href="/dashboard/orders/new">
-              <Plus className="mr-2 h-4 w-4" />
-              New Order
-            </Link>
-          </Button>
-        </div>
-      </div>
+            )}
+            <PrimaryLink href="/dashboard/orders/new">
+              <Plus className="h-4 w-4" />
+              New order
+            </PrimaryLink>
+          </>
+        }
+      />
 
       <Suspense>
         <KanbanBoard orders={orders} staff={staff} meId={me.id} archiveDays={BOARD_ARCHIVE_DAYS} />

@@ -188,35 +188,60 @@ export async function getShowcaseImages(maxResults = DEFAULT_MAX_RESULTS) {
 
 const QUOTE_FOLDER = "quotes";
 
-/**
- * Uploads a customer's quote attachment to Cloudinary and returns its secure
- * URL, or null when Cloudinary isn't configured. Throws on upload failure.
- */
-export async function uploadQuoteAttachment(file: File): Promise<string | null> {
+export type UploadedFile = { url: string; publicId: string; bytes: number; resourceType: string };
+
+/** Stream a file to Cloudinary. Returns null when Cloudinary isn't configured; throws on failure. */
+async function uploadToCloudinary(file: File, folder: string): Promise<UploadedFile | null> {
   if (!configureCloudinary()) {
     return null;
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
 
-  const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        folder: QUOTE_FOLDER,
-        resource_type: "auto",
-        use_filename: true,
-        unique_filename: true,
-      },
-      (error, uploaded) => {
-        if (error || !uploaded) {
-          reject(error ?? new Error("Upload failed"));
-          return;
-        }
-        resolve(uploaded as { secure_url: string });
-      },
-    );
-    stream.end(buffer);
-  });
+  const result = await new Promise<{ secure_url: string; public_id: string; bytes: number; resource_type: string }>(
+    (resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder,
+          resource_type: "auto",
+          use_filename: true,
+          unique_filename: true,
+        },
+        (error, uploaded) => {
+          if (error || !uploaded) {
+            reject(error ?? new Error("Upload failed"));
+            return;
+          }
+          resolve(uploaded as { secure_url: string; public_id: string; bytes: number; resource_type: string });
+        },
+      );
+      stream.end(buffer);
+    },
+  );
 
-  return result.secure_url;
+  return { url: result.secure_url, publicId: result.public_id, bytes: result.bytes, resourceType: result.resource_type };
+}
+
+/**
+ * Uploads a customer's quote attachment to Cloudinary and returns its secure
+ * URL, or null when Cloudinary isn't configured. Throws on upload failure.
+ */
+export async function uploadQuoteAttachment(file: File): Promise<string | null> {
+  return (await uploadToCloudinary(file, QUOTE_FOLDER))?.url ?? null;
+}
+
+/** Design proofs and files staff attach to an order, grouped per order number. */
+export async function uploadOrderAsset(file: File, orderNumber: number) {
+  return uploadToCloudinary(file, `orders/${orderNumber}`);
+}
+
+/** Remove an asset we uploaded. Failures are logged, not thrown: the DB row is what matters. */
+export async function deleteCloudinaryAsset(publicId: string, mimeType: string | null) {
+  if (!configureCloudinary()) return;
+  const resourceType = mimeType?.startsWith("image/") ? "image" : mimeType === "application/pdf" ? "image" : "raw";
+  try {
+    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType, invalidate: true });
+  } catch (error) {
+    console.error("Cloudinary delete failed", publicId, error);
+  }
 }

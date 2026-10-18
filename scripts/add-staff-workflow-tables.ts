@@ -51,6 +51,9 @@ async function run() {
             created_at timestamptz NOT NULL DEFAULT now()
           )
         `;
+        // New tables get RLS on with no policies: the app connects as the owner,
+        // and this keeps the public anon key out. Checked by db:check-rls.
+        await sql`ALTER TABLE payments ENABLE ROW LEVEL SECURITY`;
         await sql`CREATE INDEX IF NOT EXISTS payments_order_idx ON payments (order_id)`;
         await sql`CREATE INDEX IF NOT EXISTS payments_created_idx ON payments (created_at)`;
         console.log("  ensured payments");
@@ -69,6 +72,7 @@ async function run() {
             created_at timestamptz NOT NULL DEFAULT now()
           )
         `;
+        await sql`ALTER TABLE order_events ENABLE ROW LEVEL SECURITY`;
         await sql`CREATE INDEX IF NOT EXISTS order_events_order_idx ON order_events (order_id, created_at)`;
         console.log("  ensured order_events");
       },

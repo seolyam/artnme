@@ -6,7 +6,7 @@ import { WEB_QUOTE_PREFIX } from "@/lib/validators";
  */
 export const STATUS_STYLE: Record<
   string,
-  { short: string; dot: string; text: string; soft: string; border: string }
+  { short: string; dot: string; text: string; soft: string; border: string; rail: string }
 > = {
   Pending: {
     short: "Pending",
@@ -14,6 +14,7 @@ export const STATUS_STYLE: Record<
     text: "text-amber-700 dark:text-[#f2b33d]",
     soft: "bg-[#f2b33d]/12",
     border: "border-t-[#f2b33d]",
+    rail: "border-l-[#f2b33d]",
   },
   Designing: {
     short: "Designing",
@@ -21,6 +22,7 @@ export const STATUS_STYLE: Record<
     text: "text-blue-700 dark:text-[#6aa7ff]",
     soft: "bg-[#6aa7ff]/12",
     border: "border-t-[#6aa7ff]",
+    rail: "border-l-[#6aa7ff]",
   },
   Printing: {
     short: "Printing",
@@ -28,6 +30,7 @@ export const STATUS_STYLE: Record<
     text: "text-accent-ink",
     soft: "bg-brand/12",
     border: "border-t-brand",
+    rail: "border-l-brand",
   },
   "Ready for Pickup": {
     short: "Ready",
@@ -35,6 +38,7 @@ export const STATUS_STYLE: Record<
     text: "text-success",
     soft: "bg-success/12",
     border: "border-t-success",
+    rail: "border-l-success",
   },
   Completed: {
     short: "Done",
@@ -42,6 +46,7 @@ export const STATUS_STYLE: Record<
     text: "text-on-surface-variant",
     soft: "bg-muted/60",
     border: "border-t-on-surface-variant/50",
+    rail: "border-l-on-surface-variant/50",
   },
 };
 
@@ -81,3 +86,6 @@ export function initials(name: string | null | undefined) {
 
 /** Completed jobs stay on the board this long, then live on the customer page. */
 export const BOARD_ARCHIVE_DAYS = 14;
+
+/** Trashed orders are permanently deleted by the daily cron after this long. */
+export const TRASH_RETENTION_DAYS = 30;

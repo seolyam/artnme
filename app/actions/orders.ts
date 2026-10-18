@@ -10,7 +10,7 @@ import {
   customers,
   type OrderStatus,
 } from "@/db/schema";
-import { eq, isNull, sql, and, desc, like, inArray, gte, lt, asc } from "drizzle-orm";
+import { eq, isNull, isNotNull, sql, and, desc, like, inArray, gte, lt, asc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireAuth, requireAdmin, getSessionProfile } from "@/lib/auth";
 import {
@@ -26,7 +26,7 @@ import {
 import { logOrderEvent } from "@/lib/order-events";
 import { BOARD_ARCHIVE_DAYS } from "@/lib/order-status";
 import { peso, roundMoney, toNumber } from "@/lib/money";
-import { parseShopDateTime, shopDayRange, shopToday } from "@/lib/time";
+import { formatShopDate, parseShopDateTime, shopDayRange, shopToday } from "@/lib/time";
 import { z } from "zod/v4";
 
 /** A web quote nobody has touched for this long is flagged as stale. */
@@ -100,7 +100,9 @@ export async function getOrderStats() {
       dueToday: sql<number>`count(*) FILTER (WHERE ${orders.dueDate} >= ${todayStart.toISOString()}::timestamptz AND ${orders.dueDate} < ${todayEnd.toISOString()}::timestamptz AND ${orders.status} <> 'Completed')::int`,
       overdueOrders: sql<number>`count(*) FILTER (WHERE ${orders.dueDate} < ${now.toISOString()}::timestamptz AND ${orders.status} <> 'Completed')::int`,
       readyForPickup: sql<number>`count(*) FILTER (WHERE ${orders.status} = 'Ready for Pickup')::int`,
-      pendingRevenue: sql<number>`coalesce(sum(${orders.totalAmount} - ${orders.depositAmount}) FILTER (WHERE ${orders.status} <> 'Completed'), 0)`,
+      // Every unpaid balance, including jobs released without full payment;
+      // matches the receivables report.
+      pendingRevenue: sql<number>`coalesce(sum(greatest(${orders.totalAmount} - ${orders.depositAmount}, 0)), 0)`,
     })
     .from(orders)
     .where(isNull(orders.deletedAt));
@@ -626,20 +628,33 @@ export async function permanentlyDeleteOrder(orderId: string) {
     return { error: "Invalid order ID" };
   }
 
-  await db.delete(orders).where(eq(orders.id, parsed.data));
+  // Only orders already in the trash can be purged; live jobs go through
+  // deleteOrder first so there is always a chance to restore them.
+  const purged = await db
+    .delete(orders)
+    .where(and(eq(orders.id, parsed.data), isNotNull(orders.deletedAt)))
+    .returning({ id: orders.id });
+  if (purged.length === 0) return { error: "Order is not in the trash" };
 
   revalidatePath("/dashboard/orders/trash");
   return { success: true };
 }
 
-export async function getOrderActorProfile(userId: string | null) {
-  if (!userId) return null;
-  const parsed = z.string().uuid().safeParse(userId);
-  if (!parsed.success) return null;
-  const profile = await db.query.profiles.findFirst({
-    where: eq(profiles.id, parsed.data),
-  });
-  return profile;
+/** Permanently delete everything in the trash now instead of waiting for the daily purge. */
+export async function emptyTrash() {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "Unauthorized: Admin access required to empty the trash." };
+  }
+
+  const purged = await db
+    .delete(orders)
+    .where(isNotNull(orders.deletedAt))
+    .returning({ id: orders.id });
+
+  revalidatePath("/dashboard/orders/trash");
+  return { success: true, count: purged.length };
 }
 
 // ─── Payments ───────────────────────────────────────────────────────────────
@@ -798,6 +813,90 @@ export async function settleAndComplete(
   return { success: true as const, collected: result.collected };
 }
 
+const voidReasonSchema = z
+  .string()
+  .trim()
+  .min(3, "Say why this payment is being voided")
+  .max(200, "Keep the reason under 200 characters");
+
+/**
+ * Admin correction for a payment recorded by mistake. The original row stays;
+ * an opposite entry is added (so the ledger and daily totals still add up)
+ * and the order's paid total drops by the same amount.
+ */
+export async function voidPayment(paymentId: string, reason: string) {
+  let actorId: string;
+  try {
+    actorId = (await requireAdmin()).user.id;
+  } catch {
+    return { error: "Only an admin can void a payment." };
+  }
+  const idParsed = z.string().uuid().safeParse(paymentId);
+  if (!idParsed.success) return { error: "Invalid payment" };
+  const reasonParsed = voidReasonSchema.safeParse(reason);
+  if (!reasonParsed.success) return { error: reasonParsed.error.issues[0]?.message ?? "Invalid reason" };
+
+  try {
+    const result = await db.transaction(async (tx) => {
+      const [original] = await tx.select().from(payments).where(eq(payments.id, idParsed.data));
+      if (!original) return { error: "Payment not found" } as const;
+      if (original.voidsPaymentId) return { error: "This entry is already a reversal." } as const;
+
+      const [order] = await tx
+        .select({ deposit: orders.depositAmount, total: orders.totalAmount, orderNumber: orders.orderNumber })
+        .from(orders)
+        .where(and(eq(orders.id, original.orderId), isNull(orders.deletedAt)))
+        .for("update");
+      if (!order) return { error: "Order not found" } as const;
+
+      const [already] = await tx
+        .select({ id: payments.id })
+        .from(payments)
+        .where(eq(payments.voidsPaymentId, original.id));
+      if (already) return { error: "This payment was already voided." } as const;
+
+      const amount = toNumber(original.amount);
+      const newDeposit = roundMoney(toNumber(order.deposit) - amount);
+      if (newDeposit < -0.009 || newDeposit > toNumber(order.total) + 0.009) {
+        return { error: "Voiding this would make the amount paid invalid. Check the other entries first." } as const;
+      }
+
+      await tx.insert(payments).values({
+        orderId: original.orderId,
+        amount: (-amount).toFixed(2),
+        method: original.method,
+        reference: original.reference,
+        note: `Voided: ${reasonParsed.data}`,
+        receivedBy: actorId,
+        voidsPaymentId: original.id,
+      });
+      await tx
+        .update(orders)
+        .set({ depositAmount: newDeposit.toFixed(2), updatedBy: actorId, updatedAt: new Date() })
+        .where(eq(orders.id, original.orderId));
+      await logOrderEvent(tx, {
+        orderId: original.orderId,
+        type: "payment",
+        message: `Voided ${peso(Math.abs(amount))} ${original.method} payment from ${formatShopDate(original.createdAt)} · ${reasonParsed.data}`,
+        actorId,
+      });
+
+      return { orderNumber: order.orderNumber } as const;
+    });
+
+    if ("error" in result) return { error: result.error };
+    revalidateOrder(result.orderNumber);
+    revalidatePath("/dashboard/customers");
+    return { success: true };
+  } catch (e) {
+    // The unique index on voids_payment_id catches two admins voiding at once.
+    if (e && typeof e === "object" && "code" in e && e.code === "23505") {
+      return { error: "This payment was already voided." };
+    }
+    throw e;
+  }
+}
+
 // ─── Assignment & notes ─────────────────────────────────────────────────────
 
 export async function assignOrder(orderId: string, assigneeId: string | null) {
@@ -813,6 +912,7 @@ export async function assignOrder(orderId: string, assigneeId: string | null) {
       where: eq(profiles.id, assigneeParsed.data),
     });
     if (!profile) return { error: "Staff member not found" };
+    if (profile.deactivatedAt) return { error: `${profile.fullName}'s account is deactivated` };
     assigneeName = profile.fullName;
   }
 
@@ -890,6 +990,7 @@ export async function getOrderActivity(orderId: string) {
         note: payments.note,
         createdAt: payments.createdAt,
         receivedByName: profiles.fullName,
+        voidsPaymentId: payments.voidsPaymentId,
       })
       .from(payments)
       .leftJoin(profiles, eq(profiles.id, payments.receivedBy))
@@ -996,4 +1097,27 @@ export async function getDayActivity(day: string = shopToday()) {
   ]);
 
   return { created, completed };
+}
+
+// ─── Live updates ───────────────────────────────────────────────────────────
+
+/**
+ * A cheap "has anything changed?" probe the portal polls every 30 seconds.
+ * Every change to an order writes an order_events row, so the newest event
+ * time works as a version number for the whole board.
+ */
+export async function getLiveStatus() {
+  await requireAuth();
+  const [row] = await db
+    .select({
+      lastEvent: sql<string | null>`(SELECT max(${orderEvents.createdAt})::text FROM ${orderEvents})`,
+      latestWebQuote: sql<string | null>`(SELECT max(${orders.createdAt})::text FROM ${orders} WHERE ${orders.deletedAt} IS NULL AND ${orders.title} LIKE ${`${WEB_QUOTE_PREFIX}%`})`,
+      webQuotes: sql<number>`(SELECT count(*)::int FROM ${orders} WHERE ${orders.deletedAt} IS NULL AND ${orders.status} = 'Pending' AND ${orders.title} LIKE ${`${WEB_QUOTE_PREFIX}%`})`,
+    })
+    .from(sql`(SELECT 1) AS one`);
+  return {
+    lastEvent: row?.lastEvent ?? null,
+    latestWebQuote: row?.latestWebQuote ?? null,
+    webQuotes: Number(row?.webQuotes) || 0,
+  };
 }

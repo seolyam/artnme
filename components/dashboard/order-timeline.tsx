@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowRightLeft,
   Banknote,
+  Paperclip,
   Loader2,
   PenLine,
   Plus,
@@ -36,6 +37,7 @@ const ICONS: Record<string, LucideIcon> = {
   assigned: UserRound,
   deleted: Trash2,
   restored: RotateCcw,
+  file: Paperclip,
 };
 
 export function OrderTimeline({

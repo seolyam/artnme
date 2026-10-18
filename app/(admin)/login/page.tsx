@@ -16,9 +16,11 @@ const fieldClass =
 export default function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ redirect?: string }>;
+  searchParams: Promise<{ redirect?: string; notice?: string }>;
 }) {
   const sp = use(searchParams);
+  const notice =
+    sp.notice === "deactivated" ? "Your account has been turned off. Ask the shop admin if this is a mistake." : null;
   const redirectTo =
     typeof sp.redirect === "string" && sp.redirect.startsWith("/dashboard")
       ? sp.redirect
@@ -74,6 +76,12 @@ export default function LoginPage({
             className="mt-12 flex flex-col gap-7"
           >
             {redirectTo && <input type="hidden" name="redirect" value={redirectTo} />}
+
+            {notice && !state?.error && (
+              <p role="status" className="border border-outline-variant bg-surface-container-low px-4 py-3.5 text-sm">
+                {notice}
+              </p>
+            )}
 
             <AnimatePresence>
               {state?.error && (

@@ -23,7 +23,7 @@ export function AssigneeSelect({
 }: {
   orderId: string;
   assignedTo: string | null;
-  staff: { id: string; fullName: string }[];
+  staff: { id: string; fullName: string; deactivatedAt?: Date | null }[];
   meId: string;
 }) {
   const router = useRouter();
@@ -50,12 +50,17 @@ export function AssigneeSelect({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={NOBODY}>Unassigned</SelectItem>
-          {staff.map((s) => (
-            <SelectItem key={s.id} value={s.id}>
-              {s.fullName}
-              {s.id === meId ? " (you)" : ""}
-            </SelectItem>
-          ))}
+          {staff
+            // Deactivated staff can't take new jobs, but a job they still
+            // hold keeps showing their name until someone reassigns it.
+            .filter((s) => !s.deactivatedAt || s.id === assignedTo)
+            .map((s) => (
+              <SelectItem key={s.id} value={s.id} disabled={!!s.deactivatedAt}>
+                {s.fullName}
+                {s.id === meId ? " (you)" : ""}
+                {s.deactivatedAt ? " (deactivated)" : ""}
+              </SelectItem>
+            ))}
         </SelectContent>
       </Select>
       {pending && <Loader2 className="h-4 w-4 animate-spin text-on-surface-variant" />}

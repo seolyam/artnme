@@ -6,6 +6,7 @@ import { Marquee } from "@/components/motion/marquee";
 import { LineReveal } from "@/components/motion/line-reveal";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { ArrowRight } from "@/components/motion/icons";
+import { StudioGuideButton } from "@/components/customizer/StudioGuide";
 import { getShowcaseImages } from "@/lib/cloudinary";
 import { SITE } from "@/lib/site";
 
@@ -277,13 +278,16 @@ export default async function Home() {
               Pick a blank, drop in your logo, add text and spin it 360°. Download a
               four-angle mockup, then send it straight to a quote.
             </p>
-            <Link
-              href="/customizer"
-              className="ink-fill inline-flex min-h-15 items-center gap-3.5 bg-brand px-8 font-headline text-[15px] font-bold uppercase tracking-[0.14em] text-white"
-            >
-              Open the 3D Studio
-              <ArrowRight className="ink-arrow" />
-            </Link>
+            <div className="flex flex-wrap gap-3.5">
+              <Link
+                href="/customizer"
+                className="ink-fill inline-flex min-h-15 items-center gap-3.5 bg-brand px-8 font-headline text-[15px] font-bold uppercase tracking-[0.14em] text-white"
+              >
+                Open the 3D Studio
+                <ArrowRight className="ink-arrow" />
+              </Link>
+              <StudioGuideButton />
+            </div>
           </Reveal>
         </div>
       </section>

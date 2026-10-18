@@ -8,10 +8,8 @@ import {
 import { getMe } from "@/app/actions/staff";
 import { ActionQueue } from "@/components/dashboard/action-queue";
 import { peso } from "@/lib/money";
-import {
-  getRevenueOverTime,
-  getTopCustomers,
-} from "@/app/actions/analytics";
+import { getTopCustomers } from "@/app/actions/analytics";
+import { getDailyMoney } from "@/app/actions/reports";
 import Link from "next/link";
 import {
   ClipboardList,
@@ -33,6 +31,7 @@ import { TopCustomers } from "@/components/dashboard/top-customers";
 import { CountUp } from "@/components/motion/count-up";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { isWebQuote, statusStyle } from "@/lib/order-status";
+import { formatShopDate } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
 export default async function DashboardPage() {
@@ -40,7 +39,7 @@ export default async function DashboardPage() {
     await Promise.all([
       getOrderStats(),
       getRecentOrders(7),
-      getRevenueOverTime(),
+      getDailyMoney(),
       getTopCustomers(5),
       getWebQuoteCount(),
       getWorkQueue(),
@@ -56,12 +55,7 @@ export default async function DashboardPage() {
         <div>
           <p className="spec mb-2 text-[11px] text-on-surface-variant">
             Overview ·{" "}
-            {new Date().toLocaleDateString("en-PH", {
-              weekday: "long",
-              month: "long",
-              day: "numeric",
-              timeZone: "Asia/Manila",
-            })}
+            {formatShopDate(new Date(), { weekday: "long", month: "long", day: "numeric" })}
           </p>
           <h1 className="font-headline text-4xl font-bold uppercase leading-none tracking-[-0.045em] md:text-5xl">
             Command center
@@ -122,31 +116,35 @@ export default async function DashboardPage() {
         stagger={0.06}
         className="grid gap-0.5 border-2 border-surface-container-high bg-surface-container-high sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
       >
-        <StatCard title="Active runs" value={stats.activeOrders} icon={ClipboardList} />
+        <StatCard title="Active jobs" value={stats.activeOrders} icon={ClipboardList} href="/dashboard/orders" />
         <StatCard
           title="Due today"
           value={stats.dueToday}
           icon={CalendarClock}
           highlight={stats.dueToday > 0}
+          href="/dashboard/orders?due=today"
         />
         <StatCard
           title="Overdue"
           value={stats.overdueOrders}
           icon={AlertTriangle}
           variant={stats.overdueOrders > 0 ? "destructive" : "default"}
+          href="/dashboard/orders?due=overdue"
         />
         <StatCard
-          title="Balance due"
-          subtitle="Total − deposits"
+          title="Still to collect"
+          subtitle="All unpaid balances"
           value={stats.pendingRevenue}
           peso
           icon={Banknote}
+          href="/dashboard/reports/receivables"
         />
         <StatCard
-          title="Ready to go"
+          title="Ready for pickup"
           value={stats.readyForPickup}
           icon={PackageCheck}
           highlight={stats.readyForPickup > 0}
+          href="/dashboard/orders"
         />
       </Stagger>
 
@@ -206,8 +204,14 @@ export default async function DashboardPage() {
           <div className="mb-4 flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-on-surface-variant" />
             <h2 className="font-headline text-sm font-bold uppercase tracking-[0.04em]">
-              Revenue pulse
+              Money · last 30 days
             </h2>
+            <Link
+              href="/dashboard/reports/range"
+              className="spec ml-auto text-[10px] text-on-surface-variant transition-colors hover:text-on-surface"
+            >
+              Sales report →
+            </Link>
           </div>
           <RevenueChart data={revenueData} />
         </Reveal>
@@ -323,10 +327,7 @@ export default async function DashboardPage() {
                         {order.dueDate && (
                           <span>
                             Due{" "}
-                            {new Date(order.dueDate).toLocaleDateString("en-PH", { timeZone: "Asia/Manila",
-                              month: "short",
-                              day: "numeric",
-                            })}
+                            {formatShopDate(order.dueDate)}
                           </span>
                         )}
                         <span>
@@ -337,11 +338,11 @@ export default async function DashboardPage() {
 
                     <div className="ml-6 shrink-0 text-right">
                       <div className="font-mono text-sm font-semibold tabular-nums">
-                        ₱{parseFloat(order.totalAmount).toLocaleString()}
+                        {parseFloat(order.totalAmount) > 0 ? peso(order.totalAmount, false) : "To quote"}
                       </div>
-                      {balance > 0 && (
+                      {balance > 0.009 && (
                         <div className="font-mono text-xs tabular-nums text-accent-ink">
-                          Bal ₱{balance.toLocaleString()}
+                          {peso(balance, false)} due
                         </div>
                       )}
                     </div>
@@ -369,6 +370,7 @@ function StatCard({
   icon: Icon,
   highlight = false,
   variant = "default",
+  href,
 }: {
   title: string;
   subtitle?: string;
@@ -377,11 +379,17 @@ function StatCard({
   icon: LucideIcon;
   highlight?: boolean;
   variant?: "default" | "destructive";
+  href?: string;
 }) {
   const isDestructive = variant === "destructive";
 
   return (
     <StaggerItem className="relative flex flex-col gap-4 bg-surface-container-low p-5 transition-colors hover:bg-surface-container">
+      {href && (
+        <Link href={href} className="absolute inset-0 z-10" aria-label={`${title}: ${value}`}>
+          <span className="sr-only">{title}</span>
+        </Link>
+      )}
       {isDestructive && <span className="absolute left-0 right-0 top-0 h-[3px] bg-brand" />}
 
       <div className="flex items-start justify-between">

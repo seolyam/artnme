@@ -11,6 +11,7 @@ import { FileDropZone } from "@/components/customizer/FileDropZone";
 import { LayerList } from "@/components/customizer/LayerList";
 import { LayerEditor } from "@/components/customizer/LayerEditor";
 import { TextAdder } from "@/components/customizer/TextAdder";
+import { StudioGuidePrompt } from "@/components/customizer/StudioGuide";
 import { PRINT_COLORS } from "@/components/customizer/SwatchChip";
 import { exportMultiViewPng } from "@/lib/customizer/export";
 import { Toaster } from "@/components/ui/sonner";
@@ -267,6 +268,7 @@ function ConfigPanel() {
 }
 
 function CustomizerStage() {
+  const { assets } = useCustomizer();
   const [viewSide, setViewSide] = useState<ViewSide>("front");
 
   return (
@@ -300,6 +302,8 @@ function CustomizerStage() {
       <p className="spec pointer-events-none absolute bottom-4 left-1/2 z-20 w-full -translate-x-1/2 px-4 text-center text-[10px] text-on-surface-variant">
         Drag to spin 360° · Scroll to zoom · Click a print to edit it
       </p>
+
+      <StudioGuidePrompt hasDesign={assets.length > 0} />
     </div>
   );
 }
@@ -379,10 +383,12 @@ function CustomizerShell() {
         </div>
       ) : (
         <main className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-background lg:flex-row">
-          <header className="absolute left-0 top-0 z-30 flex w-full items-center justify-between px-4 py-4 lg:w-[62%] lg:px-6">
+          {/* Overlaps the stage's Front/Back toggle on desktop, so only the
+              link itself takes clicks. */}
+          <header className="pointer-events-none absolute left-0 top-0 z-30 flex w-full items-center justify-between px-4 py-4 lg:w-[62%] lg:px-6">
             <Link
               href="/"
-              className="flex min-h-11 items-center gap-3 text-on-surface transition-colors hover:text-brand"
+              className="pointer-events-auto flex min-h-11 items-center gap-3 text-on-surface transition-colors hover:text-brand"
             >
               <span className="material-symbols-outlined text-xl">arrow_back</span>
               <img src="/images/art-n-me-logo.jpg" alt="" className="h-8 w-8 object-cover" />

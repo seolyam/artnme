@@ -42,6 +42,8 @@ export const profiles = pgTable("profiles", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
+  /** Set when an admin deactivates the account; they keep their history. */
+  deactivatedAt: timestamp("deactivated_at", { withTimezone: true }),
 });
 
 export const customers = pgTable("customers", {
@@ -77,6 +79,10 @@ export const orders = pgTable("orders", {
   createdBy: uuid("created_by"),
   updatedBy: uuid("updated_by"),
   assignedTo: uuid("assigned_to"),
+  /** Unguessable id for the customer's public /track page. */
+  trackingToken: text("tracking_token")
+    .notNull()
+    .default(sql`replace(gen_random_uuid()::text, '-', '')`),
 });
 
 /**
@@ -99,11 +105,63 @@ export const payments = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    /**
+     * Set on the reversal entry written when a payment is voided. The
+     * original row is never edited or deleted; a unique index allows one
+     * reversal per payment.
+     */
+    voidsPaymentId: uuid("voids_payment_id"),
   },
   (t) => [
     index("payments_order_idx").on(t.orderId),
     index("payments_created_idx").on(t.createdAt),
   ],
+);
+
+/** Customer artwork and design proofs attached to an order. */
+export const orderFiles = pgTable(
+  "order_files",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    /** "attachment" (from the customer) or "proof" (made by the shop). */
+    kind: text("kind").notNull().default("attachment"),
+    url: text("url").notNull(),
+    publicId: text("public_id"),
+    fileName: text("file_name"),
+    mimeType: text("mime_type"),
+    bytes: integer("bytes"),
+    uploadedBy: uuid("uploaded_by"),
+    /** When the customer approved this proof (recorded by staff). */
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    approvedBy: uuid("approved_by"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("order_files_order_idx").on(t.orderId, t.createdAt)],
+);
+
+/** Price list entries staff can drop into an order item. */
+export const pricePresets = pgTable(
+  "price_presets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    productType: productTypeEnum("product_type").notNull(),
+    label: text("label").notNull(),
+    /** "piece" prices are per item; "sqft" prices multiply by the size. */
+    unit: text("unit").notNull().default("piece"),
+    price: numeric("price", { precision: 10, scale: 2 }).notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    createdBy: uuid("created_by"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("price_presets_product_idx").on(t.productType, t.sortOrder)],
 );
 
 /** Append-only activity log shown as the order timeline. */
@@ -152,6 +210,14 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
   items: many(orderItems),
   payments: many(payments),
   events: many(orderEvents),
+  files: many(orderFiles),
+}));
+
+export const orderFilesRelations = relations(orderFiles, ({ one }) => ({
+  order: one(orders, {
+    fields: [orderFiles.orderId],
+    references: [orders.id],
+  }),
 }));
 
 export const paymentsRelations = relations(payments, ({ one }) => ({
@@ -210,6 +276,11 @@ export type ProductType = (typeof PRODUCT_TYPES)[number];
 
 export type Payment = typeof payments.$inferSelect;
 export type OrderEvent = typeof orderEvents.$inferSelect;
+export type OrderFile = typeof orderFiles.$inferSelect;
+export type PricePreset = typeof pricePresets.$inferSelect;
+
+export const PRICE_UNITS = ["piece", "sqft"] as const;
+export type PriceUnit = (typeof PRICE_UNITS)[number];
 
 /** "Adjustment" is reserved for corrections made through the order edit form. */
 export const PAYMENT_METHODS = ["Cash", "GCash", "Bank transfer", "Maya", "Other"] as const;
@@ -224,5 +295,6 @@ export const ORDER_EVENT_TYPES = [
   "assigned",
   "deleted",
   "restored",
+  "file",
 ] as const;
 export type OrderEventType = (typeof ORDER_EVENT_TYPES)[number];

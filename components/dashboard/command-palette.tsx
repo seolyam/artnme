@@ -38,6 +38,9 @@ const QUICK: Item[] = [
   { key: "q-home", group: "Go to", label: "Command center", icon: LayoutDashboard, href: "/dashboard" },
   { key: "q-cust", group: "Go to", label: "Customers", icon: Users, href: "/dashboard/customers" },
   { key: "q-report", group: "Go to", label: "Daily report", icon: FileText, href: "/dashboard/reports" },
+  { key: "q-range", group: "Go to", label: "Sales report (date range)", icon: FileText, href: "/dashboard/reports/range" },
+  { key: "q-owed", group: "Go to", label: "Unpaid balances", icon: FileText, href: "/dashboard/reports/receivables" },
+  { key: "q-prices", group: "Go to", label: "Price list", icon: FileText, href: "/dashboard/prices" },
 ];
 
 export function CommandPalette() {

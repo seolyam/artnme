@@ -1,57 +1,41 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { getTrashedOrders } from "@/app/actions/orders";
+import { getMe } from "@/app/actions/staff";
 import { TrashTable } from "@/components/dashboard/trash-table";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { TRASH_RETENTION_DAYS } from "@/lib/order-status";
 
 export default async function TrashPage() {
-  let orders: Awaited<ReturnType<typeof getTrashedOrders>> = [];
-  let authError: string | null = null;
+  const me = await getMe();
+  // The sidebar hides Trash from staff; anyone landing here by URL goes back.
+  if (me.role !== "admin") redirect("/dashboard/orders");
 
-  try {
-    orders = await getTrashedOrders();
-  } catch (e) {
-    authError =
-      e instanceof Error ? e.message : "Unable to load trash. Admin access required.";
-  }
+  const orders = await getTrashedOrders();
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" asChild className="h-7 w-7 p-0">
-            <Link href="/dashboard/orders">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <div>
-            <h1
-              className="text-3xl font-bold tracking-tighter uppercase leading-none flex items-center gap-2"
-              style={{ fontFamily: "var(--font-headline)" }}
-            >
-              <Trash2 className="h-6 w-6" />
-              Trash
-            </h1>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider mt-1">
-              Deleted orders · Admin only · Restore or permanently remove
-            </p>
-          </div>
+    <div className="max-w-5xl space-y-6">
+      <header className="space-y-4">
+        <Link
+          href="/dashboard/orders"
+          className="spec inline-flex items-center gap-1.5 text-[11px] text-on-surface-variant hover:text-on-surface"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Orders board
+        </Link>
+        <div>
+          <p className="spec mb-2 text-[11px] text-on-surface-variant">Admin only</p>
+          <h1 className="font-headline text-4xl font-bold uppercase leading-none tracking-[-0.045em] md:text-5xl">
+            Trash
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm text-on-surface-variant">
+            Deleted orders stay here for {TRASH_RETENTION_DAYS} days so you can restore them. After that they are
+            removed for good automatically.
+          </p>
         </div>
-        <Button asChild variant="outline">
-          <Link href="/dashboard/orders">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Orders
-          </Link>
-        </Button>
-      </div>
+      </header>
 
-      {authError ? (
-        <div className="bg-destructive/10 border-l-4 border-destructive p-4 text-sm text-destructive">
-          {authError}
-        </div>
-      ) : (
-        <TrashTable orders={orders} />
-      )}
+      <TrashTable orders={orders} />
     </div>
   );
 }

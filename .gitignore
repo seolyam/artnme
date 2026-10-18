@@ -14,6 +14,9 @@
 
 # testing
 /coverage
+/test-results
+/playwright-report
+/e2e/.auth
 
 # next.js
 /.next/
@@ -52,3 +55,4 @@ screenshot_*.html
 
 # IDEs
 .idea/
+/scripts/demo-video/out/
