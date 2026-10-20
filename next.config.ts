@@ -1,6 +1,17 @@
 import type { NextConfig } from "next";
 
+// Low-risk hardening only (no CSP, so it can't break login or the 3D Studio).
+const securityHeaders = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Strict-Transport-Security", value: "max-age=31536000" },
+];
+
 const nextConfig: NextConfig = {
+  async headers() {
+    return [{ source: "/:path*", headers: securityHeaders }];
+  },
   images: {
     // Order proofs and quote attachments are served from Cloudinary.
     remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com" }],
