@@ -120,12 +120,9 @@ export const quoteRequestSchema = z.object({
   contact: z
     .string()
     .trim()
-    .min(5, "We need a phone number or email to send your proof.")
-    .max(120)
-    .refine(
-      (v) => /@/.test(v) || v.replace(/\D/g, "").length >= 7,
-      "Enter a valid phone number or email.",
-    ),
+    .max(40)
+    .refine((v) => v.replace(/\D/g, "").length >= 7, "Enter a valid phone number."),
+  email: z.string().trim().max(120).email("Enter a valid email address."),
   product: z.enum(["T-Shirt", "Jersey", "Mug", "Tarpaulin", "Other"]),
   quantity: z.coerce
     .number()

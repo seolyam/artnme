@@ -11,6 +11,7 @@ import { logOrderEvent } from "@/lib/order-events";
 import { parseShopDateTime } from "@/lib/time";
 import { normalizeContact } from "@/lib/phone";
 import { findCustomerByContact } from "@/lib/customer-match";
+import { notifyQuoteRequest } from "@/lib/quote-notify";
 
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = /^(image\/(png|jpe?g|webp|gif|svg\+xml)|application\/pdf)$/;
@@ -69,6 +70,7 @@ export async function submitQuote(
   const parsed = quoteRequestSchema.safeParse({
     name: formData.get("name"),
     contact: formData.get("contact"),
+    email: formData.get("email"),
     product: formData.get("product"),
     quantity: formData.get("quantity"),
     neededBy: formData.get("neededBy") || undefined,
@@ -127,7 +129,7 @@ export async function submitQuote(
   const description = [
     data.product === "Jersey" ? "Jersey (sublimation)" : null,
     data.details,
-    `Contact: ${data.contact}`,
+    `Contact: ${data.contact} · ${data.email}`,
     neededBy ? `Needed by: ${neededBy.toDateString()}` : null,
     data.source === "studio" ? "Source: 3D Studio mockup" : null,
   ]
@@ -188,6 +190,20 @@ export async function submitQuote(
 
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/orders");
+
+    // Awaited so serverless runtimes don't freeze the send mid-flight.
+    await notifyQuoteRequest({
+      orderNumber: order.orderNumber,
+      name: data.name,
+      contact: data.contact,
+      email: data.email,
+      productLabel: product.label,
+      quantity: data.quantity,
+      details: data.details,
+      neededBy,
+      source: data.source,
+      attachmentUrl,
+    });
 
     return {
       status: "success",

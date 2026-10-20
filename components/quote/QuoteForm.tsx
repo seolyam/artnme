@@ -205,11 +205,12 @@ function QuoteTicket({
                 </div>
                 <div>
                   <label htmlFor="q-contact" className={labelClass}>
-                    Phone or email *
+                    Phone number *
                   </label>
                   <input
                     id="q-contact"
                     name="contact"
+                    type="tel"
                     autoComplete="tel"
                     placeholder="09XX XXX XXXX"
                     aria-invalid={!!errors.contact}
@@ -217,6 +218,22 @@ function QuoteTicket({
                     className={fieldClass}
                   />
                   <FieldError id="q-contact-err" message={errors.contact} />
+                </div>
+                <div className="sm:col-span-2">
+                  <label htmlFor="q-email" className={labelClass}>
+                    Email *
+                  </label>
+                  <input
+                    id="q-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="juan@email.com"
+                    aria-invalid={!!errors.email}
+                    aria-describedby={errors.email ? "q-email-err" : undefined}
+                    className={fieldClass}
+                  />
+                  <FieldError id="q-email-err" message={errors.email} />
                 </div>
               </div>
 
