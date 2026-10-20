@@ -265,7 +265,8 @@ async function film(page: Page) {
 
   await say(page, "quote2");
   await type(page.getByLabel("Full name *"), "Ana Santos");
-  await type(page.getByLabel("Phone or email *"), "0917 123 4567");
+  await type(page.getByLabel("Phone number *"), "0917 123 4567");
+  await type(page.getByLabel("Email *"), "juan@email.com");
   await pointAt(page.getByRole("button", { name: /T-Shirt/i, pressed: true }));
   await wait(page, 900);
   const qty = page.getByRole("spinbutton", { name: "Quantity" });
