@@ -1,17 +1,26 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Decal, useGLTF, useTexture } from "@react-three/drei";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { easing } from "maath";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import type { DesignAsset } from "./CustomizerProvider";
+import { loadStudioFont, studioFontStack } from "@/lib/customizer/fonts";
 
 const SHIRT_URL = "/images/shirt.glb";
 
 /** Ignore click events that were actually orbit drags (moved > 6px). */
 const CLICK_DRAG_TOLERANCE = 6;
+
+/**
+ * z of the plane halfway between the front and back panels of shirt.glb.
+ * Measured from the mesh: the front panel sits at z ≈ +0.01…+0.15 (thinnest
+ * at the collar and side seams), the back at z ≈ −0.07…−0.16, so the gap
+ * between them is centred a little behind z = 0.
+ */
+const SHELL_MID_Z = -0.03;
 
 interface ShirtProps {
   shirtColor: string;
@@ -118,38 +127,66 @@ interface AssetDecalProps {
   onSelect: (id: string | null) => void;
 }
 
+/** Gap between the print's edge and the outline, and the outline's thickness (model units). */
+const FRAME_GAP = 0.01;
+const FRAME_LINE = 0.006;
+
+/**
+ * Thin rectangle hugging the selected print. (It used to be a circle whose
+ * radius was the print's full width, so it drew at twice the print's size and
+ * swallowed most of the shirt on large prints.)
+ */
+function SelectionFrame({ width, height }: { width: number; height: number }) {
+  const geometry = useMemo(() => {
+    const w = width / 2 + FRAME_GAP;
+    const h = height / 2 + FRAME_GAP;
+    const outer = new THREE.Shape();
+    outer.moveTo(-w, -h);
+    outer.lineTo(w, -h);
+    outer.lineTo(w, h);
+    outer.lineTo(-w, h);
+    outer.closePath();
+    const inner = new THREE.Path();
+    inner.moveTo(-w + FRAME_LINE, -h + FRAME_LINE);
+    inner.lineTo(-w + FRAME_LINE, h - FRAME_LINE);
+    inner.lineTo(w - FRAME_LINE, h - FRAME_LINE);
+    inner.lineTo(w - FRAME_LINE, -h + FRAME_LINE);
+    inner.closePath();
+    outer.holes.push(inner);
+    return new THREE.ShapeGeometry(outer);
+  }, [width, height]);
+
+  useEffect(() => () => geometry.dispose(), [geometry]);
+
+  return (
+    <mesh name="selection-frame" geometry={geometry} position={[0, 0, 0.012]} renderOrder={9999}>
+      <meshBasicMaterial color="#e31e24" transparent opacity={0.9} depthTest={false} side={THREE.DoubleSide} />
+    </mesh>
+  );
+}
+
 function AssetDecal({ asset, layerIndex, selected, onSelect }: AssetDecalProps) {
   const texture = useAssetTexture(asset);
 
   // Rigid placement; drei <Decal> does NOT apply position/rotation/scale to the
   // mesh object — it only bakes them into the geometry. The decal mesh transform
   // stays identity, so no manual matrix bookkeeping is required.
-  const ringRadius = Math.max(asset.scale[0], asset.scale[1]);
 
   // Depth of the Decal projection box (the projector's Z size). X/Y stay exactly
   // as the user set them — only Z is tuned here.
   //
-  // The shirt is a thin shell: front panel ~ z[0.08, 0.10], interior cavity
-  // ~ z[-0.08, 0.08], back panel ~ z[-0.10, -0.08]. The projector box is centred
-  // on position.z (which is biased outward: 0.14 front / -0.14 back) and spans
-  // ±depth/2, so the box's inner face sits at position.z - depth/2.
+  // The projector box is centred on position.z (biased outward: 0.14 front /
+  // -0.14 back) and spans ±depth/2. Everything inside the box gets the print:
+  //  - Too shallow: the box leaves the surface as it curves over the
+  //    collarbone/shoulders/side seams, slicing the artwork.
+  //  - Too deep: the box crosses the cavity and bakes a mirrored copy onto
+  //    the opposite panel ("punch-through"). The shell is thinnest at the
+  //    collar and side seams, so large prints punched through there when the
+  //    depth grew with the print size.
   //
-  // Goldilocks depth:
-  //  - Too shallow (depth ≈ footprint): the box leaves the surface as soon as
-  //    it curves over the collarbone/shoulders/armpits, slicing the artwork.
-  //  - Too deep (depth = footprint * 5): the box punches through the cavity
-  //    and bakes the decal onto the opposite wall — "punch-through".
-  //
-  // We scale mildly with the footprint (bigger art spans more curvature) but
-  // cap hard at 0.4 so the inner face never reaches the back panel. With
-  // position.z = 0.14 and depth <= 0.4, the inner face stays >= -0.06 (inside
-  // the cavity, ahead of the back panel at -0.08) — front art stays front-only.
-  const footprint = Math.max(asset.scale[0], asset.scale[1]);
-  const projectionDepth = THREE.MathUtils.clamp(
-    footprint * 1.5 + 0.1,
-    0.3,
-    0.4,
-  );
+  // So the inner face is pinned to the shell's mid-plane instead: the box
+  // reaches all of its own panel and none of the other, whatever the size.
+  const projectionDepth = 2 * Math.abs(asset.position[2] - SHELL_MID_Z);
 
   const decalScale: [number, number, number] = [
     asset.scale[0],
@@ -182,16 +219,7 @@ function AssetDecal({ asset, layerIndex, selected, onSelect }: AssetDecalProps) 
         // placed at the projector pose and nudged outward along its local +Z so
         // it floats just above the artwork without z-fighting.
         <group position={asset.position} rotation={asset.rotation}>
-          <mesh name="selection-ring" position={[0, 0, 0.012]} renderOrder={9999}>
-            <ringGeometry args={[ringRadius * 0.92, ringRadius * 0.99, 80]} />
-            <meshBasicMaterial
-              color="#e31e24"
-              transparent
-              opacity={0.9}
-              depthTest={false}
-              side={THREE.DoubleSide}
-            />
-          </mesh>
+          <SelectionFrame width={asset.scale[0]} height={asset.scale[1]} />
         </group>
       )}
     </>
@@ -254,10 +282,23 @@ function useTextTexture(
   flipped: boolean,
   fontFamily: string = "Inter",
 ): THREE.Texture | null {
+  // Redraw once the chosen font has downloaded; until then the canvas would
+  // quietly use Arial.
+  const [loadedFont, setLoadedFont] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    loadStudioFont(fontFamily).then(() => live && setLoadedFont(fontFamily));
+    return () => {
+      live = false;
+    };
+  }, [fontFamily]);
+
   const texture = useMemo(() => {
     if (!text) return null;
     return createTextTexture(text, color, flipped, fontFamily);
-  }, [text, color, flipped, fontFamily]);
+    // loadedFont is only here to redraw once the font is ready.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text, color, flipped, fontFamily, loadedFont]);
 
   useEffect(() => {
     return () => {
@@ -291,7 +332,7 @@ function createTextTexture(
 
   let fontSize = 220;
   const maxWidth = canvas.width * 0.88;
-  const fontStack = `"${fontFamily}", Arial, sans-serif`;
+  const fontStack = studioFontStack(fontFamily);
   ctx.font = `900 ${fontSize}px ${fontStack}`;
   const measured = ctx.measureText(text).width;
   if (measured > maxWidth) {

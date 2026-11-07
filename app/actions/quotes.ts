@@ -15,8 +15,10 @@ import { findCustomerByContact } from "@/lib/customer-match";
 import { notifyQuoteRequest } from "@/lib/quote-notify";
 import { sendTrackingEmail } from "@/lib/order-notify";
 import { siteOrigin } from "@/lib/site-url";
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL, TOO_BIG_MESSAGE } from "@/lib/upload";
 
-const MAX_FILE_BYTES = 8 * 1024 * 1024;
+// The browser shrinks photos to fit this; see lib/upload.ts for why it's 4 MB.
+const MAX_FILE_BYTES = MAX_UPLOAD_BYTES;
 const ALLOWED_FILE_TYPES = /^(image\/(png|jpe?g|webp|gif|svg\+xml)|application\/pdf)$/;
 const MIN_FILL_MS = 2500;
 
@@ -101,8 +103,8 @@ export async function submitQuote(
     if (file.size > MAX_FILE_BYTES) {
       return {
         status: "error",
-        message: "That file is over 8 MB. Send a smaller one, or bring it to the studio.",
-        fieldErrors: { attachment: "Max 8 MB." },
+        message: TOO_BIG_MESSAGE,
+        fieldErrors: { attachment: `Max ${MAX_UPLOAD_LABEL}.` },
       };
     }
     if (!ALLOWED_FILE_TYPES.test(file.type)) {

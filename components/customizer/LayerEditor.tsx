@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
+import { TemplateActions } from "./TemplatePicker";
 import { useCustomizer, type Placement, BACK_ROTATION_Y, NUDGE_STEP, PLACEMENT_BOUNDS, SCALE_RANGE } from "./CustomizerProvider";
 
 const clamp = (v: number, bounds: readonly number[]) =>
@@ -61,7 +62,7 @@ export function LayerEditor() {
 
   if (!selected) {
     return (
-      <p className="border border-dashed border-outline-variant/30 bg-surface-container-high px-4 py-6 text-center text-[10px] uppercase tracking-[0.2em] text-on-surface-variant">
+      <p className="border border-dashed border-outline-variant/30 bg-surface-container-high px-4 py-6 text-center text-xs uppercase tracking-[0.2em] text-on-surface-variant">
         Select a layer to edit it
       </p>
     );
@@ -99,13 +100,14 @@ export function LayerEditor() {
 
   return (
     <div className="space-y-6 border border-outline-variant/20 bg-surface-container-high p-6 shadow-sm">
+      {selected.template && <TemplateActions />}
       <div className="space-y-3">
         <Label>Placement Side</Label>
         <div className="flex gap-2">
           <button
             onClick={() => setPlacement(selected.id, "front")}
             className={cn(
-              "flex-1 py-2 text-center font-headline text-[10px] font-bold uppercase tracking-widest border transition-all",
+              "flex-1 py-2 text-center font-headline text-xs font-bold uppercase tracking-widest border transition-all",
               !isBack
                 ? "bg-primary-container text-on-primary-container border-primary-container"
                 : "bg-surface-container-lowest text-on-surface-variant border-outline-variant/20 hover:border-primary-container"
@@ -116,7 +118,7 @@ export function LayerEditor() {
           <button
             onClick={() => setPlacement(selected.id, "back")}
             className={cn(
-              "flex-1 py-2 text-center font-headline text-[10px] font-bold uppercase tracking-widest border transition-all",
+              "flex-1 py-2 text-center font-headline text-xs font-bold uppercase tracking-widest border transition-all",
               isBack
                 ? "bg-primary-container text-on-primary-container border-primary-container"
                 : "bg-surface-container-lowest text-on-surface-variant border-outline-variant/20 hover:border-primary-container"
@@ -134,7 +136,7 @@ export function LayerEditor() {
             <button
               key={preset.id}
               onClick={() => applyPreset(preset)}
-              className="bg-surface-container-lowest px-2 py-2 text-center font-headline text-[9px] font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:bg-primary-container hover:text-on-primary-container active:scale-95 border border-outline-variant/20"
+              className="bg-surface-container-lowest px-2 py-2 text-center font-headline text-xs font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:bg-primary-container hover:text-on-primary-container active:scale-95 border border-outline-variant/20"
             >
               {preset.label}
             </button>
@@ -163,7 +165,7 @@ export function LayerEditor() {
         
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <span className="w-12 text-[10px] font-bold uppercase text-on-surface-variant">Width</span>
+            <span className="w-12 text-xs font-bold uppercase text-on-surface-variant">Width</span>
             <input
               type="range"
               min={SCALE_RANGE[0]}
@@ -186,7 +188,7 @@ export function LayerEditor() {
           </div>
           
           <div className="flex items-center gap-3">
-            <span className="w-12 text-[10px] font-bold uppercase text-on-surface-variant">Height</span>
+            <span className="w-12 text-xs font-bold uppercase text-on-surface-variant">Height</span>
             <input
               type="range"
               min={SCALE_RANGE[0]}
@@ -249,7 +251,7 @@ export function LayerEditor() {
           <button
             onClick={() => setFlipped(selected.id, !selected.flipped)}
             className={cn(
-              "flex items-center justify-center gap-2 border border-outline-variant/30 px-3 py-3 font-headline text-[11px] font-bold uppercase tracking-widest transition-colors",
+              "flex items-center justify-center gap-2 border border-outline-variant/30 px-3 py-3 font-headline text-[13px] font-bold uppercase tracking-widest transition-colors",
               selected.flipped 
                 ? "bg-primary-container text-on-primary-container"
                 : "bg-surface-container-lowest text-on-surface-variant hover:border-primary-container hover:text-primary-container"
@@ -260,7 +262,7 @@ export function LayerEditor() {
           </button>
           <button
             onClick={() => bringToFront(selected.id)}
-            className="flex items-center justify-center gap-2 border border-outline-variant/30 bg-surface-container-lowest px-3 py-3 font-headline text-[11px] font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:border-primary-container hover:text-primary-container"
+            className="flex items-center justify-center gap-2 border border-outline-variant/30 bg-surface-container-lowest px-3 py-3 font-headline text-[13px] font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:border-primary-container hover:text-primary-container"
           >
             <span className="material-symbols-outlined text-base">layers</span>
             Bring Forward
@@ -273,7 +275,7 @@ export function LayerEditor() {
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <span className="font-headline text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+    <span className="font-headline text-xs font-bold uppercase tracking-widest text-on-surface-variant">
       {children}
     </span>
   );

@@ -94,7 +94,7 @@ export function ContactRows() {
             type="button"
             onClick={() => copy(i, row.copy)}
             aria-label={`Copy ${row.kind.toLowerCase()} details`}
-            className="spec relative min-h-11 w-full border-t border-outline-variant/50 text-[11px] text-on-surface-variant transition-colors hover:bg-sheet hover:text-sheet-foreground sm:w-32 sm:border-l sm:border-t-0"
+            className="spec relative min-h-11 w-full border-t border-outline-variant/50 text-[13px] text-on-surface-variant transition-colors hover:bg-sheet hover:text-sheet-foreground sm:w-32 sm:border-l sm:border-t-0"
           >
             <AnimatePresence mode="wait" initial={false}>
               <motion.span

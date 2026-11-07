@@ -43,7 +43,7 @@ export default async function QuotePage({
           </p>
           {source && (
             <p className="spec -mt-6 mb-10 inline-flex border border-brand/60 px-3 py-2 text-accent-ink">
-              Coming from the 3D Studio — attach your downloaded mockup below
+              Coming from the 3D Studio — your mockup is in the attachment box below
             </p>
           )}
         </Reveal>

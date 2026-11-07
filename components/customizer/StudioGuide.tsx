@@ -39,7 +39,7 @@ export function StudioGuideButton({ className }: { className?: string }) {
       >
         <Play aria-hidden className="h-4.5 w-4.5 fill-current" />
         Watch how it works
-        <span className="spec text-[11px] text-on-surface-variant">{STUDIO_GUIDE.length}</span>
+        <span className="spec text-[13px] text-on-surface-variant">{STUDIO_GUIDE.length}</span>
       </button>
       <StudioGuideDialog open={open} onOpenChange={setOpen} />
     </>
@@ -82,7 +82,7 @@ export function StudioGuidePrompt({ hasDesign }: { hasDesign: boolean }) {
         <button
           type="button"
           onClick={watch}
-          className="flex min-h-10 items-center gap-2 border border-outline-variant/40 bg-surface-container-lowest/85 px-3.5 font-headline text-[11px] font-bold uppercase tracking-[0.14em] text-on-surface backdrop-blur-md transition-colors hover:border-brand hover:text-brand"
+          className="flex min-h-10 items-center gap-2 border border-outline-variant/40 bg-surface-container-lowest/85 px-3.5 font-headline text-[13px] font-bold uppercase tracking-[0.14em] text-on-surface backdrop-blur-md transition-colors hover:border-brand hover:text-brand"
         >
           <Play aria-hidden className="h-3.5 w-3.5 fill-current" />
           How it works
@@ -116,7 +116,7 @@ export function StudioGuidePrompt({ hasDesign }: { hasDesign: boolean }) {
             <button
               type="button"
               onClick={watch}
-              className="flex min-h-9 shrink-0 items-center gap-2 bg-brand px-3.5 font-headline text-[11px] font-bold uppercase tracking-[0.14em] text-white transition-[filter] hover:brightness-110 sm:mt-2"
+              className="flex min-h-9 shrink-0 items-center gap-2 bg-brand px-3.5 font-headline text-[13px] font-bold uppercase tracking-[0.14em] text-white transition-[filter] hover:brightness-110 sm:mt-2"
             >
               <Play aria-hidden className="h-3.5 w-3.5 fill-current" />
               Watch the guide

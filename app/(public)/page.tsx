@@ -9,6 +9,7 @@ import { ArrowRight } from "@/components/motion/icons";
 import { StudioGuideButton } from "@/components/customizer/StudioGuide";
 import { getShowcaseImages } from "@/lib/cloudinary";
 import { SITE } from "@/lib/site";
+import { localBusinessJsonLd } from "@/lib/seo";
 
 const SERVICES = [
   {
@@ -92,6 +93,11 @@ export default async function Home() {
 
   return (
     <main>
+      {/* The shop's address, phone, map pin and hours for Google's business listing (lib/seo.ts). */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd()).replace(/</g, "\\u003c") }}
+      />
       <Hero />
 
       <div className="-mx-5 -rotate-[1.2deg] border-y-2 border-background bg-brand py-4 font-headline text-2xl font-bold uppercase text-white md:text-3xl">
@@ -261,7 +267,7 @@ export default async function Home() {
             <rect x="78" y="70" width="44" height="44" fill="#e31e24" />
             <path d="M78 114 L122 70 L122 114 Z" fill="#161514" />
           </svg>
-          <span className="spec absolute left-5 top-5 text-[11px] text-on-surface-variant">Live preview · 360°</span>
+          <span className="spec absolute left-5 top-5 text-[13px] text-on-surface-variant">Live preview · 360°</span>
         </Reveal>
         <div className="min-w-0 flex-[1_1_420px]">
           <Reveal>

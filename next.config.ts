@@ -21,9 +21,10 @@ const nextConfig: NextConfig = {
     "/api/staff-guide/[file]": ["./private/videos/**"],
   },
   experimental: {
-    // Quote requests and order proofs carry a file (validated to 8–9 MB server-side).
+    // Quote requests and order proofs carry a file. Vercel caps request bodies
+    // at 4.5 MB anyway, so files are kept to 4 MB in the browser (lib/upload.ts).
     serverActions: {
-      bodySizeLimit: "10mb",
+      bodySizeLimit: "5mb",
     },
   },
 };

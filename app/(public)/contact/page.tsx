@@ -72,7 +72,7 @@ export default function ContactPage() {
             <p className="mb-2.5 text-sm leading-relaxed text-on-surface-variant">
               {SITE.addressLine1}, {SITE.addressLine2}
             </p>
-            <p className="spec text-[11px] text-on-surface-variant">
+            <p className="spec text-[13px] text-on-surface-variant">
               {SITE.coords.lat.toFixed(5)}° N · {SITE.coords.lng.toFixed(5)}° E
             </p>
           </div>

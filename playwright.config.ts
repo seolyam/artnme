@@ -15,6 +15,9 @@ import { defineConfig, devices } from "@playwright/test";
  */
 const baseURL = process.env.E2E_BASE_URL ?? "http://localhost:3100";
 
+/** Customer-facing specs: no sign-in needed. */
+const PUBLIC_SPECS = /(site-tour|studio-templates|quote-uploads|seo)\.spec\.ts/;
+
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
@@ -30,8 +33,19 @@ export default defineConfig({
   },
   projects: [
     { name: "setup", testMatch: /auth\.setup\.ts/ },
+    // Customer-facing pages: no sign-in needed.
+    {
+      name: "public",
+      testMatch: PUBLIC_SPECS,
+      use: {
+        ...devices["Desktop Chrome"],
+        // Software WebGL, so the 3D Studio can render its mockup in headless Chrome.
+        launchOptions: { args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] },
+      },
+    },
     {
       name: "portal",
+      testIgnore: PUBLIC_SPECS,
       use: { ...devices["Desktop Chrome"], storageState: "e2e/.auth/staff.json" },
       dependencies: ["setup"],
     },

@@ -88,7 +88,19 @@ export async function exportMultiViewPng(
   snap: ThreeSnapshot | null,
   filename = "artnme-shirt-design.png",
 ): Promise<boolean> {
-  if (!snap) return false;
+  const composite = await renderMultiViewPng(snap);
+  if (!composite) return false;
+  triggerDownload(composite, filename);
+  return true;
+}
+
+/**
+ * Steps 1–3 and 5 of exportMultiViewPng without the download: the 2x2 sheet
+ * as a PNG data URL (null if the 3D view isn't ready). Used to hand the
+ * mockup straight to the quote form.
+ */
+export async function renderMultiViewPng(snap: ThreeSnapshot | null): Promise<string | null> {
+  if (!snap) return null;
   const { gl, scene, camera, controls } = snap;
 
   const prevPosition = camera.position.clone();
@@ -102,7 +114,7 @@ export async function exportMultiViewPng(
 
   const selectionRings: THREE.Object3D[] = [];
   scene.traverse((child) => {
-    if (child.name === "selection-ring" && child.visible) {
+    if (child.name === "selection-frame" && child.visible) {
       selectionRings.push(child);
       child.visible = false;
     }
@@ -121,22 +133,18 @@ export async function exportMultiViewPng(
     }
   } catch {
     restore();
-    return false;
+    return null;
   }
 
   // Snap the live viewer back to the user's view immediately, so the async
   // composite build (below) never shows a frozen/wrong angle on screen.
   restore();
 
-  let composite: string | null = null;
   try {
-    composite = await buildCompositeSheet(frames);
+    return await buildCompositeSheet(frames);
   } catch {
-    return false;
+    return null;
   }
-
-  triggerDownload(composite, filename);
-  return true;
 
   function restore() {
     selectionRings.forEach((ring) => {

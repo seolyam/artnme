@@ -123,7 +123,7 @@ export function PortfolioGallery({ images }: PortfolioGalleryProps) {
                   )}
                   <span className="relative">
                     {category.name}
-                    <span className={cn("spec ml-2 text-[11px]", active ? "text-white/80" : "text-on-surface-variant")}>
+                    <span className={cn("spec ml-2 text-[13px]", active ? "text-white/80" : "text-on-surface-variant")}>
                       {pad(category.count)}
                     </span>
                   </span>
@@ -159,7 +159,7 @@ export function PortfolioGallery({ images }: PortfolioGalleryProps) {
                       aria-pressed={active}
                       onClick={() => selectSubcategory(sub)}
                       className={cn(
-                        "spec min-h-9 px-3.5 text-[11px] transition-colors",
+                        "spec min-h-9 px-3.5 text-[13px] transition-colors",
                         active
                           ? "bg-surface-container-high text-accent-ink"
                           : "text-on-surface-variant hover:text-on-surface",
@@ -218,7 +218,7 @@ export function PortfolioGallery({ images }: PortfolioGalleryProps) {
                   />
                   <span className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/90 via-transparent to-transparent" />
                   <span className="absolute inset-x-5 bottom-4 flex translate-y-2 flex-col gap-1.5 opacity-90 transition-[transform,opacity] duration-500 group-hover:translate-y-0 group-hover:opacity-100">
-                    <span className="spec text-[11px] text-[#ff5a5f]">
+                    <span className="spec text-[13px] text-[#ff5a5f]">
                       {image.subcategory ? `${image.category} · ${image.subcategory}` : image.category}
                     </span>
                     <span className="font-headline text-xl font-bold uppercase tracking-tight text-white">

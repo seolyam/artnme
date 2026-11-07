@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
@@ -11,9 +12,11 @@ import { FileDropZone } from "@/components/customizer/FileDropZone";
 import { LayerList } from "@/components/customizer/LayerList";
 import { LayerEditor } from "@/components/customizer/LayerEditor";
 import { TextAdder } from "@/components/customizer/TextAdder";
+import { TemplatePicker } from "@/components/customizer/TemplatePicker";
 import { StudioGuidePrompt } from "@/components/customizer/StudioGuide";
 import { PRINT_COLORS } from "@/components/customizer/SwatchChip";
-import { exportMultiViewPng } from "@/lib/customizer/export";
+import { exportMultiViewPng, renderMultiViewPng } from "@/lib/customizer/export";
+import { clearMockupForQuote, saveMockupForQuote } from "@/lib/customizer/handoff";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { EASE_PRESS } from "@/components/motion/reveal";
@@ -45,6 +48,23 @@ function ConfigPanel() {
   const { shirtColor, setShirtColor, assets, addImageAssets, clearDraft, threeRef } =
     useCustomizer();
   const [exporting, setExporting] = useState(false);
+  const [sending, setSending] = useState(false);
+  const router = useRouter();
+
+  // Render the 4-angle mockup and hand it to the quote form, instead of asking
+  // customers to download it and attach it themselves.
+  const handleSendToQuote = async () => {
+    if (sending) return;
+    setSending(true);
+    clearMockupForQuote();
+    try {
+      const png = await renderMultiViewPng(threeRef.current);
+      if (png) saveMockupForQuote(png);
+    } catch {
+      // The quote form still lets them attach a file by hand.
+    }
+    router.push("/quote?product=T-Shirt&from=studio");
+  };
   const [step, setStep] = useState<Step>(1);
 
   const activeColor =
@@ -93,7 +113,7 @@ function ConfigPanel() {
               type="button"
               onClick={handleStartOver}
               title="Clear saved draft and start over"
-              className="flex min-h-10 shrink-0 items-center gap-1.5 border border-outline-variant/60 px-3.5 font-headline text-[11px] font-bold uppercase tracking-[0.14em] text-on-surface-variant transition-colors hover:border-brand hover:text-brand"
+              className="flex min-h-10 shrink-0 items-center gap-1.5 border border-outline-variant/60 px-3.5 font-headline text-[13px] font-bold uppercase tracking-[0.14em] text-on-surface-variant transition-colors hover:border-brand hover:text-brand"
             >
               <span className="material-symbols-outlined text-base">restart_alt</span>
               Start over
@@ -117,7 +137,7 @@ function ConfigPanel() {
                       : "bg-surface-container hover:bg-surface-container-high",
                   )}
                 >
-                  <span className="spec text-[10px] text-on-surface-variant">0{t.id}</span>
+                  <span className="spec text-xs text-on-surface-variant">0{t.id}</span>
                   <span className="font-headline text-xs font-bold uppercase tracking-[0.12em] text-on-surface">
                     {t.label}
                   </span>
@@ -158,6 +178,13 @@ function ConfigPanel() {
                 Next: add your design
                 <ArrowRight className="ink-arrow" />
               </button>
+              <button
+                type="button"
+                onClick={() => setStep(2)}
+                className="mt-4 flex min-h-12 w-full items-center justify-center text-sm font-semibold text-on-surface-variant underline underline-offset-4 transition-colors hover:text-brand"
+              >
+                No design yet? Use a ready-made one
+              </button>
             </motion.div>
           )}
 
@@ -167,11 +194,23 @@ function ConfigPanel() {
                 Add your design
               </h3>
               <p className="mb-8 text-sm text-on-surface-variant">
-                Upload a logo or type custom text. Once added, click the print on
-                the shirt to position it.
+                Start from a ready-made design, or upload a logo and type custom
+                text. Once added, click the print on the shirt to position it.
               </p>
 
-              <section className="mb-8 space-y-4">
+              <section data-studio-templates className="mb-8 space-y-4">
+                <div className="flex items-baseline justify-between gap-3">
+                  <SectionLabel>Ready-made designs</SectionLabel>
+                  <span className="spec text-on-surface-variant">Optional</span>
+                </div>
+                <p className="text-sm text-on-surface-variant">
+                  The easy way: pick one, type your names, and it goes on the
+                  shirt. Have your own design? Skip this and upload it below.
+                </p>
+                <TemplatePicker />
+              </section>
+
+              <section className="mb-8 space-y-4 border-t border-outline-variant/30 pt-8">
                 <SectionLabel>Upload artwork</SectionLabel>
                 <FileDropZone onFilesSelected={addImageAssets} />
               </section>
@@ -214,9 +253,9 @@ function ConfigPanel() {
                 it to us for a quote.
               </p>
               <dl className="mb-8 grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 border border-outline-variant/40 bg-surface-container-lowest p-5 text-sm">
-                <dt className="spec text-[11px] text-on-surface-variant">Blank</dt>
+                <dt className="spec text-[13px] text-on-surface-variant">Blank</dt>
                 <dd>{activeColor?.name ?? "Custom"} cotton tee</dd>
-                <dt className="spec text-[11px] text-on-surface-variant">Prints</dt>
+                <dt className="spec text-[13px] text-on-surface-variant">Prints</dt>
                 <dd>
                   {assets.length} {assets.length === 1 ? "layer" : "layers"}
                   {placements.length > 0 && ` · ${placements.join(" + ")}`}
@@ -253,12 +292,17 @@ function ConfigPanel() {
               </span>
               {exporting ? "Exporting…" : "Download 4-angle mockup"}
             </button>
-            <Link href="/quote?product=T-Shirt&from=studio" className={primaryButton}>
-              Send to quote
-              <ArrowRight className="ink-arrow" />
-            </Link>
-            <p className="spec pt-1 text-center text-[10px] text-on-surface-variant">
-              Download first, then attach the PNG to your quote
+            <button
+              type="button"
+              onClick={handleSendToQuote}
+              disabled={sending}
+              className={cn(primaryButton, "disabled:cursor-wait disabled:opacity-80")}
+            >
+              {sending ? "Preparing your mockup…" : "Send to quote"}
+              {!sending && <ArrowRight className="ink-arrow" />}
+            </button>
+            <p className="pt-1 text-center text-sm text-on-surface-variant">
+              Your mockup is attached to the quote for you
             </p>
           </motion.div>
         )}
@@ -299,7 +343,7 @@ function CustomizerStage() {
         <StageToggle active={viewSide === "back"} onClick={() => setViewSide("back")} icon="north" label="Back" />
       </div>
 
-      <p className="spec pointer-events-none absolute bottom-4 left-1/2 z-20 w-full -translate-x-1/2 px-4 text-center text-[10px] text-on-surface-variant">
+      <p className="spec pointer-events-none absolute bottom-4 left-1/2 z-20 w-full -translate-x-1/2 px-4 text-center text-xs text-on-surface-variant">
         Drag to spin 360° · Scroll to zoom · Click a print to edit it
       </p>
 
@@ -326,7 +370,7 @@ function StageToggle({
       aria-pressed={active}
       title={`View ${label.toLowerCase()}`}
       className={cn(
-        "relative flex min-h-10 items-center gap-2 px-4 font-headline text-[11px] font-bold uppercase tracking-[0.14em] transition-colors",
+        "relative flex min-h-10 items-center gap-2 px-4 font-headline text-[13px] font-bold uppercase tracking-[0.14em] transition-colors",
         active ? "text-accent-ink" : "text-on-surface-variant hover:text-on-surface",
       )}
     >
@@ -378,7 +422,7 @@ function CustomizerShell() {
         <div className="flex h-[100dvh] w-full items-center justify-center bg-surface-container-lowest">
           <div className="flex flex-col items-center gap-4 text-center">
             <RegistrationMark className="h-14 w-14 animate-spin text-on-surface" />
-            <p className="spec text-[10px] text-on-surface-variant">Restoring your design…</p>
+            <p className="spec text-xs text-on-surface-variant">Restoring your design…</p>
           </div>
         </div>
       ) : (
@@ -396,7 +440,7 @@ function CustomizerShell() {
                 Art &apos;n Me
               </span>
             </Link>
-            <span className="spec hidden items-center gap-2 text-[10px] text-on-surface-variant sm:flex">
+            <span className="spec hidden items-center gap-2 text-xs text-on-surface-variant sm:flex">
               <span className="h-2 w-2 bg-success" />
               Draft autosaved
             </span>

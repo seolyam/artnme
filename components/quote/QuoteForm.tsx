@@ -2,19 +2,40 @@
 
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { startTransition, useActionState, useEffect, useRef, useState } from "react";
+import { startTransition, useActionState, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { submitQuote, type QuoteState } from "@/app/actions/quotes";
 import { EASE_PLATE, EASE_PRESS } from "@/components/motion/reveal";
 import { ArrowRight } from "@/components/motion/icons";
 import { QUOTE_PRODUCTS, type QuoteProduct } from "@/lib/validators";
 import { cn } from "@/lib/utils";
+import { shrinkForUpload } from "@/lib/shrink-image";
+import { MAX_UPLOAD_LABEL } from "@/lib/upload";
+import { MOCKUP_FILE_NAME, clearMockupForQuote, dataUrlToFile, readMockupForQuote } from "@/lib/customizer/handoff";
 
 const INITIAL: QuoteState = { status: "idle" };
 
+/** sessionStorage has no change events within a tab; the mockup is read once per render. */
+const noSubscription = () => () => {};
+
+/**
+ * The server action, but a failed request (no signal, the server down) comes
+ * back as a message instead of crashing the page and losing what was typed.
+ */
+async function send(prev: QuoteState, data: FormData): Promise<QuoteState> {
+  try {
+    return await submitQuote(prev, data);
+  } catch {
+    return {
+      status: "error",
+      message: "We couldn't send your request. Check your internet and try again, or message us on Facebook.",
+    };
+  }
+}
+
 const fieldClass =
   "w-full min-h-13 border-0 border-b-2 border-[#8a817d] bg-transparent py-3 font-headline text-lg text-[#161514] outline-none transition-colors placeholder:text-[#8a817d] focus:border-brand aria-[invalid=true]:border-[#b31218]";
-const labelClass = "spec block text-[11px] text-[#b31218]";
+const labelClass = "spec block text-[13px] text-[#b31218]";
 
 export function QuoteForm({
   initialProduct,
@@ -44,25 +65,74 @@ function QuoteTicket({
   source?: string;
   onReset: () => void;
 }) {
-  const [state, formAction, pending] = useActionState(submitQuote, INITIAL);
+  const [state, formAction, pending] = useActionState(send, INITIAL);
   const [product, setProduct] = useState<QuoteProduct>(initialProduct);
   const [quantity, setQuantity] = useState(1);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [preparing, setPreparing] = useState(false);
+  const [mockupDismissed, setMockupDismissed] = useState(false);
+  // The mockup the 3D Studio handed over (browser storage, so none on the server render).
+  const storedMockup = useSyncExternalStore(
+    noSubscription,
+    () => (source === "studio" ? readMockupForQuote() : null),
+    () => null,
+  );
+  const mockupUrl = mockupDismissed ? null : storedMockup;
+  const shownFileName = fileName ?? (mockupUrl ? MOCKUP_FILE_NAME : null);
   const [dragging, setDragging] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const startedAtRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const errors = state.status === "error" ? state.fieldErrors ?? {} : {};
+  const busy = pending || preparing;
+  const banner = fileError ?? (state.status === "error" ? state.message : undefined);
 
   useEffect(() => {
     if (startedAtRef.current) startedAtRef.current.value = String(Date.now());
   }, []);
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  // Put the handed-over mockup in the file input, so it's sent with the form.
+  useEffect(() => {
+    if (!mockupUrl || !fileRef.current) return;
+    const mockup = dataUrlToFile(mockupUrl, MOCKUP_FILE_NAME);
+    if (!mockup) return;
+    const dt = new DataTransfer();
+    dt.items.add(mockup);
+    fileRef.current.files = dt.files;
+  }, [mockupUrl]);
+
+  useEffect(() => {
+    if (state.status === "success") clearMockupForQuote();
+  }, [state.status]);
+
+  const removeFile = () => {
+    if (fileRef.current) fileRef.current.value = "";
+    setFileName(null);
+    setMockupDismissed(true);
+    setFileError(null);
+    clearMockupForQuote();
+  };
+
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     // Submitting through a transition keeps the typed values on validation errors.
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     setAttempt((a) => a + 1);
+    // Big phone photos are shrunk here: anything over the upload limit would
+    // be turned away before it ever reached the server.
+    const file = data.get("attachment");
+    if (file instanceof File && file.size > 0) {
+      setPreparing(true);
+      const ready = await shrinkForUpload(file);
+      setPreparing(false);
+      if ("error" in ready) {
+        setFileError(ready.error);
+        return;
+      }
+      data.set("attachment", ready.file);
+    }
+    setFileError(null);
     startTransition(() => formAction(data));
   };
 
@@ -75,6 +145,8 @@ function QuoteTicket({
       dt.items.add(file);
       fileRef.current.files = dt.files;
       setFileName(file.name);
+      setMockupDismissed(true);
+      setFileError(null);
     }
   };
 
@@ -116,7 +188,7 @@ function QuoteTicket({
                     ["Status", "Pending"],
                   ].map(([k, v]) => (
                     <div key={k} className="py-4">
-                      <dt className="spec text-[11px] text-[#5a5250]">{k}</dt>
+                      <dt className="spec text-[13px] text-[#5a5250]">{k}</dt>
                       <dd className="mt-1.5 font-headline text-lg font-bold uppercase md:text-xl">{v}</dd>
                     </div>
                   ))}
@@ -162,7 +234,7 @@ function QuoteTicket({
             <div aria-hidden className="perforation" />
             <div className="flex items-center justify-between gap-4 border-b-2 border-dashed border-[#bdb3ae] px-6 py-5 md:px-11">
               <span className="font-headline text-xl font-bold uppercase tracking-tight">Job ticket</span>
-              <span className="spec text-[11px] text-[#5a5250]">Ref assigned on submit</span>
+              <span className="spec text-[13px] text-[#5a5250]">Ref assigned on submit</span>
             </div>
 
             {/* Anti-spam: a field people never see, and the time the form opened. */}
@@ -177,17 +249,17 @@ function QuoteTicket({
             {source && <input type="hidden" name="source" value={source} />}
 
             <div className="flex flex-col gap-9 px-6 pt-9 md:px-11">
-              {state.status === "error" && state.message && (
+              {banner && (
                 <p
                   key={attempt}
                   role="alert"
                   className="animate-shake bg-brand px-4 py-3.5 font-headline text-sm font-bold uppercase tracking-[0.06em] text-white"
                 >
-                  {state.message}
+                  {banner}
                 </p>
               )}
 
-              <div className="grid gap-7 sm:grid-cols-2">
+              <div data-tour="quote-contact" className="grid gap-7 sm:grid-cols-2">
                 <div>
                   <label htmlFor="q-name" className={labelClass}>
                     Full name *
@@ -237,7 +309,7 @@ function QuoteTicket({
                 </div>
               </div>
 
-              <fieldset>
+              <fieldset data-tour="quote-product">
                 <legend className={cn(labelClass, "mb-3.5")}>What are we printing?</legend>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
                   {QUOTE_PRODUCTS.map((p, i) => {
@@ -263,7 +335,7 @@ function QuoteTicket({
                         {active && (
                           <span aria-hidden className="absolute right-0 top-0 h-0 w-0 border-l-[26px] border-t-[26px] border-l-transparent border-t-brand" />
                         )}
-                        <span className={cn("spec relative text-[11px]", active ? "text-[#bdb3ae]" : "text-[#5a5250]")}>
+                        <span className={cn("spec relative text-[13px]", active ? "text-[#bdb3ae]" : "text-[#5a5250]")}>
                           0{i + 1}
                         </span>
                         <span className="relative font-headline text-base font-bold uppercase">{p.label}</span>
@@ -273,7 +345,7 @@ function QuoteTicket({
                 </div>
               </fieldset>
 
-              <div className="grid gap-7 sm:grid-cols-2">
+              <div data-tour="quote-qty" className="grid gap-7 sm:grid-cols-2">
                 <div>
                   <label htmlFor="q-qty" className={labelClass}>
                     Quantity
@@ -327,7 +399,7 @@ function QuoteTicket({
                 </div>
               </div>
 
-              <div>
+              <div data-tour="quote-details">
                 <label htmlFor="q-details" className={labelClass}>
                   Project details
                 </label>
@@ -343,7 +415,7 @@ function QuoteTicket({
                 <FieldError id="q-details-err" message={errors.details} />
               </div>
 
-              <div>
+              <div data-tour="quote-file">
                 <label
                   onDragOver={(e) => {
                     e.preventDefault();
@@ -356,19 +428,24 @@ function QuoteTicket({
                     dragging ? "border-brand bg-[#ece6e2]" : "border-[#8a817d] bg-[#ece6e2] hover:border-brand",
                   )}
                 >
-                  <span className="flex h-14 w-14 shrink-0 items-center justify-center bg-[#161514]">
-                    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="#f4f1ec" strokeWidth={2} className="h-6 w-6">
-                      <path d="M12 16V4M6 10l6-6 6 6M4 20h16" />
-                    </svg>
-                  </span>
+                  {mockupUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={mockupUrl} alt="Your 3D Studio mockup" className="h-16 w-16 shrink-0 border border-[#bdb3ae] bg-white object-contain" />
+                  ) : (
+                    <span className="flex h-14 w-14 shrink-0 items-center justify-center bg-[#161514]">
+                      <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="#f4f1ec" strokeWidth={2} className="h-6 w-6">
+                        <path d="M12 16V4M6 10l6-6 6 6M4 20h16" />
+                      </svg>
+                    </span>
+                  )}
                   <span className="min-w-0">
                     <span className="block truncate font-headline text-base font-bold uppercase">
-                      {fileName ?? "Attach your design"}
+                      {mockupUrl ? "Your 3D Studio mockup is attached" : fileName ?? "Attach your design"}
                     </span>
                     <span className="text-sm text-[#4c4542]">
-                      {fileName
+                      {shownFileName
                         ? "Tap to choose a different file"
-                        : "PNG, JPG, SVG or PDF · up to 8 MB · or your 3D Studio mockup"}
+                        : `Photos of any size · PDF or SVG up to ${MAX_UPLOAD_LABEL} · or your 3D Studio mockup`}
                     </span>
                   </span>
                   <input
@@ -376,22 +453,38 @@ function QuoteTicket({
                     type="file"
                     name="attachment"
                     accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,application/pdf"
-                    onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
+                    onChange={(e) => {
+                      setFileName(e.target.files?.[0]?.name ?? null);
+                      setMockupDismissed(true);
+                      setFileError(null);
+                    }}
+                    aria-invalid={!!(fileError ?? errors.attachment)}
+                    aria-describedby={fileError ?? errors.attachment ? "q-file-err" : undefined}
                     className="sr-only"
                   />
                 </label>
-                <FieldError id="q-file-err" message={errors.attachment} />
+                {shownFileName && (
+                  <button
+                    type="button"
+                    onClick={removeFile}
+                    className="mt-2 min-h-11 text-sm font-semibold text-[#4c4542] underline underline-offset-4 hover:text-brand"
+                  >
+                    Remove this file
+                  </button>
+                )}
+                <FieldError id="q-file-err" message={fileError ?? errors.attachment} />
               </div>
 
               <div>
                 <button
                   type="submit"
-                  disabled={pending}
+                  data-tour="quote-submit"
+                  disabled={busy}
                   className="ink-fill relative flex min-h-19 w-full items-center justify-between bg-brand px-7 font-headline text-xl font-bold uppercase tracking-[0.04em] text-white disabled:cursor-wait [--ink-flood:#161514] [--ink-flood-fg:#ffffff] md:text-2xl"
                 >
-                  {pending ? (
+                  {busy ? (
                     <>
-                      <span>Sending to the press…</span>
+                      <span>{preparing ? "Preparing your photo…" : "Sending to the press…"}</span>
                       <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="h-6 w-6 animate-spin">
                         <path d="M12 3a9 9 0 1 0 9 9" />
                       </svg>
@@ -410,7 +503,7 @@ function QuoteTicket({
                     </>
                   )}
                 </button>
-                <p className="spec mt-4 text-center text-[10px] text-[#5a5250]">
+                <p className="spec mt-4 text-center text-xs text-[#5a5250]">
                   Estimates usually take 1–2 production hours
                 </p>
               </div>

@@ -10,6 +10,8 @@ import { useConfirm } from "@/components/dashboard/confirm-dialog";
 import { CopyButton } from "@/components/dashboard/copy-button";
 import { timeAgo } from "@/lib/time";
 import { cn } from "@/lib/utils";
+import { shrinkForUpload } from "@/lib/shrink-image";
+import { MAX_UPLOAD_LABEL } from "@/lib/upload";
 
 const ACCEPT = "image/*,application/pdf";
 
@@ -33,13 +35,23 @@ export function OrderFiles({ orderId, files }: { orderId: string; files: OrderFi
     setUploading(true);
     let ok = 0;
     for (const file of Array.from(list)) {
+      // Big photos are shrunk first; anything over the limit never reaches the server.
+      const ready = await shrinkForUpload(file);
+      if ("error" in ready) {
+        toast.error(`${file.name}: over ${MAX_UPLOAD_LABEL}. Export a smaller JPG or PDF.`);
+        continue;
+      }
       const fd = new FormData();
       fd.set("orderId", orderId);
       fd.set("kind", kind);
-      fd.set("file", file);
-      const result = await uploadOrderFile(fd);
-      if (result.error) toast.error(`${file.name}: ${result.error}`);
-      else ok++;
+      fd.set("file", ready.file);
+      try {
+        const result = await uploadOrderFile(fd);
+        if (result.error) toast.error(`${file.name}: ${result.error}`);
+        else ok++;
+      } catch {
+        toast.error(`${file.name}: upload failed. Check the connection and try again.`);
+      }
     }
     setUploading(false);
     if (inputRef.current) inputRef.current.value = "";
@@ -133,7 +145,7 @@ export function OrderFiles({ orderId, files }: { orderId: string; files: OrderFi
           {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
           {uploading ? "Uploading…" : "Choose file"}
         </button>
-        <p className="text-xs text-on-surface-variant">or drag it here · JPG, PNG or PDF up to 9 MB</p>
+        <p className="text-xs text-on-surface-variant">or drag it here · photos of any size, PDF up to 4 MB</p>
         <input
           ref={inputRef}
           type="file"

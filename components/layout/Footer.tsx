@@ -76,7 +76,7 @@ export default function Footer() {
           Art &apos;n Me
         </p>
 
-        <div className="spec mt-8 flex flex-wrap justify-between gap-3 border-t border-outline-variant/30 pt-6 text-[11px] text-on-surface-variant">
+        <div className="spec mt-8 flex flex-wrap justify-between gap-3 border-t border-outline-variant/30 pt-6 text-[13px] text-on-surface-variant">
           <span>
             © {new Date().getFullYear()} {SITE.legalName}
           </span>

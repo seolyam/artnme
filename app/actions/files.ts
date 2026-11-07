@@ -9,9 +9,10 @@ import { orderFiles, orders, profiles } from "@/db/schema";
 import { getSessionProfile, requireAuth } from "@/lib/auth";
 import { deleteCloudinaryAsset, uploadOrderAsset } from "@/lib/cloudinary";
 import { logOrderEvent } from "@/lib/order-events";
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/upload";
 
-// Server actions accept up to 10 MB (next.config.ts); leave room for the form.
-const MAX_BYTES = 9 * 1024 * 1024;
+// Vercel turns away bigger requests before they get here; the browser shrinks photos to fit (lib/upload.ts).
+const MAX_BYTES = MAX_UPLOAD_BYTES;
 const ALLOWED = /^(image\/(png|jpe?g|webp|gif|svg\+xml|heic|heif)|application\/pdf)$/;
 const KINDS = ["proof", "attachment"] as const;
 
@@ -67,7 +68,7 @@ export async function uploadOrderFile(formData: FormData) {
   const file = formData.get("file");
   if (!orderId.success || !kind.success) return { error: "Invalid upload" };
   if (!(file instanceof File) || file.size === 0) return { error: "Choose a file first" };
-  if (file.size > MAX_BYTES) return { error: "That file is over 9 MB. Export a smaller JPG or PDF." };
+  if (file.size > MAX_BYTES) return { error: `That file is over ${MAX_UPLOAD_LABEL}. Export a smaller JPG or PDF.` };
   if (!ALLOWED.test(file.type)) return { error: "Use a JPG, PNG, WebP, GIF, SVG or PDF." };
 
   const [order] = await db

@@ -58,7 +58,7 @@ export function SwatchChip({ selected, onSelect }: SwatchChipProps) {
             />
             <span
               className={cn(
-                "pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-bold uppercase tracking-widest font-headline text-on-surface-variant opacity-0 transition-opacity group-hover:opacity-100",
+                "pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-bold uppercase tracking-widest font-headline text-on-surface-variant opacity-0 transition-opacity group-hover:opacity-100",
                 isActive && "opacity-100 text-primary-container",
               )}
             >

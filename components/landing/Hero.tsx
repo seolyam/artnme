@@ -67,6 +67,7 @@ export function Hero() {
         <Reveal immediate delay={0.75} className="mt-10 flex flex-wrap gap-3.5">
           <Link
             href="/quote"
+            data-tour="hero-quote"
             className="ink-fill inline-flex min-h-15 items-center gap-3.5 bg-brand px-8 font-headline text-[15px] font-bold uppercase tracking-[0.14em] text-white"
           >
             Start a project
@@ -88,7 +89,7 @@ export function Hero() {
           <dl className="mt-14 flex flex-wrap gap-10">
             {SPECS.map((s) => (
               <div key={s.label}>
-                <dt className="spec text-[11px] text-on-surface-variant">{s.label}</dt>
+                <dt className="spec text-[13px] text-on-surface-variant">{s.label}</dt>
                 <dd className="mt-1.5 font-headline text-lg font-bold">{s.value}</dd>
               </div>
             ))}
@@ -129,7 +130,7 @@ export function Hero() {
               className="absolute right-0 top-0 h-0 w-0 border-l-[72px] border-t-[72px] border-l-transparent border-t-brand"
             />
           </motion.div>
-          <figcaption className="spec flex h-11 items-end justify-between text-[11px] text-[#3a3533]">
+          <figcaption className="spec flex h-11 items-end justify-between text-[13px] text-[#3a3533]">
             <span>Proof 01 / Jersey run</span>
             <span>CMYK · 300 DPI</span>
           </figcaption>

@@ -87,7 +87,7 @@ export function FileDropZone({ onFilesSelected }: FileDropZoneProps) {
         <p className="text-on-surface dark:text-white font-headline font-bold tracking-tight">
           ADD IMAGE LAYERS
         </p>
-        <p className="text-on-surface-variant text-[10px] mt-2 uppercase tracking-widest">
+        <p className="text-on-surface-variant text-xs mt-2 uppercase tracking-widest">
           PNG, JPG, or SVG — drop or click — select multiple
         </p>
       </div>

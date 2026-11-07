@@ -56,7 +56,7 @@ export function TextAdder() {
       <div className="grid grid-cols-2 gap-4">
         {/* Font Selection */}
         <div className="space-y-2">
-          <span className="font-headline text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+          <span className="font-headline text-xs font-bold uppercase tracking-widest text-on-surface-variant">
             Font
           </span>
           <select
@@ -74,7 +74,7 @@ export function TextAdder() {
 
         {/* Color Selection */}
         <div className="space-y-2">
-          <span className="font-headline text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+          <span className="font-headline text-xs font-bold uppercase tracking-widest text-on-surface-variant">
             Ink Color
           </span>
           <div className="flex flex-wrap items-center gap-2">

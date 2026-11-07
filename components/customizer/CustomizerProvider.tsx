@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import type { ThreeSnapshot } from "@/lib/customizer/export";
+import type { TemplateLink } from "@/lib/customizer/templates";
 
 export type AssetKind = "image" | "text";
 export type Placement = "front" | "back";
@@ -39,6 +40,8 @@ export interface DesignAsset {
   rotation: [number, number, number];
   scale: [number, number, number];
   visible: boolean;
+  /** Set on layers made from a ready-made design, so the words stay editable. */
+  template?: TemplateLink;
 }
 
 export interface AssetTransformPatch {
@@ -115,6 +118,19 @@ export interface CustomizerState {
   toggleAssetVisibility: (id: string) => void;
   removeAsset: (id: string) => void;
   clearDraft: () => void;
+  /** Swap the whole design for another (a ready-made template): blank color plus layers. */
+  replaceDesign: (shirtColor: string, assets: DesignAsset[]) => void;
+  /**
+   * New words for a ready-made design: swaps the artwork of its layers
+   * (`art` is keyed by piece id) and keeps where and how big they are.
+   */
+  retextTemplate: (templateId: string, values: Record<string, string>, art: Record<string, string>) => void;
+  /**
+   * Takes a ready-made design off the shirt (all of its layers), leaving the
+   * customer's own layers and the shirt color. Returns the layers as they were
+   * before, for an undo.
+   */
+  removeTemplate: (templateId: string) => DesignAsset[];
   /**
    * False until the provider has read (or attempted to read) the saved draft
    * from localStorage. Consumers should gate rendering of restored state on
@@ -370,6 +386,36 @@ export function CustomizerProvider({ children }: { children: ReactNode }) {
     setSelectedAssetId(null);
   }, []);
 
+  const replaceDesign = useCallback((color: string, next: DesignAsset[]) => {
+    setShirtColor(color);
+    setAssets(next);
+    setSelectedAssetId(null);
+  }, []);
+
+  const retextTemplate = useCallback(
+    (templateId: string, values: Record<string, string>, art: Record<string, string>) => {
+      setAssets((prev) =>
+        prev.map((asset) =>
+          asset.template?.id === templateId && art[asset.template.piece]
+            ? { ...asset, url: art[asset.template.piece], template: { ...asset.template, values } }
+            : asset,
+        ),
+      );
+    },
+    [],
+  );
+
+  const removeTemplate = useCallback(
+    (templateId: string) => {
+      const before = assets;
+      const removed = new Set(before.filter((a) => a.template?.id === templateId).map((a) => a.id));
+      setAssets(before.filter((a) => !removed.has(a.id)));
+      setSelectedAssetId((prev) => (prev && removed.has(prev) ? null : prev));
+      return before;
+    },
+    [assets],
+  );
+
   return (
     <CustomizerContext.Provider
       value={{
@@ -387,6 +433,9 @@ export function CustomizerProvider({ children }: { children: ReactNode }) {
         toggleAssetVisibility,
         removeAsset,
         clearDraft,
+        replaceDesign,
+        retextTemplate,
+        removeTemplate,
         hydrated,
         draftRestored,
         threeRef,

@@ -78,7 +78,7 @@ export default function Navbar() {
             </span>
           </Link>
 
-          <ul className="hidden items-center gap-8 md:flex">
+          <ul data-tour="nav-links" className="hidden items-center gap-8 md:flex">
             {LINKS.map((link) => {
               const active = isActive(pathname, link.href);
               return (
@@ -111,6 +111,7 @@ export default function Navbar() {
             <ThemeToggle className="hidden md:flex" />
             <Link
               href="/quote"
+              data-tour="nav-quote"
               className="hidden h-11 items-center bg-brand px-5 font-headline text-xs font-bold uppercase tracking-[0.16em] text-white transition-[background-color,transform] hover:bg-[#ff2b31] active:scale-95 md:flex"
             >
               Get a quote
@@ -120,6 +121,7 @@ export default function Navbar() {
               onClick={() => setOpen((v) => !v)}
               aria-expanded={open}
               aria-controls="mobile-menu"
+              data-tour="nav-menu"
               aria-label={open ? "Close menu" : "Open menu"}
               className="relative z-50 flex h-11 w-11 flex-col items-center justify-center gap-1.5 md:hidden"
             >

@@ -19,7 +19,7 @@ export function LayerList() {
 
   if (assets.length === 0) {
     return (
-      <p className="border border-dashed border-outline-variant/30 bg-surface-container-high px-4 py-6 text-center text-[10px] uppercase tracking-[0.2em] text-on-surface-variant">
+      <p className="border border-dashed border-outline-variant/30 bg-surface-container-high px-4 py-6 text-center text-xs uppercase tracking-[0.2em] text-on-surface-variant">
         No layers yet — upload an image or add text
       </p>
     );
@@ -79,7 +79,7 @@ export function LayerList() {
               <p className="truncate font-headline text-xs font-bold uppercase tracking-tight text-on-surface dark:text-white">
                 {label}
               </p>
-              <p className="text-[10px] uppercase tracking-widest text-on-surface-variant">
+              <p className="text-xs uppercase tracking-widest text-on-surface-variant">
                 {isSelected
                   ? `Editing — ${asset.placement} side`
                   : asset.kind === "text"

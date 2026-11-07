@@ -38,7 +38,7 @@ export default async function TrackOrderPage({ params }: { params: Promise<{ tok
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 pb-24 pt-32 md:pt-40">
-      <p className="spec mb-3 text-[11px] text-accent-ink">Order #{String(order.orderNumber).padStart(4, "0")}</p>
+      <p className="spec mb-3 text-[13px] text-accent-ink">Order #{String(order.orderNumber).padStart(4, "0")}</p>
       <h1 className="font-headline text-4xl font-bold uppercase leading-[0.9] tracking-[-0.05em] md:text-6xl">
         Hi {order.firstName}!
       </h1>
@@ -46,7 +46,7 @@ export default async function TrackOrderPage({ params }: { params: Promise<{ tok
 
       {/* Status */}
       <section aria-label="Order status" className="mt-10 bg-surface-container-low p-5 md:p-7">
-        <p className="spec text-[11px] text-on-surface-variant">Status</p>
+        <p className="spec text-[13px] text-on-surface-variant">Status</p>
         <p className="mt-1 font-headline text-3xl font-bold uppercase tracking-[-0.03em]">{step.label}</p>
         <p className="mt-2 text-on-surface-variant">{step.text}</p>
 
@@ -56,7 +56,7 @@ export default async function TrackOrderPage({ params }: { params: Promise<{ tok
               <div className={cn("h-1.5", i <= current ? "bg-brand" : "bg-surface-container-high")} />
               <p
                 className={cn(
-                  "flex items-center gap-1 text-[11px] leading-tight sm:text-xs",
+                  "flex items-center gap-1 text-[13px] leading-tight sm:text-xs",
                   i === current ? "font-semibold text-on-surface" : "text-on-surface-variant",
                 )}
               >
@@ -79,7 +79,7 @@ export default async function TrackOrderPage({ params }: { params: Promise<{ tok
       {/* Dates & money */}
       <div className="mt-0.5 grid gap-0.5 bg-surface-container-high sm:grid-cols-2">
         <div className="bg-surface-container-low p-5">
-          <p className="spec flex items-center gap-1.5 text-[11px] text-on-surface-variant">
+          <p className="spec flex items-center gap-1.5 text-[13px] text-on-surface-variant">
             <CalendarClock className="h-3.5 w-3.5" />
             {done ? "Ordered" : "Target date"}
           </p>
@@ -102,7 +102,7 @@ export default async function TrackOrderPage({ params }: { params: Promise<{ tok
           )}
         </div>
         <div className="bg-surface-container-low p-5">
-          <p className="spec text-[11px] text-on-surface-variant">Payment</p>
+          <p className="spec text-[13px] text-on-surface-variant">Payment</p>
           {total > 0 ? (
             <dl className="mt-2 space-y-1 text-sm">
               <div className="flex justify-between">
@@ -128,7 +128,7 @@ export default async function TrackOrderPage({ params }: { params: Promise<{ tok
 
       {order.items.length > 0 && (
         <section className="mt-8">
-          <h2 className="spec mb-3 text-[11px] text-on-surface-variant">What we&apos;re making</h2>
+          <h2 className="spec mb-3 text-[13px] text-on-surface-variant">What we&apos;re making</h2>
           <ul className="flex flex-wrap gap-2">
             {order.items.map((it, i) => (
               <li key={i} className="border border-outline-variant/60 px-3 py-1.5 text-sm">
