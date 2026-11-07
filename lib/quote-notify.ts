@@ -6,6 +6,11 @@ export const QUOTE_NOTIFY_TO = "artinme03@gmail.com";
 // testing, but it only delivers to the Resend account owner's address.
 const DEFAULT_FROM = "Art 'N Me <onboarding@resend.dev>";
 
+/** Sender for all outgoing mail. Set QUOTE_EMAIL_FROM to an address on a verified domain. */
+export function emailFrom() {
+  return process.env.QUOTE_EMAIL_FROM || DEFAULT_FROM;
+}
+
 export type QuoteEmailInput = {
   orderNumber: number;
   name: string;
@@ -52,7 +57,7 @@ export async function notifyQuoteRequest(input: QuoteEmailInput) {
   try {
     const resend = new Resend(apiKey);
     const { data, error } = await resend.emails.send({
-      from: process.env.QUOTE_EMAIL_FROM || DEFAULT_FROM,
+      from: emailFrom(),
       to: QUOTE_NOTIFY_TO,
       // Hitting reply in Gmail goes straight to the customer.
       replyTo: input.email,

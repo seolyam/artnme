@@ -101,7 +101,22 @@ export function CreateOrderForm({
         toast.error(result.error, result.fieldErrors?.length ? { description: "Fix the fields marked in red." } : undefined);
         return;
       }
-      toast.success(`Order #${result.data!.orderNumber} created`);
+      const trackingUrl = result.trackingUrl!;
+      toast.success(`Order #${result.data!.orderNumber} created`, {
+        description: result.emailedTo
+          ? `Tracking link emailed to ${result.emailedTo}. You can also copy it to send by text or Messenger.`
+          : "Send the customer their tracking link so they can follow progress.",
+        duration: 15000,
+        action: {
+          label: "Copy tracking link",
+          onClick: () => {
+            navigator.clipboard
+              .writeText(trackingUrl)
+              .then(() => toast.success("Tracking link copied. Send it to the customer."))
+              .catch(() => toast.error("Couldn't copy. Use Copy link on the order page."));
+          },
+        },
+      });
       router.push(`/dashboard/orders/${result.data!.orderNumber}`);
     } finally {
       setSubmitting(false);

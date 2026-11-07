@@ -9,6 +9,9 @@ export const customerSchema = z.object({
   fbMessengerLink: z
     .union([z.string().url("Invalid URL"), z.literal("")])
     .optional(),
+  email: z
+    .union([z.string().trim().max(120).email("Enter a valid email address"), z.literal("")])
+    .optional(),
 });
 
 export type CustomerFormValues = z.infer<typeof customerSchema>;

@@ -24,6 +24,8 @@ import {
   WEB_QUOTE_PREFIX,
 } from "@/lib/validators";
 import { logOrderEvent } from "@/lib/order-events";
+import { siteOrigin } from "@/lib/site-url";
+import { customerEmailOf, sendTrackingEmail } from "@/lib/order-notify";
 import { BOARD_ARCHIVE_DAYS } from "@/lib/order-status";
 import { peso, roundMoney, toNumber } from "@/lib/money";
 import { formatShopDate, parseShopDateTime, shopDayRange, shopToday } from "@/lib/time";
@@ -310,7 +312,26 @@ export async function createOrder(data: OrderFormValues) {
   });
 
   revalidateOrder();
-  return { error: null, data: result };
+  // Hand the customer link back so staff can send it the moment the order exists.
+  const trackingUrl = `${await siteOrigin()}/track/${result.trackingToken}`;
+
+  // Email it too when we have an address. Awaited so serverless runtimes don't
+  // freeze the send mid-flight; failures only cost the email, never the order.
+  const [customer] = await db
+    .select({ name: customers.name, email: customers.email, contactNumber: customers.contactNumber })
+    .from(customers)
+    .where(eq(customers.id, result.customerId));
+  const to = customer ? customerEmailOf(customer) : null;
+  const emailed =
+    !!to &&
+    (await sendTrackingEmail(to, {
+      orderNumber: result.orderNumber,
+      customerName: customer.name,
+      title: result.title,
+      trackingUrl,
+    }));
+
+  return { error: null, data: result, trackingUrl, emailedTo: emailed ? to : null };
 }
 
 export async function updateOrderStatus(data: UpdateOrderStatusValues) {

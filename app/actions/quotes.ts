@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { customers, orderFiles, orderItems, orders } from "@/db/schema";
@@ -12,6 +13,8 @@ import { parseShopDateTime } from "@/lib/time";
 import { normalizeContact } from "@/lib/phone";
 import { findCustomerByContact } from "@/lib/customer-match";
 import { notifyQuoteRequest } from "@/lib/quote-notify";
+import { sendTrackingEmail } from "@/lib/order-notify";
+import { siteOrigin } from "@/lib/site-url";
 
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = /^(image\/(png|jpe?g|webp|gif|svg\+xml)|application\/pdf)$/;
@@ -147,9 +150,14 @@ export async function submitQuote(
         (
           await tx
             .insert(customers)
-            .values({ name: data.name, contactNumber: normalizeContact(data.contact) })
+            .values({ name: data.name, contactNumber: normalizeContact(data.contact), email: data.email.toLowerCase() })
             .returning()
         )[0];
+
+      // Returning customers from before emails were saved: keep the one they gave now.
+      if (existing && !existing.email) {
+        await tx.update(customers).set({ email: data.email.toLowerCase() }).where(eq(customers.id, existing.id));
+      }
 
       const [created] = await tx
         .insert(orders)
@@ -159,7 +167,7 @@ export async function submitQuote(
           status: "Pending",
           dueDate: neededBy,
         })
-        .returning({ id: orders.id, orderNumber: orders.orderNumber });
+        .returning({ id: orders.id, orderNumber: orders.orderNumber, trackingToken: orders.trackingToken });
 
       await tx.insert(orderItems).values({
         orderId: created.id,
@@ -203,6 +211,14 @@ export async function submitQuote(
       neededBy,
       source: data.source,
       attachmentUrl,
+    });
+
+    // Give the customer their tracking link right away (best-effort, like the alert above).
+    await sendTrackingEmail(data.email, {
+      orderNumber: order.orderNumber,
+      customerName: data.name,
+      title: `${data.quantity}× ${product.label}`,
+      trackingUrl: `${await siteOrigin()}/track/${order.trackingToken}`,
     });
 
     return {

@@ -44,6 +44,7 @@ export function useCustomerPicker({
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [messenger, setMessenger] = useState("");
+  const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const duplicate = mode === "new" ? findDuplicateCustomer(customers, name, contact) : null;
@@ -70,6 +71,7 @@ export function useCustomerPicker({
       name: name.trim(),
       contactNumber: contact.trim() || undefined,
       fbMessengerLink: messenger.trim() || undefined,
+      email: email.trim() || undefined,
     });
     if (res.error || !res.data) {
       toast.error(res.error ?? "Couldn't save the new customer");
@@ -128,6 +130,19 @@ export function useCustomerPicker({
                 onChange={(e) => setContact(e.target.value)}
                 inputMode="tel"
                 placeholder="0917 123 4567"
+                className={fieldClass}
+              />
+            </label>
+            <label className="space-y-1.5 sm:col-span-2">
+              <span className="text-sm font-medium">
+                Email <span className="font-normal text-on-surface-variant">(optional, we&apos;ll email their tracking link)</span>
+              </span>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="off"
+                placeholder="name@example.com"
                 className={fieldClass}
               />
             </label>

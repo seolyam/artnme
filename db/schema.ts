@@ -57,6 +57,7 @@ export const customers = pgTable("customers", {
   name: text("name").notNull(),
   contactNumber: text("contact_number"),
   fbMessengerLink: text("fb_messenger_link"),
+  email: text("email"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

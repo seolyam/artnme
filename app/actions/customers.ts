@@ -23,6 +23,7 @@ export async function getCustomersWithOrderCount() {
       name: customers.name,
       contactNumber: customers.contactNumber,
       fbMessengerLink: customers.fbMessengerLink,
+      email: customers.email,
       createdAt: customers.createdAt,
       orderCount: sql<number>`count(${orders.id})::int`,
       activeCount: sql<number>`count(${orders.id}) FILTER (WHERE ${orders.status} <> 'Completed')::int`,
@@ -43,6 +44,7 @@ export async function getCustomersWithOrderCount() {
     name: r.name,
     contactNumber: r.contactNumber,
     fbMessengerLink: r.fbMessengerLink,
+    email: r.email,
     createdAt: r.createdAt,
     orderCount: Number(r.orderCount) || 0,
     activeCount: Number(r.activeCount) || 0,
@@ -65,6 +67,7 @@ export async function createCustomer(data: CustomerFormValues) {
       name: parsed.data.name.trim(),
       contactNumber: normalizeContact(parsed.data.contactNumber) || null,
       fbMessengerLink: parsed.data.fbMessengerLink || null,
+      email: parsed.data.email?.toLowerCase() || null,
     })
     .returning();
 
@@ -94,6 +97,7 @@ export async function updateCustomer(
       name: parsed.data.name.trim(),
       contactNumber: normalizeContact(parsed.data.contactNumber) || null,
       fbMessengerLink: parsed.data.fbMessengerLink || null,
+      email: parsed.data.email?.toLowerCase() || null,
     })
     .where(eq(customers.id, idParsed.data));
 
