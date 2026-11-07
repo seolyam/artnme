@@ -18,6 +18,7 @@ export const orderStatusEnum = pgEnum("order_status", [
   "Pending",
   "Designing",
   "Printing",
+  "Sewing",
   "Ready for Pickup",
   "Completed",
 ]);
@@ -26,6 +27,11 @@ export const productTypeEnum = pgEnum("product_type", [
   "Tarpaulin",
   "T-Shirt",
   "Mug",
+  "Jersey Upper",
+  "Jersey Set",
+  "Polo",
+  "Chinese Collar",
+  "Button Pins",
   "Other",
 ]);
 
@@ -51,6 +57,7 @@ export const customers = pgTable("customers", {
   name: text("name").notNull(),
   contactNumber: text("contact_number"),
   fbMessengerLink: text("fb_messenger_link"),
+  email: text("email"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -259,6 +266,7 @@ export const ORDER_STATUSES = [
   "Pending",
   "Designing",
   "Printing",
+  "Sewing",
   "Ready for Pickup",
   "Completed",
 ] as const;
@@ -269,6 +277,11 @@ export const PRODUCT_TYPES = [
   "Tarpaulin",
   "T-Shirt",
   "Mug",
+  "Jersey Upper",
+  "Jersey Set",
+  "Polo",
+  "Chinese Collar",
+  "Button Pins",
   "Other",
 ] as const;
 

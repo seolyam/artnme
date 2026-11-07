@@ -5,8 +5,8 @@ export default function OrderDetailLoading() {
   return (
     <div className="max-w-6xl space-y-6" role="status" aria-label="Loading order">
       <HeaderSkeleton back actions={3} />
-      <div className="grid grid-cols-5 gap-0.5" aria-hidden>
-        {Array.from({ length: 5 }).map((_, i) => (
+      <div className="grid grid-cols-6 gap-0.5" aria-hidden>
+        {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="space-y-1.5">
             <Bar className="h-1" />
             <Bar className="h-2.5 w-14 bg-surface-container" />

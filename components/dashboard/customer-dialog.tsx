@@ -26,6 +26,7 @@ type EditableCustomer = {
   name: string;
   contactNumber: string | null;
   fbMessengerLink: string | null;
+  email?: string | null;
   orderCount?: number;
 };
 
@@ -54,6 +55,7 @@ export function CustomerDialog({
   const [name, setName] = useState(customer?.name ?? "");
   const [contact, setContact] = useState(customer?.contactNumber ?? "");
   const [messenger, setMessenger] = useState(customer?.fbMessengerLink ?? "");
+  const [email, setEmail] = useState(customer?.email ?? "");
 
   const editing = !!customer;
   const duplicate = findDuplicateCustomer(
@@ -66,6 +68,7 @@ export function CustomerDialog({
     setName(customer?.name ?? "");
     setContact(customer?.contactNumber ?? "");
     setMessenger(customer?.fbMessengerLink ?? "");
+    setEmail(customer?.email ?? "");
   }
 
   function save(e: React.FormEvent) {
@@ -75,6 +78,7 @@ export function CustomerDialog({
       name: name.trim(),
       contactNumber: contact.trim() || undefined,
       fbMessengerLink: messenger.trim() || undefined,
+      email: email.trim() || undefined,
     };
     startTransition(async () => {
       const result = editing ? await updateCustomer(customer.id, values) : await createCustomer(values);
@@ -145,6 +149,19 @@ export function CustomerDialog({
                 onChange={(e) => setContact(e.target.value)}
                 inputMode="tel"
                 placeholder="0917 123 4567"
+                className="h-11 rounded-none"
+              />
+            </label>
+            <label className="block space-y-1.5">
+              <span className="text-sm font-medium">
+                Email <span className="font-normal text-on-surface-variant">(optional, for tracking links)</span>
+              </span>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="off"
+                placeholder="name@example.com"
                 className="h-11 rounded-none"
               />
             </label>

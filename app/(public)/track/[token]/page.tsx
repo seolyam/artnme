@@ -18,6 +18,7 @@ const STEPS = [
   { status: "Pending", label: "Received", text: "We have your order and will confirm the details with you soon." },
   { status: "Designing", label: "Designing", text: "We're working on your design. We'll send you a proof to approve." },
   { status: "Printing", label: "Printing", text: "Your design is approved and being printed." },
+  { status: "Sewing", label: "Sewing", text: "Printing is done. We're sewing your pieces together." },
   { status: "Ready for Pickup", label: "Ready", text: "Your order is ready! Come by the studio during opening hours." },
   { status: "Completed", label: "Picked up", text: "Picked up. Thank you for ordering with us!" },
 ];
@@ -49,7 +50,7 @@ export default async function TrackOrderPage({ params }: { params: Promise<{ tok
         <p className="mt-1 font-headline text-3xl font-bold uppercase tracking-[-0.03em]">{step.label}</p>
         <p className="mt-2 text-on-surface-variant">{step.text}</p>
 
-        <ol className="mt-6 grid grid-cols-5 gap-1" aria-label="Progress">
+        <ol className="mt-6 grid grid-cols-6 gap-1" aria-label="Progress">
           {STEPS.map((s, i) => (
             <li key={s.status} aria-current={i === current ? "step" : undefined} className="space-y-2">
               <div className={cn("h-1.5", i <= current ? "bg-brand" : "bg-surface-container-high")} />

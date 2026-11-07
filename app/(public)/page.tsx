@@ -21,7 +21,7 @@ const SERVICES = [
     code: "02 / Sublimation",
     title: "Jerseys",
     body: "Edge-to-edge sublimated jerseys and polos for teams, schools and reunions. Names and numbers included.",
-    product: "Jersey",
+    product: "Jersey Set",
   },
   {
     code: "03 / Souvenirs",

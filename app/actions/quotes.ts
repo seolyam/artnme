@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { customers, orderFiles, orderItems, orders } from "@/db/schema";
@@ -11,6 +12,9 @@ import { logOrderEvent } from "@/lib/order-events";
 import { parseShopDateTime } from "@/lib/time";
 import { normalizeContact } from "@/lib/phone";
 import { findCustomerByContact } from "@/lib/customer-match";
+import { notifyQuoteRequest } from "@/lib/quote-notify";
+import { sendTrackingEmail } from "@/lib/order-notify";
+import { siteOrigin } from "@/lib/site-url";
 
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = /^(image\/(png|jpe?g|webp|gif|svg\+xml)|application\/pdf)$/;
@@ -69,6 +73,7 @@ export async function submitQuote(
   const parsed = quoteRequestSchema.safeParse({
     name: formData.get("name"),
     contact: formData.get("contact"),
+    email: formData.get("email"),
     product: formData.get("product"),
     quantity: formData.get("quantity"),
     neededBy: formData.get("neededBy") || undefined,
@@ -125,9 +130,9 @@ export async function submitQuote(
   const neededBy = parseShopDateTime(data.neededBy);
 
   const description = [
-    data.product === "Jersey" ? "Jersey (sublimation)" : null,
+    data.product === "Jersey Upper" || data.product === "Jersey Set" ? `${product.label} (sublimation)` : null,
     data.details,
-    `Contact: ${data.contact}`,
+    `Contact: ${data.contact} · ${data.email}`,
     neededBy ? `Needed by: ${neededBy.toDateString()}` : null,
     data.source === "studio" ? "Source: 3D Studio mockup" : null,
   ]
@@ -145,9 +150,14 @@ export async function submitQuote(
         (
           await tx
             .insert(customers)
-            .values({ name: data.name, contactNumber: normalizeContact(data.contact) })
+            .values({ name: data.name, contactNumber: normalizeContact(data.contact), email: data.email.toLowerCase() })
             .returning()
         )[0];
+
+      // Returning customers from before emails were saved: keep the one they gave now.
+      if (existing && !existing.email) {
+        await tx.update(customers).set({ email: data.email.toLowerCase() }).where(eq(customers.id, existing.id));
+      }
 
       const [created] = await tx
         .insert(orders)
@@ -157,7 +167,7 @@ export async function submitQuote(
           status: "Pending",
           dueDate: neededBy,
         })
-        .returning({ id: orders.id, orderNumber: orders.orderNumber });
+        .returning({ id: orders.id, orderNumber: orders.orderNumber, trackingToken: orders.trackingToken });
 
       await tx.insert(orderItems).values({
         orderId: created.id,
@@ -188,6 +198,28 @@ export async function submitQuote(
 
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/orders");
+
+    // Awaited so serverless runtimes don't freeze the send mid-flight.
+    await notifyQuoteRequest({
+      orderNumber: order.orderNumber,
+      name: data.name,
+      contact: data.contact,
+      email: data.email,
+      productLabel: product.label,
+      quantity: data.quantity,
+      details: data.details,
+      neededBy,
+      source: data.source,
+      attachmentUrl,
+    });
+
+    // Give the customer their tracking link right away (best-effort, like the alert above).
+    await sendTrackingEmail(data.email, {
+      orderNumber: order.orderNumber,
+      customerName: data.name,
+      title: `${data.quantity}× ${product.label}`,
+      trackingUrl: `${await siteOrigin()}/track/${order.trackingToken}`,
+    });
 
     return {
       status: "success",
