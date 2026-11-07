@@ -18,6 +18,7 @@ export const orderStatusEnum = pgEnum("order_status", [
   "Pending",
   "Designing",
   "Printing",
+  "Sewing",
   "Ready for Pickup",
   "Completed",
 ]);
@@ -26,6 +27,11 @@ export const productTypeEnum = pgEnum("product_type", [
   "Tarpaulin",
   "T-Shirt",
   "Mug",
+  "Jersey Upper",
+  "Jersey Set",
+  "Polo",
+  "Chinese Collar",
+  "Button Pins",
   "Other",
 ]);
 
@@ -259,6 +265,7 @@ export const ORDER_STATUSES = [
   "Pending",
   "Designing",
   "Printing",
+  "Sewing",
   "Ready for Pickup",
   "Completed",
 ] as const;
@@ -269,6 +276,11 @@ export const PRODUCT_TYPES = [
   "Tarpaulin",
   "T-Shirt",
   "Mug",
+  "Jersey Upper",
+  "Jersey Set",
+  "Polo",
+  "Chinese Collar",
+  "Button Pins",
   "Other",
 ] as const;
 

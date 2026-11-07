@@ -239,7 +239,7 @@ function QuoteTicket({
 
               <fieldset>
                 <legend className={cn(labelClass, "mb-3.5")}>What are we printing?</legend>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
                   {QUOTE_PRODUCTS.map((p, i) => {
                     const active = p.value === product;
                     return (

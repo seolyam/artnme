@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { PAYMENT_METHODS } from "@/db/schema";
+import { ORDER_STATUSES, PAYMENT_METHODS, PRODUCT_TYPES } from "@/db/schema";
 
 // ─── Customer ───────────────────────────────────────────────────────────────
 
@@ -17,7 +17,7 @@ export type CustomerFormValues = z.infer<typeof customerSchema>;
 
 export const orderItemSchema = z.object({
   id: z.string().uuid().optional(),
-  productType: z.enum(["Tarpaulin", "T-Shirt", "Mug", "Other"]),
+  productType: z.enum(PRODUCT_TYPES),
   description: z.string().optional(),
   quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
   dimensions: z.string().optional(),
@@ -31,13 +31,7 @@ export type OrderItemFormValues = z.infer<typeof orderItemSchema>;
 export const orderSchema = z.object({
   customerId: z.string().uuid("Please select a customer"),
   title: z.string().min(1, "Order title is required"),
-  status: z.enum([
-    "Pending",
-    "Designing",
-    "Printing",
-    "Ready for Pickup",
-    "Completed",
-  ]),
+  status: z.enum(ORDER_STATUSES),
   totalAmount: z.coerce.number().min(0, "Total must be non-negative"),
   depositAmount: z.coerce.number().min(0, "Deposit must be non-negative"),
   dueDate: z.string().optional(),
@@ -52,13 +46,7 @@ export type OrderFormValues = z.infer<typeof orderSchema>;
 export const orderFormSchema = z.object({
   customerId: z.string().default(""),
   title: z.string().min(1, "Order title is required"),
-  status: z.enum([
-    "Pending",
-    "Designing",
-    "Printing",
-    "Ready for Pickup",
-    "Completed",
-  ]),
+  status: z.enum(ORDER_STATUSES),
   totalAmount: z.coerce.number().min(0, "Total must be non-negative"),
   depositAmount: z.coerce.number().min(0, "Deposit must be non-negative"),
   dueDate: z.string().optional(),
@@ -72,13 +60,7 @@ export type OrderFormSchemaValues = z.infer<typeof orderFormSchema>;
 
 export const updateOrderStatusSchema = z.object({
   orderId: z.string().uuid(),
-  status: z.enum([
-    "Pending",
-    "Designing",
-    "Printing",
-    "Ready for Pickup",
-    "Completed",
-  ]),
+  status: z.enum(ORDER_STATUSES),
 });
 
 export type UpdateOrderStatusValues = z.infer<typeof updateOrderStatusSchema>;
@@ -107,8 +89,12 @@ export const WEB_QUOTE_PREFIX = "Web quote";
 
 export const QUOTE_PRODUCTS = [
   { value: "T-Shirt", label: "T-shirt", productType: "T-Shirt" },
-  { value: "Jersey", label: "Jersey", productType: "Other" },
+  { value: "Jersey Upper", label: "Jersey upper", productType: "Jersey Upper" },
+  { value: "Jersey Set", label: "Jersey set", productType: "Jersey Set" },
+  { value: "Polo", label: "Polo", productType: "Polo" },
+  { value: "Chinese Collar", label: "Chinese collar", productType: "Chinese Collar" },
   { value: "Mug", label: "Mug", productType: "Mug" },
+  { value: "Button Pins", label: "Button pins", productType: "Button Pins" },
   { value: "Tarpaulin", label: "Tarpaulin", productType: "Tarpaulin" },
   { value: "Other", label: "Other", productType: "Other" },
 ] as const;
@@ -123,7 +109,7 @@ export const quoteRequestSchema = z.object({
     .max(40)
     .refine((v) => v.replace(/\D/g, "").length >= 7, "Enter a valid phone number."),
   email: z.string().trim().max(120).email("Enter a valid email address."),
-  product: z.enum(["T-Shirt", "Jersey", "Mug", "Tarpaulin", "Other"]),
+  product: z.enum(QUOTE_PRODUCTS.map((p) => p.value) as [QuoteProduct, ...QuoteProduct[]]),
   quantity: z.coerce
     .number()
     .int("Quantity must be a whole number.")

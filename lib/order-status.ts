@@ -32,6 +32,14 @@ export const STATUS_STYLE: Record<
     border: "border-t-brand",
     rail: "border-l-brand",
   },
+  Sewing: {
+    short: "Sewing",
+    dot: "bg-[#b07cff]",
+    text: "text-violet-700 dark:text-[#b07cff]",
+    soft: "bg-[#b07cff]/12",
+    border: "border-t-[#b07cff]",
+    rail: "border-l-[#b07cff]",
+  },
   "Ready for Pickup": {
     short: "Ready",
     dot: "bg-success",
@@ -61,7 +69,7 @@ export function isWebQuote(title: string) {
   return title.startsWith(WEB_QUOTE_PREFIX);
 }
 
-const SEQUENCE = ["Pending", "Designing", "Printing", "Ready for Pickup", "Completed"] as const;
+const SEQUENCE = ["Pending", "Designing", "Printing", "Sewing", "Ready for Pickup", "Completed"] as const;
 
 /** The status a job normally moves to next, or null once it's done. */
 export function nextStatus(current: string): (typeof SEQUENCE)[number] | null {

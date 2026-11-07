@@ -127,7 +127,7 @@ export async function submitQuote(
   const neededBy = parseShopDateTime(data.neededBy);
 
   const description = [
-    data.product === "Jersey" ? "Jersey (sublimation)" : null,
+    data.product === "Jersey Upper" || data.product === "Jersey Set" ? `${product.label} (sublimation)` : null,
     data.details,
     `Contact: ${data.contact} · ${data.email}`,
     neededBy ? `Needed by: ${neededBy.toDateString()}` : null,

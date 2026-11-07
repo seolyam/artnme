@@ -182,6 +182,11 @@ const SIZE_HINT: Record<string, string> = {
   Tarpaulin: "e.g. 3ft x 5ft",
   "T-Shirt": "e.g. S×2, M×5, L×3",
   Mug: "e.g. 11oz white",
+  "Jersey Upper": "e.g. S×2, M×5, L×3",
+  "Jersey Set": "e.g. S×2, M×5, L×3",
+  Polo: "e.g. S×2, M×5, L×3",
+  "Chinese Collar": "e.g. S×2, M×5, L×3",
+  "Button Pins": "e.g. 58mm round",
   Other: "Size / variant",
 };
 

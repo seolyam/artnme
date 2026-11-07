@@ -373,12 +373,12 @@ export default async function OrderDetailPage({
   );
 }
 
-const PIPELINE = ["Pending", "Designing", "Printing", "Ready for Pickup", "Completed"];
+const PIPELINE = ["Pending", "Designing", "Printing", "Sewing", "Ready for Pickup", "Completed"];
 
 function StatusPipeline({ status }: { status: string }) {
   const current = PIPELINE.indexOf(status);
   return (
-    <ol className="grid grid-cols-5 gap-0.5" aria-label="Order progress">
+    <ol className="grid grid-cols-6 gap-0.5" aria-label="Order progress">
       {PIPELINE.map((step, i) => {
         const reached = i <= current;
         const st = statusStyle(step);
