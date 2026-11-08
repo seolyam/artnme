@@ -55,9 +55,9 @@ Phase 1 evals pick the final primary. Model IDs live only in `lib/ai/models.ts`.
 
 ## Phase 0: Foundation
 
-- [ ] **[ASK]** Owner approval. Find which Vercel team owns the deployment (`vercel link` asks for the scope; or check the dashboard); credits and budgets belong to that team.
-- [ ] **[ASK]** Hard cap: `vercel ai-gateway budgets set team --limit 5 --refresh-period monthly`. Before buying any credits, check whether buying ends the free monthly credit.
-- [ ] **[ASK]** Local key: `vercel ai-gateway api-keys create --name artnme-dev --limit 2 --refresh-period monthly`, add `AI_GATEWAY_API_KEY` to `.env.local`. Production uses OIDC with no key. Don't set `AI_GATEWAY_API_KEY` in Vercel production: when set, it always wins over OIDC, even if invalid (gateway docs, "OIDC Authentication").
+- [x] **[ASK]** Owner approval (given 2026-11-08). The deployment is `seolyams-projects/artnme` (Hobby); the repo is linked with `vercel link`.
+- [x] **[ASK]** Hard cap: `vercel ai-gateway budgets set team --amount 5 --refresh-period monthly` (the CLI flag is `--amount`). Done; no credits bought. Before buying any credits, check whether buying ends the free monthly credit.
+- [x] **[ASK]** Local key: `vercel ai-gateway api-keys create --name artnme-dev --amount 2 --refresh-period monthly --expiration 1y` (done), add `AI_GATEWAY_API_KEY` to `.env.local`. Production uses OIDC with no key. Don't set `AI_GATEWAY_API_KEY` in Vercel production: when set, it always wins over OIDC, even if invalid (gateway docs, "OIDC Authentication").
 - [x] `pnpm add ai` (v7; check `npm view ai version`). Read `node_modules/ai/docs/03-ai-sdk-core/10-generating-structured-data.mdx`, `55-testing.mdx` and `50-error-handling.mdx` before writing code.
 - [x] `.env.example`: add commented `AI_GATEWAY_API_KEY=`, `AI_STAFF_ENABLED=`, `AI_PUBLIC_ENABLED=` (template only, no secrets).
 - [x] `lib/ai/models.ts`: `MODELS` map (primary, fallback), per-1M prices for cost logging, and `gatewayOptions({ feature, user })` returning `{ gateway: { models: [fallback], tags: ["feature:<name>"], user, disallowPromptTraining: true } }`.
@@ -65,7 +65,7 @@ Phase 1 evals pick the final primary. Model IDs live only in `lib/ai/models.ts`.
 - [x] `lib/rate-limit.ts`: `createThrottle({ windowMs, max })` → `hit(key): boolean`, generalized from `isThrottled` (`app/actions/quotes.ts:41`). Leave `quotes.ts` as is (no unasked refactor).
 - [x] `lib/ai/call.ts`: `runStructured({ model, instructions, prompt | messages, schema, feature, user, timeoutMs = 15000 })` wraps `generateText` + `Output.object`, sets `abortSignal: AbortSignal.timeout(timeoutMs)`, catches everything (including `NoOutputGeneratedError`), and returns `{ ok: true, output, usage, ms } | { ok: false, reason: "timeout" | "unavailable" | "invalid" }`. Logs one line: `ai feature=… model=… in=… out=… ms=… ok=…`. (v7 deprecates `system`; the option is `instructions`.)
 - [x] Tests first: `lib/rate-limit.test.ts` (window expiry, per-key isolation, max boundary), `lib/ai/call.test.ts` with `MockLanguageModelV4` (valid object → ok; malformed JSON → `invalid`; thrown error → `unavailable`; never rejects).
-- [x] `scripts/ai-smoke.ts`: one real call that prints the output and usage (`pnpm exec dotenv -e .env.local -- tsx scripts/ai-smoke.ts`). Written; not yet run (no `AI_GATEWAY_API_KEY` in `.env.local`).
+- [x] `scripts/ai-smoke.ts`: one real call that prints the output and usage (`pnpm exec dotenv -e .env.local -- tsx scripts/ai-smoke.ts`). Ran 2026-11-08: Haiku 5.5, 84 in / 31 out tokens, 3.2 s, ~$0.00002. It labelled a Hiligaynon message as Tagalog, so don't trust model language detection; Phase 1 evals should check reply language.
 
 Verify: `pnpm test && pnpm lint && pnpm exec tsc --noEmit` all pass; the smoke script prints a reply plus token usage, and the call shows up tagged `feature:smoke` in the AI Gateway dashboard.
 Interview note: a result type instead of exceptions makes "AI failed" an ordinary, typed state the UI must handle. The budget is the real guarantee because in-memory throttles don't share state across serverless instances.
