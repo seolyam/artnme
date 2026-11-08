@@ -22,6 +22,7 @@ const TOOL_LABEL: Record<string, string> = {
   getCollections: "collections",
   getDayActivity: "day activity",
   getOrder: "order",
+  getRecentOrders: "recent orders",
   searchEverything: "search",
   getTopCustomers: "top customers",
   getProductTypeBreakdown: "product breakdown",

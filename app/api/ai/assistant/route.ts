@@ -3,7 +3,7 @@ import { getActiveUser } from "@/lib/auth";
 import { aiStaffEnabled } from "@/lib/ai/flags";
 import { createShopAssistant } from "@/lib/ai/assistant/agent";
 import { createThrottle } from "@/lib/rate-limit";
-import { getCollections, getDayActivity, getOrder, getWorkQueue } from "@/app/actions/orders";
+import { getCollections, getDayActivity, getOrder, getRecentOrders, getWorkQueue } from "@/app/actions/orders";
 import { getDailyMoney, getRangeReport, getReceivables } from "@/app/actions/reports";
 import { searchEverything } from "@/app/actions/search";
 import { getProductTypeBreakdown, getTopCustomers } from "@/app/actions/analytics";
@@ -46,6 +46,7 @@ export async function POST(request: Request) {
       getCollections,
       getDayActivity,
       getOrder,
+      getRecentOrders,
       searchEverything,
       getTopCustomers,
       getProductTypeBreakdown,

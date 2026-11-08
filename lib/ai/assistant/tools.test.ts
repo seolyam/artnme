@@ -11,6 +11,7 @@ function deps(over: Partial<AssistantDeps> = {}): AssistantDeps {
     getCollections: vi.fn(async () => ({})),
     getDayActivity: vi.fn(async () => ({})),
     getOrder: vi.fn(async () => null),
+    getRecentOrders: empty,
     searchEverything: vi.fn(async () => ({ orders: [], customers: [] })),
     getTopCustomers: empty,
     getProductTypeBreakdown: empty,

@@ -15,6 +15,7 @@ export const ASSISTANT_TOOL_NAMES = [
   "getCollections",
   "getDayActivity",
   "getOrder",
+  "getRecentOrders",
   "searchEverything",
   "getTopCustomers",
   "getProductTypeBreakdown",
@@ -29,6 +30,7 @@ export type AssistantDeps = {
   getCollections: (day?: string) => Promise<unknown>;
   getDayActivity: (day?: string) => Promise<unknown>;
   getOrder: (orderNumber: string) => Promise<unknown>;
+  getRecentOrders: (limit?: number) => Promise<unknown>;
   searchEverything: (query: string) => Promise<unknown>;
   getTopCustomers: (limit?: number) => Promise<unknown>;
   getProductTypeBreakdown: () => Promise<unknown>;
@@ -108,6 +110,11 @@ export function createAssistantTools(deps: AssistantDeps) {
       description: "One order's details by its order number (e.g. 123 for #0123).",
       inputSchema: z.object({ orderNumber: z.number().int().positive() }),
       execute: async ({ orderNumber }) => forModel(await deps.getOrder(String(orderNumber))),
+    }),
+    getRecentOrders: tool({
+      description: "The newest orders, latest first, with customer name, items, status and amounts.",
+      inputSchema: z.object({ limit: z.number().int().min(1).max(MAX_ROWS).optional().describe("How many; default 5.") }),
+      execute: async ({ limit }) => forModel(await deps.getRecentOrders(limit)),
     }),
     searchEverything: tool({
       description: "Find orders and customers by name, title or order number.",

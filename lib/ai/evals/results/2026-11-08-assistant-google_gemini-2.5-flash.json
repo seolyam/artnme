@@ -1,8 +1,8 @@
 {
   "summary": {
     "model": "google/gemini-2.5-flash",
-    "cases": 6,
-    "passed": 6,
+    "cases": 7,
+    "passed": 7,
     "emptyAnswers": 0
   },
   "cases": [
@@ -10,37 +10,43 @@
       "q": "Sino pa may balance?",
       "ok": true,
       "misses": [],
-      "text": "Ang may balance pa ay:\n* Ana Cruz: ₱9,500.00 para sa order #0012\n* Ben Lim: ₱225.00 para sa order #0015"
+      "text": "Ang may balance pa ay:\n* Ana Cruz: ₱9,500.00 para sa #0012\n* Ben Lim: ₱225.00 para sa #0015"
     },
     {
       "q": "Who still owes money?",
       "ok": true,
       "misses": [],
-      "text": "Ang naga-utang pa:\n* Ana Cruz: ₱9,500.00 para sa #0012\n* Ben Lim: ₱225.00 para sa #0015"
+      "text": "Ang may utang pa ay:\nAna Cruz: ₱9,500.00 para sa #0012\nBen Lim: ₱225.00 para sa #0015"
     },
     {
       "q": "How much did we collect today?",
       "ok": true,
       "misses": [],
-      "text": "Today's collections:\nCash: ₱2,000.00\nGCash: ₱1,500.00\nTotal: ₱3,500.00"
+      "text": "Today we collected ₱3,500.00: ₱2,000.00 by Cash and ₱1,500.00 by GCash."
     },
     {
       "q": "Pila ang nakolekta namon subong?",
       "ok": true,
       "misses": [],
-      "text": "Subong, nakakolekta kita sang ₱3,500.00."
+      "text": "Subong nakakolekta kita sang ₱3,500.00."
     },
     {
       "q": "Ano ang overdue?",
       "ok": true,
       "misses": [],
-      "text": "Ang overdue ay:\n\n*   #0009 Jersey set x12 (due 2026-11-06)"
+      "text": "Ang overdue ay ang #0009 - Jersey set x12 (due 2026-11-06)."
     },
     {
       "q": "Top customer namon?",
       "ok": true,
       "misses": [],
-      "text": "Ang amon top customer amo ang Silay Bakeshop, nga naka-order sang 6 ka beses kag naka-gastos sang ₱52,000.00."
+      "text": "Ang top customer amo ang Silay Bakeshop nga may 6 ka orders kag total spent nga ₱52,000.00."
+    },
+    {
+      "q": "sino latest order",
+      "ok": true,
+      "misses": [],
+      "text": "Ang pinakabag-o nga order ay kay Carla Reyes para sa Batch 2016 reunion shirts, order #0031. Nagasto niya ₱8,750.00."
     }
   ]
 }
