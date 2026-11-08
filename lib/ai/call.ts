@@ -13,6 +13,8 @@ export type StructuredResult<T> =
       output: T;
       usage: { inputTokens: number; outputTokens: number };
       ms: number;
+      /** The model that answered (the fallback when the primary failed). */
+      model: string;
     }
   | { ok: false; reason: AiFailure };
 
@@ -26,6 +28,8 @@ type RunStructuredOptions<S extends z.ZodType> = {
   user?: string;
   timeoutMs?: number;
   maxRetries?: number;
+  /** Let the gateway retry on the fallback model (default true). */
+  fallback?: boolean;
 } & ({ prompt: string; messages?: never } | { messages: ModelMessage[]; prompt?: never });
 
 function modelName(model: LanguageModel): string {
@@ -54,9 +58,9 @@ export async function runStructured<S extends z.ZodType>(
   const signal = AbortSignal.timeout(opts.timeoutMs ?? 15_000);
   const started = performance.now();
   const ms = () => Math.round(performance.now() - started);
-  const log = (ok: boolean, inTok = 0, outTok = 0) =>
+  const log = (ok: boolean, inTok = 0, outTok = 0, served = modelName(model), err = "") =>
     console.info(
-      `ai feature=${opts.feature} model=${modelName(model)} in=${inTok} out=${outTok} ms=${ms()} ok=${ok}`,
+      `ai feature=${opts.feature} model=${served} in=${inTok} out=${outTok} ms=${ms()} ok=${ok}${err ? ` err=${err}` : ""}`,
     );
 
   try {
@@ -67,7 +71,7 @@ export async function runStructured<S extends z.ZodType>(
       output: Output.object({ schema: opts.schema }),
       abortSignal: signal,
       ...(opts.maxRetries !== undefined ? { maxRetries: opts.maxRetries } : {}),
-      providerOptions: gatewayOptions({ feature: opts.feature, user: opts.user }),
+      providerOptions: gatewayOptions({ feature: opts.feature, user: opts.user, fallback: opts.fallback }),
     });
     // Accessing .output throws when the model returned nothing usable.
     const output = result.output as z.infer<S>;
@@ -75,10 +79,14 @@ export async function runStructured<S extends z.ZodType>(
       inputTokens: result.usage.inputTokens ?? 0,
       outputTokens: result.usage.outputTokens ?? 0,
     };
-    log(true, usage.inputTokens, usage.outputTokens);
-    return { ok: true, output, usage, ms: ms() };
+    // The gateway may have answered with the fallback; log who actually did.
+    const served = result.response?.modelId || modelName(model);
+    log(true, usage.inputTokens, usage.outputTokens, served);
+    return { ok: true, output, usage, ms: ms(), model: served };
   } catch (err) {
-    log(false);
+    // Error name and HTTP status only; messages can echo request content.
+    const status = (err as { statusCode?: number }).statusCode;
+    log(false, 0, 0, modelName(model), `${errorName(err) || "unknown"}${status ? `:${status}` : ""}`);
     if (signal.aborted) return { ok: false, reason: "timeout" };
     if (isInvalidOutput(err)) return { ok: false, reason: "invalid" };
     return { ok: false, reason: "unavailable" };
