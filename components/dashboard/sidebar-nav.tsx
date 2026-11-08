@@ -18,6 +18,7 @@ import {
   Search,
   Tags,
   UserCog,
+  Sparkles,
 } from "lucide-react";
 import {
   Sheet,
@@ -33,7 +34,7 @@ import { initials } from "@/lib/order-status";
 import { AlertsToggle } from "@/components/dashboard/live-updates";
 import { StaffGuideButton } from "@/components/dashboard/staff-guide";
 
-export type SidebarUser = { fullName: string; role: string };
+export type SidebarUser = { fullName: string; role: string; /** AI features on (shows Ask the shop). */ ai?: boolean };
 
 const navItems = [
   { label: "Command center", href: "/dashboard", icon: LayoutDashboard },
@@ -41,6 +42,7 @@ const navItems = [
   { label: "Customers", href: "/dashboard/customers", icon: Users },
   { label: "Reports", href: "/dashboard/reports", icon: BarChart3 },
   { label: "Price list", href: "/dashboard/prices", icon: Tags },
+  { label: "Ask the shop", href: "/dashboard/assistant", icon: Sparkles, aiOnly: true },
   // Not prefetched: the page calls the Supabase admin API, so only load it on a real visit.
   { label: "Staff", href: "/dashboard/staff", icon: UserCog, adminOnly: true, prefetch: false },
   { label: "Trash", href: "/dashboard/orders/trash", icon: Trash2, adminOnly: true },
@@ -59,11 +61,13 @@ function NavLinks({
   webQuotes,
   layoutGroup,
   isAdmin,
+  ai = false,
 }: {
   onNavigate?: () => void;
   webQuotes: number;
   layoutGroup: string;
   isAdmin: boolean;
+  ai?: boolean;
 }) {
   const pathname = usePathname();
 
@@ -81,7 +85,7 @@ function NavLinks({
         Search
         <kbd className="spec ml-auto text-[10px]">Ctrl K</kbd>
       </button>
-      {navItems.filter((item) => !item.adminOnly || isAdmin).map((item) => {
+      {navItems.filter((item) => (!item.adminOnly || isAdmin) && (!item.aiOnly || ai)).map((item) => {
         const active = isActive(pathname, item.href);
 
         return (
@@ -176,7 +180,7 @@ function DesktopSidebar({ webQuotes, user }: { webQuotes: number; user: SidebarU
   return (
     <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-outline-variant/30 bg-surface-container-lowest md:flex print:hidden">
       <Brand />
-      <NavLinks webQuotes={webQuotes} layoutGroup="desktop" isAdmin={user.role === "admin"} />
+      <NavLinks webQuotes={webQuotes} layoutGroup="desktop" isAdmin={user.role === "admin"} ai={user.ai} />
       <div className="space-y-1 border-t border-outline-variant/30 px-3 py-4">
         <Account user={user} />
         <AlertsToggle />
@@ -246,7 +250,7 @@ function MobileHeader({ webQuotes, user }: { webQuotes: number; user: SidebarUse
                 onNavigate={closeSheet}
                 webQuotes={webQuotes}
                 layoutGroup="mobile"
-                isAdmin={user.role === "admin"}
+                isAdmin={user.role === "admin"} ai={user.ai}
               />
               <div className="border-t border-outline-variant/30 px-3 py-4">
                 <Account user={user} onNavigate={closeSheet} />

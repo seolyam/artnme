@@ -39,6 +39,15 @@ export async function requireAuth() {
   return user;
 }
 
+/** For API routes, which answer 401 instead of redirecting: the signed-in,
+ *  active staff user, or null. */
+export async function getActiveUser() {
+  const user = await getSessionUser();
+  if (!user) return null;
+  const profile = await getProfile(user.id);
+  return profile?.deactivatedAt ? null : user;
+}
+
 export async function getSessionProfile() {
   const user = await requireAuth();
   const profile = await getProfile(user.id);
