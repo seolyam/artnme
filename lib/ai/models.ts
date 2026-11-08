@@ -14,6 +14,9 @@
 export const MODELS = {
   primary: "google/gemini-2.5-flash-lite",
   fallback: "google/gemini-2.5-flash",
+  // The tool-calling assistant: Flash-Lite often returned an empty answer
+  // after a tool result (assistant.eval.ts); Flash answered every case.
+  assistant: "google/gemini-2.5-flash",
 } as const;
 
 export const MODEL_PRICES: Record<string, { input: number; output: number }> = {

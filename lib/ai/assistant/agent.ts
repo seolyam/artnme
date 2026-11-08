@@ -23,7 +23,7 @@ Rules:
 
 /** The read-only "Ask the shop" agent. */
 export function createShopAssistant({
-  model = MODELS.primary,
+  model = MODELS.assistant,
   deps,
   now = new Date(),
   user,
@@ -38,7 +38,9 @@ export function createShopAssistant({
     instructions: instructions(shopToday(now)),
     tools: createAssistantTools(deps),
     stopWhen: isStepCount(MAX_STEPS),
-    providerOptions: gatewayOptions({ feature: "assistant", user }),
+    // No fallback: the general fallback is this same model, and Flash-Lite
+    // isn't reliable enough at tool use to stand in for it.
+    providerOptions: gatewayOptions({ feature: "assistant", user, fallback: false }),
   });
 }
 
