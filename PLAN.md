@@ -290,7 +290,7 @@ Interview note: tools are the permission boundary. The model can only do what th
 ## Phase 8: Ship and show
 
 - [x] `README.md`: "AI features" section with a mermaid flow (chat → redact → model → Zod → resolve → staff → `createOrder`), the guardrails, and an eval results table (accuracy, average latency, cost per call).
-- [ ] Staff guide: add a "Paste a chat" and "Check artwork" page (not done: the guide is a narrated video recorded by `scripts/demo-video/staff`; it needs a re-record with AI enabled) (find the source with `rg -l "staff-guide" app private`) and keep `e2e/staff-guide.spec.ts` green.
+- [x] ~~Staff guide: add a "Paste a chat" and "Check artwork" page~~ Dropped 2026-11-08: the guide is a narrated video (`scripts/demo-video/staff`) and won't be re-recorded for the AI features.
 - [x] **[ASK]** Production env: `AI_STAFF_ENABLED=1` first (set for Production and Preview on 2026-11-08; takes effect on the next deploy of this branch). Run a week with staff, then `AI_PUBLIC_ENABLED=1` (not set yet).
 - [ ] Portfolio repo (after a week of real use, so the claim is live and has a real number) (`~/projects/dev/portfolio`, separate commit): update the Art N Me dossier in `lib/projects.ts` (AI SDK + one measured number from the evals or a week of real use), and add an "AI" group to `lib/arsenal.ts` with proof "Art N Me".
 
