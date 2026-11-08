@@ -20,7 +20,7 @@ Assumptions:
 
 ## Status (2026-11-08)
 
-Built on `feat/ai-assist`: Phases 0–7 and the README part of Phase 8. Checked: `pnpm test` (offline), `pnpm lint` (no new warnings), `pnpm exec tsc --noEmit`, `pnpm build`, `pnpm eval` (order drafts 44 cases, studio 15/15, assistant 6/6), and live checks of artwork review (Cloudinary preview → vision) and assistant tool calls, and a logged-out `POST /api/ai/assistant` → 401.
+Built on `feat/ai-assist` and merged to `main` on 2026-11-08 (staff features on in production; public features off until staff have used them for a week): Phases 0–7 and the README part of Phase 8. Owner tried the preview (paste a chat, Ask the shop) before the merge; Ask the shop gained a `getRecentOrders` tool after "sino latest order" found no tool. Checked: `pnpm test` (offline), `pnpm lint` (no new warnings), `pnpm exec tsc --noEmit`, `pnpm build`, `pnpm eval` (order drafts 44 cases, studio 15/15, assistant 6/6), and live checks of artwork review (Cloudinary preview → vision) and assistant tool calls, and a logged-out `POST /api/ai/assistant` → 401.
 
 Changes from the plan, found while building:
 - **Free tier.** The team's AI Gateway is on the free tier: Haiku 5.5, Gemini 3.x and GPT-6 Luna return 403, and each model allows 5 requests per minute. Evals picked `google/gemini-2.5-flash-lite` (primary) and `google/gemini-2.5-flash` (fallback); see `lib/ai/models.ts` and `lib/ai/evals/results/`. Evals space calls to 5/min and turn the fallback off. Buying credits lifts both limits, **[ASK]** first (money).
@@ -31,7 +31,7 @@ Changes from the plan, found while building:
 - **Studio colors** moved to `lib/customizer/colors.ts` (the old list lived in a `"use client"` file, which a server action can't read).
 
 Not verified yet (need a signed-in browser session, or data the repo doesn't have):
-- Manual UI checks in Phases 2–7 (paste a chat end to end, Apply on a web quote, Check artwork, studio describe, assistant answers matching Reports).
+- Manual UI checks not yet done by the owner: Apply on a web quote, Check artwork on a real customer file, studio describe (public flag is off), assistant figures against the Reports page.
 - `pnpm test:e2e`.
 - Phase 5 `artwork.eval.ts`: needs 12–15 labeled sample images from the shop.
 
@@ -292,7 +292,7 @@ Interview note: tools are the permission boundary. The model can only do what th
 - [x] `README.md`: "AI features" section with a mermaid flow (chat → redact → model → Zod → resolve → staff → `createOrder`), the guardrails, and an eval results table (accuracy, average latency, cost per call).
 - [ ] Staff guide: add a "Paste a chat" and "Check artwork" page (not done: the guide is a narrated video recorded by `scripts/demo-video/staff`; it needs a re-record with AI enabled) (find the source with `rg -l "staff-guide" app private`) and keep `e2e/staff-guide.spec.ts` green.
 - [x] **[ASK]** Production env: `AI_STAFF_ENABLED=1` first (set for Production and Preview on 2026-11-08; takes effect on the next deploy of this branch). Run a week with staff, then `AI_PUBLIC_ENABLED=1` (not set yet).
-- [ ] Portfolio repo (`~/projects/dev/portfolio`, separate commit): update the Art N Me dossier in `lib/projects.ts` (AI SDK + one measured number from the evals or a week of real use), and add an "AI" group to `lib/arsenal.ts` with proof "Art N Me".
+- [ ] Portfolio repo (after a week of real use, so the claim is live and has a real number) (`~/projects/dev/portfolio`, separate commit): update the Art N Me dossier in `lib/projects.ts` (AI SDK + one measured number from the evals or a week of real use), and add an "AI" group to `lib/arsenal.ts` with proof "Art N Me".
 
 Verify: `pnpm test && pnpm lint && pnpm exec tsc --noEmit && pnpm build && pnpm test:e2e` pass in artnme; `pnpm test && pnpm typecheck && pnpm build` pass in portfolio; AI Gateway usage shows spend per `feature:*` tag.
 
