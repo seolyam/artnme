@@ -13,14 +13,17 @@
     "db:studio": "drizzle-kit studio",
     "db:check-rls": "dotenv -e .env.local -- tsx scripts/check-rls.ts",
     "test": "vitest run",
-    "test:e2e": "dotenv -e .env.local -- playwright test"
+    "test:e2e": "dotenv -e .env.local -- playwright test",
+    "eval": "dotenv -e .env.local -- vitest run --config vitest.eval.config.mts"
   },
   "dependencies": {
+    "@ai-sdk/react": "^4.0.169",
     "@hookform/resolvers": "^5.2.2",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.98.0",
+    "ai": "^7.0.165",
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.9.0",
     "clsx": "^2.1.1",

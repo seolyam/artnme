@@ -2,18 +2,32 @@
 
 import { useState } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
-import { Calculator } from "lucide-react";
+import { Calculator, History } from "lucide-react";
 import type { PricePresetView } from "@/app/actions/prices";
 import type { OrderFormSchemaValues } from "@/lib/validators";
 import { peso } from "@/lib/money";
 import { describeSize, parseSize, priceBySize } from "@/lib/pricing";
+import { rankPriceMemory, type PriceMemoryRow } from "@/lib/price-memory-rank";
+import { formatShopDate } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
 /**
  * Under each item row: the price list for that product as one-tap buttons,
- * and for tarpaulins a size × rate calculator that fills in the price.
+ * what the shop last charged for it, and for tarpaulins a size × rate
+ * calculator that fills in the price.
  */
-export function ItemPricingTools({ index, presets }: { index: number; presets: PricePresetView[] }) {
+export function ItemPricingTools({
+  index,
+  presets,
+  memory = [],
+  customerId,
+}: {
+  index: number;
+  presets: PricePresetView[];
+  /** Recently charged prices (getPriceMemory), loaded once by the page. */
+  memory?: PriceMemoryRow[];
+  customerId?: string;
+}) {
   const { control, setValue } = useFormContext<OrderFormSchemaValues>();
   const item = useWatch({ control, name: `items.${index}` });
   const [rate, setRate] = useState("");
@@ -24,6 +38,7 @@ export function ItemPricingTools({ index, presets }: { index: number; presets: P
   const isTarp = productType === "Tarpaulin" || sqftOptions.length > 0;
   const rateNum = Number(rate);
   const unitPrice = Number(item?.unitPrice) || 0;
+  const hints = rankPriceMemory(memory, { productType, quantity: Number(item?.quantity) || undefined, customerId });
 
   function setPrice(value: number) {
     setValue(`items.${index}.unitPrice`, value, { shouldValidate: true, shouldDirty: true });
@@ -41,7 +56,7 @@ export function ItemPricingTools({ index, presets }: { index: number; presets: P
     if (!item?.description) setValue(`items.${index}.description`, p.label, { shouldDirty: true });
   }
 
-  if (options.length === 0 && !isTarp) return null;
+  if (options.length === 0 && !isTarp && hints.length === 0) return null;
 
   return (
     <div className="mt-3 space-y-2">
@@ -67,6 +82,29 @@ export function ItemPricingTools({ index, presets }: { index: number; presets: P
               </button>
             );
           })}
+        </div>
+      )}
+
+      {hints.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="spec mr-1 inline-flex items-center gap-1 text-[10px] text-on-surface-variant">
+            <History className="h-3 w-3" />
+            Last charged
+          </span>
+          {hints.map((h) => (
+            <button
+              key={`${h.orderNumber}-${h.unitPrice}-${h.dimensions ?? ""}`}
+              type="button"
+              onClick={() => setPrice(h.unitPrice)}
+              aria-pressed={Math.abs(unitPrice - h.unitPrice) < 0.005}
+              title={`Use ${peso(h.unitPrice)} each`}
+              className="min-h-9 border border-dashed border-outline-variant/80 px-3 text-xs transition-colors hover:border-on-surface-variant aria-pressed:border-solid aria-pressed:border-on-surface"
+            >
+              <span className="font-semibold">{peso(h.unitPrice, false)}</span>
+              {` · ${h.quantity} pcs${h.dimensions ? ` · ${h.dimensions}` : ""} · #${String(h.orderNumber).padStart(4, "0")} · ${formatShopDate(h.createdAt, { month: "short", year: "numeric" })}`}
+              {h.labels.length > 0 && <span className="text-on-surface-variant"> · {h.labels.join(", ")}</span>}
+            </button>
+          ))}
         </div>
       )}
 

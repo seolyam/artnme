@@ -1,4 +1,6 @@
 import { Inter, Merriweather, Outfit } from "next/font/google";
+import { StudioAiProvider } from "@/components/customizer/studio-ai";
+import { aiPublicEnabled } from "@/lib/ai/flags";
 
 // The 3D Studio's "Add text" fonts (Space Grotesk already comes from the root layout).
 // Only this page downloads them. See lib/customizer/fonts.ts.
@@ -10,7 +12,7 @@ const merriweather = Merriweather({ subsets: ["latin"], variable: "--font-studio
 export default function CustomizerLayout({ children }: { children: React.ReactNode }) {
   return (
     <div data-studio-fonts className={`contents ${inter.variable} ${outfit.variable} ${merriweather.variable}`}>
-      {children}
+      <StudioAiProvider enabled={aiPublicEnabled()}>{children}</StudioAiProvider>
     </div>
   );
 }

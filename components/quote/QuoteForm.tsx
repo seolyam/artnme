@@ -9,7 +9,9 @@ import { EASE_PLATE, EASE_PRESS } from "@/components/motion/reveal";
 import { ArrowRight } from "@/components/motion/icons";
 import { QUOTE_PRODUCTS, type QuoteProduct } from "@/lib/validators";
 import { cn } from "@/lib/utils";
-import { shrinkForUpload } from "@/lib/shrink-image";
+import { previewForCheck, shrinkForUpload } from "@/lib/shrink-image";
+import { artworkHint } from "@/lib/artwork/print-size";
+import { checkQuoteArtwork, type QuoteArtworkCheck } from "@/app/actions/ai-artwork";
 import { MAX_UPLOAD_LABEL } from "@/lib/upload";
 import { MOCKUP_FILE_NAME, clearMockupForQuote, dataUrlToFile, readMockupForQuote } from "@/lib/customizer/handoff";
 
@@ -40,9 +42,12 @@ const labelClass = "spec block text-[13px] text-[#b31218]";
 export function QuoteForm({
   initialProduct,
   source,
+  aiCheck = false,
 }: {
   initialProduct?: QuoteProduct;
   source?: string;
+  /** Offer the optional AI "Check my file" button. */
+  aiCheck?: boolean;
 }) {
   // Remounting the inner form gives a clean slate after "Send another".
   const [round, setRound] = useState(0);
@@ -51,6 +56,7 @@ export function QuoteForm({
       key={round}
       initialProduct={initialProduct}
       source={source}
+      aiCheck={aiCheck}
       onReset={() => setRound((r) => r + 1)}
     />
   );
@@ -59,10 +65,12 @@ export function QuoteForm({
 function QuoteTicket({
   initialProduct = "T-Shirt",
   source,
+  aiCheck,
   onReset,
 }: {
   initialProduct?: QuoteProduct;
   source?: string;
+  aiCheck: boolean;
   onReset: () => void;
 }) {
   const [state, formAction, pending] = useActionState(send, INITIAL);
@@ -71,6 +79,9 @@ function QuoteTicket({
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [preparing, setPreparing] = useState(false);
+  const [art, setArt] = useState<{ type: string; width?: number; height?: number } | null>(null);
+  const [aiResult, setAiResult] = useState<QuoteArtworkCheck | null>(null);
+  const [checking, setChecking] = useState(false);
   const [mockupDismissed, setMockupDismissed] = useState(false);
   // The mockup the 3D Studio handed over (browser storage, so none on the server render).
   const storedMockup = useSyncExternalStore(
@@ -109,6 +120,8 @@ function QuoteTicket({
   const removeFile = () => {
     if (fileRef.current) fileRef.current.value = "";
     setFileName(null);
+    setArt(null);
+    setAiResult(null);
     setMockupDismissed(true);
     setFileError(null);
     clearMockupForQuote();
@@ -147,8 +160,54 @@ function QuoteTicket({
       setFileName(file.name);
       setMockupDismissed(true);
       setFileError(null);
+      void measureArt(file);
     }
   };
+
+  // Read the original pixel size before shrinkForUpload downsizes it, so the
+  // sharpness hint reflects what the customer actually has.
+  async function measureArt(file: File | undefined) {
+    setArt(null);
+    setAiResult(null);
+    if (!file) return;
+    if (!file.type.startsWith("image/") || file.type === "image/svg+xml") {
+      setArt({ type: file.type });
+      return;
+    }
+    try {
+      const bitmap = await createImageBitmap(file);
+      setArt({ type: file.type, width: bitmap.width, height: bitmap.height });
+      bitmap.close();
+    } catch {
+      setArt(null);
+    }
+  }
+  const artHint = art ? artworkHint({ ...art, productType: product }) : null;
+
+  // Opt-in AI look at the file: a small JPEG preview is sent, never the original.
+  async function checkWithAi() {
+    const file = fileRef.current?.files?.[0];
+    if (!file) return;
+    setChecking(true);
+    try {
+      const preview = await previewForCheck(file);
+      if (!preview) {
+        setAiResult({ ok: false, message: "This file can't be checked. You can still send it." });
+        return;
+      }
+      const fd = new FormData();
+      fd.set("image", new File([preview], "preview.jpg", { type: "image/jpeg" }));
+      fd.set("product", product);
+      fd.set("startedAt", startedAtRef.current?.value ?? "");
+      const honeypot = fileRef.current?.form?.elements.namedItem("company");
+      fd.set("company", honeypot instanceof HTMLInputElement ? honeypot.value : "");
+      setAiResult(await checkQuoteArtwork(fd));
+    } catch {
+      setAiResult({ ok: false, message: "Couldn't check the file right now. You can still send it." });
+    } finally {
+      setChecking(false);
+    }
+  }
 
   return (
     <div className="relative">
@@ -457,6 +516,7 @@ function QuoteTicket({
                       setFileName(e.target.files?.[0]?.name ?? null);
                       setMockupDismissed(true);
                       setFileError(null);
+                      void measureArt(e.target.files?.[0]);
                     }}
                     aria-invalid={!!(fileError ?? errors.attachment)}
                     aria-describedby={fileError ?? errors.attachment ? "q-file-err" : undefined}
@@ -471,6 +531,48 @@ function QuoteTicket({
                   >
                     Remove this file
                   </button>
+                )}
+                {artHint && shownFileName && !mockupUrl && (
+                  <p
+                    className={cn(
+                      "mt-2 text-sm",
+                      artHint.verdict === "low" ? "font-semibold text-[#8a3b12]" : "text-[#4c4542]",
+                    )}
+                  >
+                    {artHint.message}
+                  </p>
+                )}
+                {aiCheck && shownFileName && !mockupUrl && art?.width && (
+                  <div className="mt-2 space-y-1.5 text-sm text-[#4c4542]">
+                    {!aiResult ? (
+                      <button
+                        type="button"
+                        onClick={checkWithAi}
+                        disabled={checking}
+                        className="min-h-11 font-semibold underline underline-offset-4 hover:text-brand disabled:opacity-60"
+                      >
+                        {checking ? "Checking your file…" : "Check my file"}
+                      </button>
+                    ) : aiResult.ok ? (
+                      <>
+                        <p className="font-semibold">
+                          {aiResult.printableAsIs && aiResult.hints.length === 0
+                            ? "Your file looks ready to print."
+                            : aiResult.summary || "A few things to know about this file:"}
+                        </p>
+                        {aiResult.hints.length > 0 && (
+                          <ul className="list-disc space-y-0.5 pl-5">
+                            {aiResult.hints.map((h) => (
+                              <li key={h}>{h}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </>
+                    ) : (
+                      <p>{aiResult.message}</p>
+                    )}
+                    <p className="text-xs">Checked automatically by an AI service. Our designer still reviews every file.</p>
+                  </div>
                 )}
                 <FieldError id="q-file-err" message={fileError ?? errors.attachment} />
               </div>

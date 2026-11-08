@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getOrder } from "@/app/actions/orders";
 import { getCustomers } from "@/app/actions/customers";
 import { getPricePresets } from "@/app/actions/prices";
+import { getPriceMemory } from "@/app/actions/price-memory";
 import { EditOrderForm } from "@/components/forms/edit-order-form";
 import { PageHeader } from "@/components/dashboard/page-header";
 
@@ -16,6 +17,7 @@ export default async function EditOrderPage({
   if (!order) {
     notFound();
   }
+  const priceMemory = await getPriceMemory(order.customerId);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -30,6 +32,7 @@ export default async function EditOrderPage({
         order={order}
         customers={customers.map((c) => ({ id: c.id, name: c.name, contactNumber: c.contactNumber }))}
         presets={presets}
+        priceMemory={priceMemory}
       />
     </div>
   );

@@ -31,6 +31,9 @@ import { SettleDialog } from "@/components/dashboard/settle-dialog";
 import { AssigneeSelect } from "@/components/dashboard/assignee-select";
 import { OrderTimeline } from "@/components/dashboard/order-timeline";
 import { CustomerMessage } from "@/components/dashboard/customer-message";
+import { WebQuoteTriage } from "@/components/dashboard/web-quote-triage";
+import { getPriceMemory } from "@/app/actions/price-memory";
+import { aiStaffEnabled } from "@/lib/ai/flags";
 import { isWebQuote, statusStyle } from "@/lib/order-status";
 import { balanceOf, peso, toNumber } from "@/lib/money";
 import { daysUntil, formatShopDate, formatShopTime } from "@/lib/time";
@@ -55,6 +58,9 @@ export default async function OrderDetailPage({
     getOrderFiles(order.id),
     siteOrigin(),
   ]);
+  // AI triage for pending web quotes; price memory only loads when it shows.
+  const triage = aiStaffEnabled() && isWebQuote(order.title) && order.status === "Pending";
+  const triageMemory = triage ? await getPriceMemory(order.customerId) : undefined;
   const trackingUrl = `${origin}/track/${order.trackingToken}`;
   const fileUrls = new Set(files.map((f) => f.url));
 
@@ -215,9 +221,14 @@ export default async function OrderDetailPage({
                 Items add up to {peso(itemsTotal)} but the order total is {peso(total)}.
               </p>
             )}
+            {triage && (
+              <div className="mt-4">
+                <WebQuoteTriage orderId={order.id} priceMemory={triageMemory} />
+              </div>
+            )}
           </Panel>
           <Panel icon={Paperclip} title={`Files & proofs · ${files.length}`} className="mt-6">
-            <OrderFiles orderId={order.id} files={files} />
+            <OrderFiles orderId={order.id} files={files} aiReview={aiStaffEnabled()} />
           </Panel>
         </div>
 

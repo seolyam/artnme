@@ -10,6 +10,7 @@ import {
   Loader2,
   Plus,
   Search,
+  Sparkles,
   UserRound,
   Users,
 } from "lucide-react";
@@ -43,7 +44,10 @@ const QUICK: Item[] = [
   { key: "q-prices", group: "Go to", label: "Price list", icon: FileText, href: "/dashboard/prices" },
 ];
 
-export function CommandPalette() {
+const ASSISTANT: Item = { key: "q-ask", group: "Go to", label: "Ask the shop (AI)", icon: Sparkles, href: "/dashboard/assistant" };
+
+export function CommandPalette({ ai = false }: { ai?: boolean }) {
+  const quickLinks = useMemo(() => (ai ? [...QUICK, ASSISTANT] : QUICK), [ai]);
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -91,7 +95,7 @@ export function CommandPalette() {
 
   const items: Item[] = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return QUICK;
+    if (!q) return quickLinks;
     const orderItems: Item[] = results.orders.map((o) => ({
       key: `o-${o.orderNumber}`,
       group: "Orders",
@@ -109,9 +113,9 @@ export function CommandPalette() {
       icon: Users,
       href: `/dashboard/customers/${c.id}`,
     }));
-    const quick = QUICK.filter((i) => i.label.toLowerCase().includes(q));
+    const quick = quickLinks.filter((i) => i.label.toLowerCase().includes(q));
     return [...orderItems, ...customerItems, ...quick];
-  }, [query, results]);
+  }, [query, results, quickLinks]);
 
   const close = useCallback(() => {
     setOpen(false);

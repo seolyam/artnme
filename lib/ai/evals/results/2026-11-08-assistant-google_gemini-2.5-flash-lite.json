@@ -1,0 +1,63 @@
+{
+  "summary": {
+    "model": "google/gemini-2.5-flash-lite",
+    "cases": 6,
+    "passed": 1,
+    "emptyAnswers": 3
+  },
+  "cases": [
+    {
+      "q": "Sino pa may balance?",
+      "ok": false,
+      "misses": [
+        "empty answer",
+        "missing \"9,500\"",
+        "missing \"Ana\""
+      ],
+      "text": ""
+    },
+    {
+      "q": "Who still owes money?",
+      "ok": false,
+      "misses": [
+        "empty answer",
+        "missing \"225\"",
+        "missing \"Ben\""
+      ],
+      "text": ""
+    },
+    {
+      "q": "How much did we collect today?",
+      "ok": false,
+      "misses": [
+        "empty answer",
+        "missing \"3,500\""
+      ],
+      "text": ""
+    },
+    {
+      "q": "Pila ang nakolekta namon subong?",
+      "ok": false,
+      "misses": [
+        "tools getDailyMoney, want getCollections",
+        "missing \"3,500\""
+      ],
+      "text": "Wala pa sing koleksyon nga narekord para sa semana nga amo na."
+    },
+    {
+      "q": "Ano ang overdue?",
+      "ok": true,
+      "misses": [],
+      "text": "May isang order na overdue: #0009 Jersey set x12."
+    },
+    {
+      "q": "Top customer namon?",
+      "ok": false,
+      "misses": [
+        "tools none, want getTopCustomers",
+        "missing \"Silay Bakeshop\""
+      ],
+      "text": "Sure, I can get that for you. How many do you want to see?"
+    }
+  ]
+}

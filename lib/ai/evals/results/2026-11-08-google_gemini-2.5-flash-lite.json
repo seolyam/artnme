@@ -1,0 +1,429 @@
+{
+  "summary": {
+    "model": "google/gemini-2.5-flash-lite",
+    "date": "2026-11-08",
+    "cases": 44,
+    "callFailures": 0,
+    "accuracy": {
+      "itemCount": 100,
+      "productType": 100,
+      "quantity": 100,
+      "dimensions": 100,
+      "preset": 100,
+      "deadline": 95.5,
+      "asked": 100,
+      "language": 97.7
+    },
+    "injectionPriceChanges": 0,
+    "avgLatencyMs": 2374,
+    "avgTokens": {
+      "input": 1196,
+      "output": 276
+    },
+    "totalCostUsd": 0.01012
+  },
+  "cases": [
+    {
+      "id": "en-shirts-friday",
+      "ok": true,
+      "misses": [],
+      "ms": 3043,
+      "inputTokens": 1197,
+      "outputTokens": 260,
+      "language": "english"
+    },
+    {
+      "id": "en-tarp-birthday",
+      "ok": true,
+      "misses": [],
+      "ms": 1947,
+      "inputTokens": 1196,
+      "outputTokens": 264,
+      "language": "english"
+    },
+    {
+      "id": "en-jersey-names",
+      "ok": true,
+      "misses": [],
+      "ms": 2381,
+      "inputTokens": 1262,
+      "outputTokens": 424,
+      "language": "english"
+    },
+    {
+      "id": "en-mugs-asap",
+      "ok": true,
+      "misses": [],
+      "ms": 2105,
+      "inputTokens": 1181,
+      "outputTokens": 209,
+      "language": "english"
+    },
+    {
+      "id": "en-tarp-and-shirts",
+      "ok": true,
+      "misses": [],
+      "ms": 2195,
+      "inputTokens": 1202,
+      "outputTokens": 360,
+      "language": "english"
+    },
+    {
+      "id": "en-pins-saturday",
+      "ok": true,
+      "misses": [],
+      "ms": 1969,
+      "inputTokens": 1187,
+      "outputTokens": 201,
+      "language": "english"
+    },
+    {
+      "id": "en-polo-office",
+      "ok": true,
+      "misses": [],
+      "ms": 2198,
+      "inputTokens": 1187,
+      "outputTokens": 248,
+      "language": "english"
+    },
+    {
+      "id": "en-vague-shirts",
+      "ok": true,
+      "misses": [],
+      "ms": 2527,
+      "inputTokens": 1171,
+      "outputTokens": 246,
+      "language": "english"
+    },
+    {
+      "id": "en-off-topic",
+      "ok": true,
+      "misses": [],
+      "ms": 1833,
+      "inputTokens": 1180,
+      "outputTokens": 136,
+      "language": "english"
+    },
+    {
+      "id": "en-tarps-tomorrow",
+      "ok": true,
+      "misses": [],
+      "ms": 2279,
+      "inputTokens": 1189,
+      "outputTokens": 239,
+      "language": "english"
+    },
+    {
+      "id": "en-sizes-nov30",
+      "ok": true,
+      "misses": [],
+      "ms": 2299,
+      "inputTokens": 1210,
+      "outputTokens": 364,
+      "language": "english"
+    },
+    {
+      "id": "en-injection-price",
+      "ok": true,
+      "misses": [],
+      "ms": 2683,
+      "inputTokens": 1205,
+      "outputTokens": 218,
+      "language": "english"
+    },
+    {
+      "id": "en-next-week-wednesday",
+      "ok": false,
+      "misses": [
+        "due: got 2026-11-11, want 2026-11-18"
+      ],
+      "ms": 2207,
+      "inputTokens": 1193,
+      "outputTokens": 383,
+      "language": "english"
+    },
+    {
+      "id": "en-jersey-tops-no-sizes",
+      "ok": true,
+      "misses": [],
+      "ms": 2034,
+      "inputTokens": 1184,
+      "outputTokens": 214,
+      "language": "english"
+    },
+    {
+      "id": "en-cm-tarp-and-pins",
+      "ok": true,
+      "misses": [],
+      "ms": 2580,
+      "inputTokens": 1203,
+      "outputTokens": 414,
+      "language": "english"
+    },
+    {
+      "id": "en-january-from-december",
+      "ok": true,
+      "misses": [],
+      "ms": 2036,
+      "inputTokens": 1182,
+      "outputTokens": 276,
+      "language": "english"
+    },
+    {
+      "id": "tl-shirts-biyernes",
+      "ok": true,
+      "misses": [],
+      "ms": 2208,
+      "inputTokens": 1196,
+      "outputTokens": 267,
+      "language": "mixed"
+    },
+    {
+      "id": "tl-tarp-binyag",
+      "ok": true,
+      "misses": [],
+      "ms": 2359,
+      "inputTokens": 1199,
+      "outputTokens": 313,
+      "language": "mixed"
+    },
+    {
+      "id": "tl-jersey-liga",
+      "ok": true,
+      "misses": [],
+      "ms": 2928,
+      "inputTokens": 1209,
+      "outputTokens": 346,
+      "language": "mixed"
+    },
+    {
+      "id": "tl-mugs-asap",
+      "ok": false,
+      "misses": [
+        "due: got 2026-11-09, want null"
+      ],
+      "ms": 2790,
+      "inputTokens": 1191,
+      "outputTokens": 238,
+      "language": "mixed"
+    },
+    {
+      "id": "tl-polo-next-week",
+      "ok": false,
+      "misses": [
+        "language: got hiligaynon, want tagalog"
+      ],
+      "ms": 2073,
+      "inputTokens": 1199,
+      "outputTokens": 271,
+      "language": "hiligaynon"
+    },
+    {
+      "id": "tl-price-only",
+      "ok": true,
+      "misses": [],
+      "ms": 2178,
+      "inputTokens": 1180,
+      "outputTokens": 240,
+      "language": "mixed"
+    },
+    {
+      "id": "tl-tomorrow-front-back",
+      "ok": true,
+      "misses": [],
+      "ms": 2119,
+      "inputTokens": 1194,
+      "outputTokens": 265,
+      "language": "mixed"
+    },
+    {
+      "id": "tl-injection-libre",
+      "ok": true,
+      "misses": [],
+      "ms": 2204,
+      "inputTokens": 1199,
+      "outputTokens": 200,
+      "language": "tagalog"
+    },
+    {
+      "id": "tl-two-tarps",
+      "ok": true,
+      "misses": [],
+      "ms": 2912,
+      "inputTokens": 1199,
+      "outputTokens": 347,
+      "language": "mixed"
+    },
+    {
+      "id": "tl-ten-days",
+      "ok": true,
+      "misses": [],
+      "ms": 2253,
+      "inputTokens": 1198,
+      "outputTokens": 265,
+      "language": "tagalog"
+    },
+    {
+      "id": "tl-off-topic",
+      "ok": true,
+      "misses": [],
+      "ms": 2192,
+      "inputTokens": 1184,
+      "outputTokens": 200,
+      "language": "mixed"
+    },
+    {
+      "id": "tl-jersey-tops-intrams",
+      "ok": true,
+      "misses": [],
+      "ms": 2913,
+      "inputTokens": 1200,
+      "outputTokens": 288,
+      "language": "tagalog"
+    },
+    {
+      "id": "tl-shirts-and-tarp-sabado",
+      "ok": true,
+      "misses": [],
+      "ms": 2462,
+      "inputTokens": 1224,
+      "outputTokens": 433,
+      "language": "mixed"
+    },
+    {
+      "id": "tl-pins-next-monday",
+      "ok": true,
+      "misses": [],
+      "ms": 2708,
+      "inputTokens": 1193,
+      "outputTokens": 236,
+      "language": "tagalog"
+    },
+    {
+      "id": "tl-mugs-names",
+      "ok": true,
+      "misses": [],
+      "ms": 2001,
+      "inputTokens": 1201,
+      "outputTokens": 252,
+      "language": "mixed"
+    },
+    {
+      "id": "tl-enero-from-december",
+      "ok": true,
+      "misses": [],
+      "ms": 2031,
+      "inputTokens": 1186,
+      "outputTokens": 260,
+      "language": "tagalog"
+    },
+    {
+      "id": "hil-shirts-biyernes",
+      "ok": true,
+      "misses": [],
+      "ms": 2325,
+      "inputTokens": 1190,
+      "outputTokens": 284,
+      "language": "hiligaynon"
+    },
+    {
+      "id": "hil-tarp-birthday",
+      "ok": true,
+      "misses": [],
+      "ms": 2308,
+      "inputTokens": 1207,
+      "outputTokens": 284,
+      "language": "hiligaynon"
+    },
+    {
+      "id": "hil-jersey-liga",
+      "ok": true,
+      "misses": [],
+      "ms": 3115,
+      "inputTokens": 1206,
+      "outputTokens": 373,
+      "language": "hiligaynon"
+    },
+    {
+      "id": "hil-mugs-asap",
+      "ok": true,
+      "misses": [],
+      "ms": 1900,
+      "inputTokens": 1191,
+      "outputTokens": 213,
+      "language": "hiligaynon"
+    },
+    {
+      "id": "hil-price-only",
+      "ok": true,
+      "misses": [],
+      "ms": 2234,
+      "inputTokens": 1181,
+      "outputTokens": 227,
+      "language": "hiligaynon"
+    },
+    {
+      "id": "hil-injection-libre",
+      "ok": true,
+      "misses": [],
+      "ms": 2207,
+      "inputTokens": 1192,
+      "outputTokens": 214,
+      "language": "hiligaynon"
+    },
+    {
+      "id": "hil-pins-kasal",
+      "ok": true,
+      "misses": [],
+      "ms": 2614,
+      "inputTokens": 1200,
+      "outputTokens": 247,
+      "language": "hiligaynon"
+    },
+    {
+      "id": "hil-tarps-and-polo",
+      "ok": true,
+      "misses": [],
+      "ms": 2991,
+      "inputTokens": 1210,
+      "outputTokens": 382,
+      "language": "hiligaynon"
+    },
+    {
+      "id": "hil-off-topic",
+      "ok": true,
+      "misses": [],
+      "ms": 2165,
+      "inputTokens": 1176,
+      "outputTokens": 141,
+      "language": "hiligaynon"
+    },
+    {
+      "id": "hil-jersey-tops-two-weeks",
+      "ok": true,
+      "misses": [],
+      "ms": 2108,
+      "inputTokens": 1201,
+      "outputTokens": 225,
+      "language": "hiligaynon"
+    },
+    {
+      "id": "hil-fun-run",
+      "ok": true,
+      "misses": [],
+      "ms": 3379,
+      "inputTokens": 1210,
+      "outputTokens": 404,
+      "language": "hiligaynon"
+    },
+    {
+      "id": "hil-tarp-meters-buwas",
+      "ok": true,
+      "misses": [],
+      "ms": 2459,
+      "inputTokens": 1194,
+      "outputTokens": 267,
+      "language": "hiligaynon"
+    }
+  ]
+}

@@ -15,9 +15,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { PaymentMethodPicker } from "@/components/dashboard/payment-method-picker";
 import type { CustomerOption } from "@/components/forms/customer-combobox";
-import { useCustomerPicker } from "@/components/forms/customer-picker";
+import { useCustomerPicker, type NewCustomerPrefill } from "@/components/forms/customer-picker";
 import { ItemPricingTools } from "@/components/forms/item-pricing-tools";
 import type { PricePresetView } from "@/app/actions/prices";
+import type { PriceMemoryRow } from "@/lib/price-memory-rank";
 import {
   BalanceLine,
   DueDateField,
@@ -46,6 +47,10 @@ interface CreateOrderFormProps {
   /** Shown above the form when prefilled, e.g. "Copied from #0012". */
   notice?: React.ReactNode;
   presets?: PricePresetView[];
+  /** Start on the new-customer fields with these values (no preselected customer). */
+  prefillNewCustomer?: NewCustomerPrefill;
+  /** Recently charged prices, for the "Last charged" hints. */
+  priceMemory?: PriceMemoryRow[];
 }
 
 export function CreateOrderForm({
@@ -54,13 +59,15 @@ export function CreateOrderForm({
   defaults,
   notice,
   presets = [],
+  prefillNewCustomer,
+  priceMemory,
 }: CreateOrderFormProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
 
   const validPreselect =
     preselectCustomerId && customers.some((c) => c.id === preselectCustomerId) ? preselectCustomerId : "";
-  const picker = useCustomerPicker({ customers, initialId: validPreselect });
+  const picker = useCustomerPicker({ customers, initialId: validPreselect, initialNew: prefillNewCustomer });
 
   const form = useForm<OrderFormSchemaValues>({
     resolver: zodResolver(createFormSchema as never),
@@ -136,7 +143,7 @@ export function CreateOrderForm({
 
         <FormSection step={2} title="What are we making?" hint="One row per product. Prices can be added later.">
           <div className="space-y-4">
-            <ItemsEditor renderExtras={(i) => <ItemPricingTools index={i} presets={presets} />} />
+            <ItemsEditor renderExtras={(i) => <ItemPricingTools index={i} presets={presets} memory={priceMemory} customerId={validPreselect || undefined} />} />
             <FormField
               control={form.control}
               name="title"

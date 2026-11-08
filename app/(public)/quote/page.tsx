@@ -1,4 +1,5 @@
 import { QuoteForm } from "@/components/quote/QuoteForm";
+import { aiPublicEnabled } from "@/lib/ai/flags";
 import { LineReveal } from "@/components/motion/line-reveal";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { SITE } from "@/lib/site";
@@ -77,7 +78,7 @@ export default async function QuotePage({
       </div>
 
       <div className="min-w-0 flex-[1.4_1_560px] pr-3.5">
-        <QuoteForm initialProduct={initialProduct} source={source} />
+        <QuoteForm initialProduct={initialProduct} source={source} aiCheck={aiPublicEnabled()} />
       </div>
     </main>
   );

@@ -31,20 +31,26 @@ export function findDuplicateCustomer(customers: CustomerOption[], name: string,
  * customer first if needed (and switching to it, so a retry won't create a
  * second copy).
  */
+export type NewCustomerPrefill = { name?: string; contact?: string; email?: string; messenger?: string };
+
 export function useCustomerPicker({
   customers: initialCustomers,
   initialId = "",
+  initialNew,
 }: {
   customers: CustomerOption[];
   initialId?: string;
+  /** Without an initialId, start on the new-customer fields with these values. */
+  initialNew?: NewCustomerPrefill;
 }) {
+  const startNew = !initialId && !!initialNew;
   const [customers, setCustomers] = useState(initialCustomers);
-  const [mode, setMode] = useState<"existing" | "new">("existing");
+  const [mode, setMode] = useState<"existing" | "new">(startNew ? "new" : "existing");
   const [customerId, setCustomerId] = useState(initialId);
-  const [name, setName] = useState("");
-  const [contact, setContact] = useState("");
-  const [messenger, setMessenger] = useState("");
-  const [email, setEmail] = useState("");
+  const [name, setName] = useState(startNew ? (initialNew.name ?? "") : "");
+  const [contact, setContact] = useState(startNew ? (initialNew.contact ?? "") : "");
+  const [messenger, setMessenger] = useState(startNew ? (initialNew.messenger ?? "") : "");
+  const [email, setEmail] = useState(startNew ? (initialNew.email ?? "") : "");
   const [error, setError] = useState<string | null>(null);
 
   const duplicate = mode === "new" ? findDuplicateCustomer(customers, name, contact) : null;

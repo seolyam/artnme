@@ -69,6 +69,15 @@ export function isWebQuote(title: string) {
   return title.startsWith(WEB_QUOTE_PREFIX);
 }
 
+/** A web quote item's description without the lines the quote form adds
+ *  (contact, needed-by date, attachment, source), i.e. what the customer asked for. */
+export function stripQuoteMeta(description: string | null | undefined) {
+  return (description ?? "")
+    .split("\n")
+    .filter((l) => !/^(Contact|Needed by|Attachment|Source):/.test(l))
+    .join("\n");
+}
+
 const SEQUENCE = ["Pending", "Designing", "Printing", "Sewing", "Ready for Pickup", "Completed"] as const;
 
 /** The status a job normally moves to next, or null once it's done. */

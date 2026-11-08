@@ -21,6 +21,7 @@ import type { CustomerOption } from "@/components/forms/customer-combobox";
 import { useCustomerPicker } from "@/components/forms/customer-picker";
 import { ItemPricingTools } from "@/components/forms/item-pricing-tools";
 import type { PricePresetView } from "@/app/actions/prices";
+import type { PriceMemoryRow } from "@/lib/price-memory-rank";
 import {
   BalanceLine,
   DueDateField,
@@ -58,9 +59,11 @@ interface EditOrderFormProps {
   order: OrderData;
   customers: CustomerOption[];
   presets?: PricePresetView[];
+  /** Recently charged prices, for the "Last charged" hints. */
+  priceMemory?: PriceMemoryRow[];
 }
 
-export function EditOrderForm({ order, customers, presets = [] }: EditOrderFormProps) {
+export function EditOrderForm({ order, customers, presets = [], priceMemory }: EditOrderFormProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [correctingPaid, setCorrectingPaid] = useState(false);
@@ -127,7 +130,7 @@ export function EditOrderForm({ order, customers, presets = [] }: EditOrderFormP
 
         <FormSection title="Items">
           <div className="space-y-4">
-            <ItemsEditor renderExtras={(i) => <ItemPricingTools index={i} presets={presets} />} />
+            <ItemsEditor renderExtras={(i) => <ItemPricingTools index={i} presets={presets} memory={priceMemory} customerId={order.customerId} />} />
             <FormField
               control={form.control}
               name="title"

@@ -6,6 +6,7 @@ import { getMe } from "@/app/actions/staff";
 import { CommandPalette } from "@/components/dashboard/command-palette";
 import { LiveUpdates } from "@/components/dashboard/live-updates";
 import { StaffGuide } from "@/components/dashboard/staff-guide";
+import { aiStaffEnabled } from "@/lib/ai/flags";
 
 export default async function DashboardLayout({
   children,
@@ -17,12 +18,13 @@ export default async function DashboardLayout({
   // enforce a session before any dashboard UI is rendered.
   await requireAuth();
   const [webQuotes, me] = await Promise.all([getWebQuoteCount(), getMe()]);
+  const ai = aiStaffEnabled();
 
   return (
     <div className="flex h-screen flex-col bg-background md:flex-row print:block print:h-auto">
-      <SidebarNav webQuotes={webQuotes} user={{ fullName: me.fullName, role: me.role }} />
+      <SidebarNav webQuotes={webQuotes} user={{ fullName: me.fullName, role: me.role, ai }} />
       <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 print:overflow-visible print:p-0">{children}</main>
-      <CommandPalette />
+      <CommandPalette ai={ai} />
       <StaffGuide />
       <LiveUpdates />
       <Toaster richColors position="bottom-right" />
