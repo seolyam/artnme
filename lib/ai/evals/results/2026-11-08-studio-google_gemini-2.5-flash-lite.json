@@ -1,0 +1,11 @@
+{
+  "summary": {
+    "model": "google/gemini-2.5-flash-lite",
+    "cases": 15,
+    "callFailures": 0,
+    "templateAccuracy": 100,
+    "wordsKept": 100,
+    "colorAccuracy": 100
+  },
+  "misses": []
+}

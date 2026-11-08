@@ -14,6 +14,9 @@ import {
   templateOnShirt,
   type ShirtTemplate,
 } from "@/lib/customizer/templates";
+import { PRINT_COLORS } from "@/lib/customizer/colors";
+import { DescribeShirt, type StudioPrefill } from "@/components/customizer/describe-shirt";
+import { useStudioAi } from "@/components/customizer/studio-ai";
 
 /**
  * "Ready-made designs" for the studio's Design step. The customer picks one,
@@ -23,8 +26,15 @@ import {
 export function TemplatePicker() {
   const font = useTemplateFont();
   const { assets } = useCustomizer();
+  const ai = useStudioAi();
   const [chosen, setChosen] = useState<ShirtTemplate | null>(null);
+  const [prefill, setPrefill] = useState<StudioPrefill | null>(null);
   const current = templateOnShirt(assets);
+
+  const choose = (t: ShirtTemplate, fill: StudioPrefill | null = null) => {
+    setPrefill(fill);
+    setChosen(t);
+  };
 
   // Card thumbnails with the sample words, drawn once the font is ready.
   const thumbs = useMemo(() => {
@@ -45,12 +55,13 @@ export function TemplatePicker() {
           <TemplateActions />
         </div>
       )}
+      {ai && <DescribeShirt onSuggest={choose} />}
       <ul className="grid grid-cols-2 gap-3" aria-label="Ready-made designs">
         {SHIRT_TEMPLATES.map((t) => (
           <li key={t.id}>
             <button
               type="button"
-              onClick={() => setChosen(t)}
+              onClick={() => choose(t)}
               className="group flex h-full w-full flex-col border border-outline-variant/40 bg-surface-container-lowest text-left transition-colors hover:border-brand focus-visible:border-brand"
             >
               <span className="block w-full bg-surface-container px-2 pt-3">
@@ -76,7 +87,15 @@ export function TemplatePicker() {
           showCloseButton={false}
           className="max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto rounded-none border border-outline-variant bg-surface p-0 text-on-surface sm:max-w-3xl"
         >
-          {chosen && font && <TemplateForm key={chosen.id} template={chosen} font={font} onDone={() => setChosen(null)} />}
+          {chosen && font && (
+            <TemplateForm
+              key={chosen.id}
+              template={chosen}
+              prefill={prefill ?? undefined}
+              font={font}
+              onDone={() => setChosen(null)}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </>
@@ -154,21 +173,29 @@ export function TemplateActions() {
   );
 }
 
-/** Fill-in form for a template. With `initialValues` it edits the design already on the shirt. */
+/**
+ * Fill-in form for a template. With `initialValues` it edits the design already
+ * on the shirt; with `prefill` it's a new design started from "Describe your
+ * event" (the customer's words and a shirt color), still applied only on submit.
+ */
 function TemplateForm({
   template,
   initialValues,
+  prefill,
   font,
   onDone,
 }: {
   template: ShirtTemplate;
   initialValues?: Record<string, string>;
+  prefill?: StudioPrefill;
   font: string;
   onDone: () => void;
 }) {
   const { assets, replaceDesign, retextTemplate } = useCustomizer();
   const editing = !!initialValues;
-  const [values, setValues] = useState(() => initialValues ?? templateDefaults(template));
+  const [values, setValues] = useState(() => initialValues ?? prefill?.values ?? templateDefaults(template));
+  const shirtColor = prefill?.shirtColor ?? template.shirtColor;
+  const shirtLabel = PRINT_COLORS.find((c) => c.hex === shirtColor)?.name ?? template.shirtLabel;
   const art = useMemo(() => template.pieces.map((p) => renderPiece(p, values, font, 520)), [template, values, font]);
 
   const apply = (e: React.FormEvent) => {
@@ -195,7 +222,7 @@ function TemplateForm({
       template: { id: template.id, piece: piece.id, values },
       ...piecePose(piece),
     }));
-    replaceDesign(template.shirtColor, layers);
+    replaceDesign(shirtColor, layers);
     toast.success("Design added to your shirt. To change the words later, press Edit the words.");
     onDone();
   };
@@ -209,6 +236,7 @@ function TemplateForm({
             ? "Change any of the words below. Your prints stay where you put them."
             : "Type your own words below. The picture changes as you type."}
         </DialogDescription>
+        {prefill?.reason && <p className="mt-2 text-sm text-on-surface-variant">Suggested: {prefill.reason}</p>}
       </div>
 
       <div className="grid gap-6 px-6 py-6 sm:grid-cols-[1.1fr_1fr]">
@@ -218,7 +246,7 @@ function TemplateForm({
           </div>
           {!editing && (
             <p className="mt-2 text-sm text-on-surface-variant">
-              {template.shirtLabel} shirt · you can change the color later
+              {shirtLabel} shirt · you can change the color later
             </p>
           )}
         </div>
