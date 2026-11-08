@@ -28,7 +28,9 @@ export async function getCustomersWithOrderCount() {
       orderCount: sql<number>`count(${orders.id})::int`,
       activeCount: sql<number>`count(${orders.id}) FILTER (WHERE ${orders.status} <> 'Completed')::int`,
       totalRevenue: sql<number>`coalesce(sum(${orders.totalAmount}::numeric), 0)`,
-      balance: sql<number>`coalesce(sum(${orders.totalAmount} - ${orders.depositAmount}), 0)`,
+      // Clamp per order so an overpaid job can't hide another job's balance;
+      // matches getOrderStats and the receivables report.
+      balance: sql<number>`coalesce(sum(greatest(${orders.totalAmount} - ${orders.depositAmount}, 0)), 0)`,
       lastOrderAt: sql<Date | null>`max(${orders.createdAt})`,
     })
     .from(customers)
