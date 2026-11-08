@@ -37,6 +37,23 @@ export async function shrinkForUpload(file: File): Promise<{ file: File } | { er
   }
 }
 
+/** Browser-only. A ≤1024px JPEG of an image for the optional AI file check,
+ *  or null for files a canvas can't draw (PDF, SVG). */
+export async function previewForCheck(file: File): Promise<Blob | null> {
+  if (!file.type.startsWith("image/") || file.type === "image/svg+xml") return null;
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    return null;
+  }
+  try {
+    return await draw(bitmap, 1024, "image/jpeg");
+  } finally {
+    bitmap.close();
+  }
+}
+
 function draw(bitmap: ImageBitmap, edge: number, type: string): Promise<Blob | null> {
   const { width, height } = fitWithin(bitmap.width, bitmap.height, edge);
   const canvas = document.createElement("canvas");

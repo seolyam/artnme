@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { removeOrderFile, setProofApproved, uploadOrderFile, type OrderFileView } from "@/app/actions/files";
 import { useConfirm } from "@/components/dashboard/confirm-dialog";
 import { CopyButton } from "@/components/dashboard/copy-button";
+import { ArtworkCheck } from "@/components/ai/artwork-check";
 import { timeAgo } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { shrinkForUpload } from "@/lib/shrink-image";
@@ -20,7 +21,16 @@ function isImage(f: OrderFileView) {
 }
 
 /** Proofs and customer files for one order, with upload and customer approval. */
-export function OrderFiles({ orderId, files }: { orderId: string; files: OrderFileView[] }) {
+export function OrderFiles({
+  orderId,
+  files,
+  aiReview = false,
+}: {
+  orderId: string;
+  files: OrderFileView[];
+  /** Show "Check artwork" on customer files (AI enabled). */
+  aiReview?: boolean;
+}) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [kind, setKind] = useState<"proof" | "attachment">("proof");
@@ -228,6 +238,7 @@ export function OrderFiles({ orderId, files }: { orderId: string; files: OrderFi
                         Customer approved this
                       </button>
                     ))}
+                  {aiReview && !proof && <ArtworkCheck fileId={f.id} />}
                   <div className="mt-auto flex items-center justify-between gap-2 pt-1">
                     <CopyButton
                       value={f.url}
